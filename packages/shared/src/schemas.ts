@@ -64,9 +64,13 @@ export const photoInsertSchema = z.object({
 });
 export type PhotoInsertInput = z.infer<typeof photoInsertSchema>;
 
-// Sticker sheet generator input
+// Sticker sheet generator input.
+// We gebruiken z.input/z.output apart want de default op `count` betekent
+// dat de gebruiker hem weg kan laten (input = optional) maar na parse is
+// het altijd een number (output = required).
 export const stickerSheetGenerateSchema = z.object({
   startNumber: z.number().int().min(1).max(9999),
   count: z.number().int().min(1).max(160).default(160),
 });
-export type StickerSheetGenerateInput = z.infer<typeof stickerSheetGenerateSchema>;
+export type StickerSheetGenerateInput = z.input<typeof stickerSheetGenerateSchema>;
+export type StickerSheetGenerateData = z.output<typeof stickerSheetGenerateSchema>;

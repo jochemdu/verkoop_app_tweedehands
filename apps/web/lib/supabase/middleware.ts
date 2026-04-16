@@ -39,6 +39,13 @@ export async function updateSession(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
   if (!user && !isPublic) {
+    // API routes krijgen JSON 401, HTML routes krijgen een login-redirect.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Niet ingelogd" },
+        { status: 401 },
+      );
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
