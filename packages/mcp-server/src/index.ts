@@ -32,6 +32,15 @@ import {
   updateProductDefinition,
   handleUpdateProduct,
 } from "./tools/update_product";
+import { lookupEanDefinition, handleLookupEan } from "./tools/lookup_ean.js";
+import {
+  fetchTweakersPricesDefinition,
+  handleFetchTweakersPrices,
+} from "./tools/fetch_tweakers_prices.js";
+import {
+  markListingPublishedDefinition,
+  handleMarkListingPublished,
+} from "./tools/mark_listing_published.js";
 
 // Ping tool — handig om de verbinding te checken zonder dat er data hoeft te zijn.
 const pingDefinition = {
@@ -52,6 +61,9 @@ const TOOLS = [
   { def: suggestBundleDefinition, handler: handleSuggestBundle },
   { def: createListingDefinition, handler: handleCreateListing },
   { def: updateProductDefinition, handler: handleUpdateProduct },
+  { def: lookupEanDefinition, handler: handleLookupEan },
+  { def: fetchTweakersPricesDefinition, handler: handleFetchTweakersPrices },
+  { def: markListingPublishedDefinition, handler: handleMarkListingPublished },
 ];
 
 async function handlePing() {
