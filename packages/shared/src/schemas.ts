@@ -19,7 +19,8 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
-// Product insert (Fase A — indexering)
+// Product insert (Fase A — indexering).
+// Zie stickerSheetGenerateSchema voor de input/output split-pattern.
 export const productIndexSchema = z.object({
   sticker_id: stickerIdSchema.optional(),
   sticker_input_method: z.enum(STICKER_INPUT_METHODS).optional(),
@@ -29,15 +30,16 @@ export const productIndexSchema = z.object({
   indexing_notes: z.string().max(1000).optional(),
   ean: z.string().regex(/^\d{8,14}$/).optional(),
 });
-export type ProductIndexInput = z.infer<typeof productIndexSchema>;
+export type ProductIndexInput = z.input<typeof productIndexSchema>;
+export type ProductIndexData = z.output<typeof productIndexSchema>;
 
-// Product update (Fase B — verkoop)
+// Product update (Fase B — verkoop). specs is bewust niet opgenomen — die
+// komt via een ander pad (Claude MCP bundel update of categorie-spec form).
 export const productUpdateSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(5000).optional(),
   condition: z.enum(PRODUCT_CONDITIONS).optional(),
   status: z.enum(PRODUCT_STATUSES).optional(),
-  specs: z.record(z.string(), z.unknown()).optional(),
   defects: z.array(z.string()).optional(),
   included_accessories: z.array(z.string()).optional(),
   missing_items: z.array(z.string()).optional(),

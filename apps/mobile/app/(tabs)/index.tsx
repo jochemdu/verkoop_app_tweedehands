@@ -1,50 +1,102 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/auth/useSession";
 
 export default function Dashboard() {
   const { session, signOut } = useSession();
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [indexedCount, setIndexedCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const [total, indexed] = await Promise.all([
+        supabase.from("products").select("*", { count: "exact", head: true }),
+        supabase
+          .from("products")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "indexed"),
+      ]);
+      setTotalCount(total.count ?? 0);
+      setIndexedCount(indexed.count ?? 0);
+    })();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.label}>Ingelogd als</Text>
-        <Text style={styles.email}>{session?.user.email ?? "onbekend"}</Text>
-      </View>
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Fase 1 — Foundation ✅</Text>
-        <Text style={styles.infoText}>
-          De volgende fase implementeert het sticker-systeem (PLAN (1).md sectie 3).
-        </Text>
-      </View>
-      <Pressable style={styles.button} onPress={signOut}>
-        <Text style={styles.buttonText}>Uitloggen</Text>
-      </Pressable>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.header}>
+          <Text style={styles.heading}>Dashboard</Text>
+          <Text style={styles.email}>{session?.user.email}</Text>
+        </View>
+
+        <View style={styles.statsRow}>
+          <Stat label="Totaal" value={totalCount} />
+          <Stat label="Klaar voor analyse" value={indexedCount} />
+        </View>
+
+        <Pressable
+          style={styles.primaryAction}
+          onPress={() => router.push("/(tabs)/capture")}
+        >
+          <Text style={styles.primaryActionText}>+ Nieuw product indexeren</Text>
+        </Pressable>
+
+        <Pressable style={styles.outlineAction} onPress={signOut}>
+          <Text style={styles.outlineActionText}>Uitloggen</Text>
+        </Pressable>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
+function Stat({ label, value }: { label: string; value: number | null }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statValue}>{value ?? "—"}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, gap: 16 },
-  card: { borderWidth: 1, borderColor: "#e4e4e7", borderRadius: 12, padding: 16 },
-  label: { color: "#71717a", fontSize: 12 },
-  email: { fontSize: 18, fontWeight: "500", marginTop: 4 },
-  infoCard: {
+  container: { flex: 1 },
+  scroll: { padding: 20, gap: 16 },
+  header: { marginBottom: 4 },
+  heading: { fontSize: 24, fontWeight: "600" },
+  email: { fontSize: 13, color: "#71717a", marginTop: 2 },
+  statsRow: { flexDirection: "row", gap: 12 },
+  stat: {
+    flex: 1,
     borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#d4d4d8",
+    borderColor: "#e4e4e7",
     borderRadius: 12,
     padding: 16,
   },
-  infoTitle: { fontWeight: "600" },
-  infoText: { color: "#71717a", marginTop: 4, fontSize: 13 },
-  button: {
+  statValue: { fontSize: 28, fontWeight: "700" },
+  statLabel: { fontSize: 12, color: "#71717a", marginTop: 4 },
+  primaryAction: {
+    backgroundColor: "#18181b",
+    borderRadius: 12,
+    padding: 18,
+    alignItems: "center",
+  },
+  primaryActionText: { color: "#fff", fontSize: 15, fontWeight: "500" },
+  outlineAction: {
     marginTop: "auto",
     borderWidth: 1,
     borderColor: "#e4e4e7",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     alignItems: "center",
   },
-  buttonText: { fontSize: 15 },
+  outlineActionText: { fontSize: 14 },
 });

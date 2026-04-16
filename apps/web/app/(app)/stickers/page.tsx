@@ -25,27 +25,19 @@ export default async function StickersPage() {
       .eq("key", "last_sticker_number")
       .maybeSingle(),
   ]);
-  const sheets: StickerSheetRow[] = (sheetsRaw as StickerSheetRow[] | null) ?? [];
-  const lastUsed = Number((settingRaw?.value as number | null) ?? 0);
+  const sheets: StickerSheetRow[] = sheetsRaw ?? [];
+  const lastUsed = Number(settingRaw?.value ?? 0);
   const suggestedStart = Math.max(lastUsed + 1, 1);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 p-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Stickervel genereren</h1>
-          <p className="text-sm text-muted-foreground">
-            A4 portrait, 4 kwartieren van 40 stickers (21×15&nbsp;mm) — 160
-            stickers per vel.
-          </p>
-        </div>
-        <a
-          href="/"
-          className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
-        >
-          Dashboard
-        </a>
-      </header>
+    <main className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold">Stickervel genereren</h1>
+        <p className="text-sm text-muted-foreground">
+          A4 portrait, 4 kwartieren van 40 stickers (21×15&nbsp;mm) — 160
+          stickers per vel.
+        </p>
+      </div>
 
       <section className="rounded-lg border p-6">
         <p className="text-sm text-muted-foreground">Laatst gebruikt</p>
