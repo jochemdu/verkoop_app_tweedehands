@@ -5,7 +5,7 @@ import {
   PHOTO_TYPES,
   STICKER_INPUT_METHODS,
   CATEGORY_SLUGS,
-} from "./enums";
+} from "./enums.js";
 
 // 4-cijferig zero-padded sticker nummer: 0001 - 9999
 export const stickerIdSchema = z

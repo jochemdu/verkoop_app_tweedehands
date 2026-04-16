@@ -1,4 +1,4 @@
-import { Constants, type Database } from "./database.types";
+import { Constants, type Database } from "./database.types.js";
 
 // Runtime arrays (uit Constants) — gebruik voor forms/dropdowns.
 export const PRODUCT_CONDITIONS = Constants.public.Enums.product_condition;

@@ -1,31 +1,31 @@
 # @verkoopassistent/mcp-server
 
-Skeleton MCP server — Fase 4 vult de echte tools (list_inventory, get_product_photos, suggest_bundle, create_listing, update_product, search_products) in.
+MCP (Model Context Protocol) server die Claude Desktop/Code toegang geeft tot je VerkoopAssistent inventaris. Via deze server kan Claude producten opzoeken, foto's tonen, bundels voorstellen, en advertenties aanmaken — allemaal vanuit een gesprek.
 
-## Fase 1: ping tool
+## Tools
 
-Deze fase heeft alleen een `ping` tool ter verificatie dat de server start en een Supabase-verbinding kan maken.
+| Tool | Wat doet het |
+|------|--------------|
+| `ping` | Test de verbinding en returnt het totaal aantal producten. |
+| `list_inventory` | Lijst producten met filters (status, categorie, sticker-range). |
+| `get_product_photos` | Haal signed URLs op van alle foto's van 1 product (1u geldig default). |
+| `search_products` | Full-text zoek op titel/omschrijving/notities. |
+| `suggest_bundle` | Maak een concept-bundel aan met meerdere producten + reasoning. |
+| `create_listing` | Maak een concept-advertentie voor een product + platform. |
+| `update_product` | Werk productgegevens bij (categoriseer, conditie, specs, etc.). |
 
-## Lokaal testen
+Elke tool accepteert zowel UUID's als 4-cijferige sticker-ID's (bijv. `"0042"`) als product-identifier waar relevant.
 
-```bash
-# Vanaf monorepo root:
-pnpm -F @verkoopassistent/mcp-server start
+## Prerequisites
 
-# Of met de MCP inspector (UI voor handmatige tool-calls):
-pnpm -F @verkoopassistent/mcp-server inspector
-```
+- Node.js 20+
+- Service role key uit je Supabase project  
+  → Dashboard → Project Settings → API → `service_role` (klik op *Reveal*)
+- `pnpm install` op monorepo root uitgevoerd
 
-Verwachte env vars:
+## Installatie in Claude Desktop
 
-- `SUPABASE_URL` — bijv. `https://ffifhjwjauvhohmhhbip.supabase.co`
-- `SUPABASE_SERVICE_KEY` — service role key (dashboard → Project Settings → API → `service_role` key)
-
-Tip: plaats deze in `packages/mcp-server/.env` (zelfde formaat als root `.env.example`).
-
-## Installeren in Claude Desktop (Fase 4+)
-
-Voeg toe aan `%APPDATA%\Claude\claude_desktop_config.json` (Windows) of `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+Bewerk `%APPDATA%\Claude\claude_desktop_config.json` (Windows) of `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 
 ```json
 {
@@ -33,20 +33,108 @@ Voeg toe aan `%APPDATA%\Claude\claude_desktop_config.json` (Windows) of `~/Libra
     "verkoopassistent": {
       "command": "npx",
       "args": [
+        "-y",
         "tsx",
-        "<ABSOLUTE_PATH>/packages/mcp-server/src/index.ts"
+        "D:\\AntiGravity_Projects\\Verkoop_index_app\\packages\\mcp-server\\src\\index.ts"
       ],
       "env": {
         "SUPABASE_URL": "https://ffifhjwjauvhohmhhbip.supabase.co",
-        "SUPABASE_SERVICE_KEY": "<service_role_key>"
+        "SUPABASE_SERVICE_KEY": "eyJhbGciOi..."
       }
     }
   }
 }
 ```
 
-Herstart Claude Desktop → nieuw gesprek → tik `/mcp` om de verbinding te verifiëren.
+Herstart Claude Desktop. Typ in een nieuw gesprek `/mcp` om de tool-lijst te zien, of vraag direct: *"Roep de ping-tool aan"*.
 
-## Volgende stappen
+## Installatie in Claude Code
 
-Fase 4 voegt toe: `list_inventory`, `get_product_photos`, `search_products`, `suggest_bundle`, `create_listing`, `update_product`. Zie PLAN (1).md sectie 6.
+```bash
+claude mcp add verkoopassistent \
+  --env SUPABASE_URL="https://ffifhjwjauvhohmhhbip.supabase.co" \
+  --env SUPABASE_SERVICE_KEY="eyJhbGciOi..." \
+  -- npx -y tsx "D:/AntiGravity_Projects/Verkoop_index_app/packages/mcp-server/src/index.ts"
+```
+
+Check met `/mcp`.
+
+## Lokaal testen
+
+```bash
+# .env kopiëren en invullen
+cp packages/mcp-server/.env.example packages/mcp-server/.env
+# edit .env, plak echte SUPABASE_SERVICE_KEY
+
+# Direct starten
+pnpm -F @verkoopassistent/mcp-server start
+
+# Of met MCP Inspector UI (handmatig tools aanroepen):
+pnpm -F @verkoopassistent/mcp-server inspector
+# → opent http://localhost:6274 in je browser
+```
+
+## Typische workflow met Claude Desktop
+
+```
+JIJ:    Laat me de inventaris zien van sticker 0042 t/m 0060
+
+CLAUDE: [list_inventory met sticker_range_start=0042, sticker_range_end=0060]
+        Ik zie 19 producten. 12 zijn al gecategoriseerd (7× RAM,
+        3× Pokémon kaarten, 2× consoles), 7 staan als 'unknown'.
+        Wil je dat ik de foto's van de unknowns bekijk?
+
+JIJ:    Ja graag
+
+CLAUDE: [get_product_photos voor elk unknown product]
+        [deelt de signed URLs — jij ziet de foto's in het gesprek]
+        Op basis van de foto's:
+        - 0045: antieke tinnen kandelaar met merkteken D.B. 1762
+        - 0048: DDR2 SODIMM 2GB Samsung
+        - 0052: PlayStation 2 controller (Dual Shock)
+        ...
+        Zal ik deze categoriseren?
+
+JIJ:    Ja, en stel een bundel voor met alle compatibele RAM
+
+CLAUDE: [update_product ×3 voor de RAM modules met category + specs]
+        [list_inventory met category=ram_sodimm]
+        [analyseert specs — zelfde generatie + speed]
+        [suggest_bundle]
+        Bundle aangemaakt:
+        "DDR2 SODIMM 8GB Kit (4×2GB Samsung)"
+        Stickers: 0048, 0051, 0058, 0061
+        Voorgestelde prijs: €45 (matched-kit premium)
+```
+
+## Security
+
+- De MCP server gebruikt de **service role key** en heeft dus volledige DB-toegang (bypass RLS).
+- Draai de server daarom **alleen lokaal** — nooit exposen aan het internet.
+- De `env` in `claude_desktop_config.json` is lokaal op jouw machine; deel dat bestand niet.
+
+## Architectuur
+
+```
+src/
+├── index.ts          # Server bootstrap, tool-dispatcher, ping tool
+├── lib/
+│   ├── supabase.ts   # Singleton service-role client
+│   ├── resolve.ts    # UUID ↔ sticker_id resolver
+│   └── format.ts     # Response formatters (text/JSON)
+└── tools/            # Eén bestand per tool
+    ├── list_inventory.ts
+    ├── get_product_photos.ts
+    ├── search_products.ts
+    ├── suggest_bundle.ts
+    ├── create_listing.ts
+    └── update_product.ts
+```
+
+Elke tool exporteert een `definition` (MCP tool descriptor) en een `handler` (async function). `index.ts` aggregeert ze en dispatcht op naam.
+
+## Volgende stappen (Fase 5+)
+
+- Integreer prijs-lookup tools: `fetch_marktplaats_prices`, `lookup_ean`, `identify_card_by_id`
+- Publicatie-tool: `publish_listing` → actueel plaatsen via platform API
+- Batch bulk-update voor snelle categorisatie van veel unknowns

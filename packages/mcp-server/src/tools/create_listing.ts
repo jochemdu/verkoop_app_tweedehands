@@ -1,0 +1,88 @@
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { PLATFORM_SLUGS } from "@verkoopassistent/shared";
+import { getSupabase } from "../lib/supabase";
+import { resolveProductId } from "../lib/resolve";
+import { jsonContent, errorContent } from "../lib/format";
+
+const schema = z.object({
+  product: z.string().min(1).describe("UUID of 4-cijferig sticker-ID."),
+  platform: z
+    .enum(PLATFORM_SLUGS)
+    .describe("Platform waarop de advertentie komt."),
+  title: z.string().min(3).max(200),
+  description: z.string().min(10).max(5000),
+  price: z.number().nonnegative(),
+  shipping_price: z.number().nonnegative().default(0),
+});
+
+export const createListingDefinition = {
+  name: "create_listing",
+  description:
+    "Maak een concept-advertentie aan voor een product op een platform. Status is 'pending_review' — de gebruiker moet hem nog goedkeuren in de web-app voordat hij gepubliceerd wordt.",
+  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+};
+
+export async function handleCreateListing(input: unknown) {
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) {
+    return errorContent(
+      `Ongeldige invoer: ${parsed.error.issues.map((i) => i.path.join(".") + ": " + i.message).join("; ")}`,
+    );
+  }
+  const { product, platform, title, description, price, shipping_price } = parsed.data;
+
+  let productId: string;
+  try {
+    productId = await resolveProductId(product);
+  } catch (err) {
+    return errorContent(err instanceof Error ? err.message : "unknown");
+  }
+
+  const supabase = getSupabase();
+  const { data: platformRow, error: platformErr } = await supabase
+    .from("platforms")
+    .select("id, name")
+    .eq("slug", platform)
+    .single();
+  if (platformErr || !platformRow) {
+    return errorContent(`Platform '${platform}' niet gevonden.`);
+  }
+
+  const { data: listing, error: listingErr } = await supabase
+    .from("listings")
+    .insert({
+      product_id: productId,
+      platform_id: platformRow.id,
+      status: "pending_review",
+      price,
+      shipping_price,
+      generated_title: title,
+      generated_description: description,
+      final_title: title,
+      final_description: description,
+    })
+    .select()
+    .single();
+  if (listingErr || !listing) {
+    const isDup = listingErr?.message.includes("duplicate");
+    return errorContent(
+      isDup
+        ? `Er bestaat al een advertentie voor dit product op ${platform}. Gebruik de web-app om die te bewerken.`
+        : (listingErr?.message ?? "listing insert faalde"),
+    );
+  }
+
+  return jsonContent(
+    {
+      listing_id: listing.id,
+      product_id: productId,
+      platform: platform,
+      platform_name: platformRow.name,
+      price,
+      shipping_price,
+      status: listing.status,
+    },
+    `Draft advertentie aangemaakt voor ${platform} (wacht op review):`,
+  );
+}
