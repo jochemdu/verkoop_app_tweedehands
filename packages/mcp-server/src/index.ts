@@ -53,6 +53,15 @@ import {
   lookupTinMarkDefinition,
   handleLookupTinMark,
 } from "./tools/lookup_tin_mark.js";
+import { lookupBookDefinition, handleLookupBook } from "./tools/lookup_book.js";
+import {
+  inventorySummaryDefinition,
+  handleInventorySummary,
+} from "./tools/inventory_summary.js";
+import {
+  createProductStubDefinition,
+  handleCreateProductStub,
+} from "./tools/create_product_stub.js";
 
 // Ping tool — handig om de verbinding te checken zonder dat er data hoeft te zijn.
 const pingDefinition = {
@@ -79,6 +88,9 @@ const TOOLS = [
   { def: createTaxatiePdfDefinition, handler: handleCreateTaxatiePdf },
   { def: lookupSilverHallmarkDefinition, handler: handleLookupSilverHallmark },
   { def: lookupTinMarkDefinition, handler: handleLookupTinMark },
+  { def: lookupBookDefinition, handler: handleLookupBook },
+  { def: inventorySummaryDefinition, handler: handleInventorySummary },
+  { def: createProductStubDefinition, handler: handleCreateProductStub },
 ];
 
 async function handlePing() {

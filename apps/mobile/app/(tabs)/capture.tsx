@@ -200,14 +200,32 @@ export default function CaptureScreen() {
     }
   }
 
-  function handleBarcodeScanned(result: BarcodeScanningResult) {
-    if (ean) return; // al gescand
+  async function handleBarcodeScanned(result: BarcodeScanningResult) {
+    if (ean) return;
     setEan(result.data);
-    Alert.alert(
-      "Barcode gescand",
-      `${result.type}: ${result.data}\n\nLookup via Claude Desktop of web-app voor productinfo.`,
-    );
     setCameraMode("product");
+    // Feat 3 + 19: auto-lookup. ISBN-13 begint met 978/979. Verder alles als EAN.
+    try {
+      const isIsbn = /^97[89]\d{10}$/.test(result.data) || /^\d{10}$/.test(result.data);
+      const fn = isIsbn ? "lookup-book" : "lookup-ean";
+      const key = isIsbn ? "isbn" : "ean";
+      const { data } = await supabase.functions.invoke(fn, { body: { [key]: result.data } });
+      if (!data?.match) return;
+      if (isIsbn && data.book) {
+        const b = data.book;
+        const t = b.title ? `${b.title}${b.authors?.[0] ? ` — ${b.authors[0]}` : ""}` : "";
+        if (t && !workingTitle) setWorkingTitle(t);
+        const extra = [b.publisher && `Uitgever: ${b.publisher}`, b.year && `Jaar: ${b.year}`, b.language && `Taal: ${b.language}`].filter(Boolean).join(" · ");
+        if (extra) setNotes((prev) => (prev ? `${prev}\n${extra}` : extra));
+      } else if (!isIsbn && data.product) {
+        if (data.product.name && !workingTitle) {
+          const brand = data.product.brand ? `${data.product.brand} ` : "";
+          setWorkingTitle(`${brand}${data.product.name}`.trim());
+        }
+      }
+    } catch {
+      // silent
+    }
   }
 
   async function save() {
