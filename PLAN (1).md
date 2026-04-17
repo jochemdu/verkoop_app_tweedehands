@@ -8,10 +8,10 @@
 ## Snelle Start voor Claude Code
 
 ```
-# 1. Plaats dit bestand als PLAN (1).md in de root van je project
+# 1. Plaats dit bestand als PLAN.md in de root van je project
 # 2. Start Claude Code in de projectmap
 # 3. Vraag Claude Code:
-#    "Lees PLAN (1).md en implementeer Fase 1 (Foundation)"
+#    "Lees PLAN.md en implementeer Fase 1 (Foundation)"
 ```
 
 ---
@@ -353,7 +353,7 @@ CREATE TABLE sticker_sheets (
 
 ### Platforms, categories, buyback_services
 
-*(Zelfde als vorige plan — zie eerdere PLAN (1).md voor volledige INSERT statements)*
+*(Zelfde als vorige plan — zie eerdere PLAN.md voor volledige INSERT statements)*
 
 ```sql
 CREATE TABLE platforms (...);
@@ -533,7 +533,7 @@ Taak 4.3: Test insert met sticker_id='0001' en lees terug.
 
 ```
 verkoopassistent/
-├── PLAN (1).md
+├── PLAN.md
 ├── .env.example
 ├── supabase/
 │   ├── migrations/
@@ -1150,7 +1150,7 @@ Verificatie: alles werkt end-to-end.
 ### Helemaal nieuw starten
 
 ```
-Ik wil de verkoopassistent app bouwen zoals beschreven in PLAN (1).md.
+Ik wil de verkoopassistent app bouwen zoals beschreven in PLAN.md.
 Start met Fase 1 (Foundation):
 1. Maak de monorepo structuur aan (apps/web, apps/mobile,
    packages/shared, packages/mcp-server, supabase)
@@ -1164,7 +1164,7 @@ Rapporteer wat je hebt gedaan.
 ### Stickersysteem bouwen
 
 ```
-Implementeer Fase 2 (Sticker systeem) uit PLAN (1).md.
+Implementeer Fase 2 (Sticker systeem) uit PLAN.md.
 Begin met de generate-sticker-sheet Edge Function.
 Gebruik @react-pdf/renderer voor de PDF generatie.
 Volg de specificatie in sectie 10 exact (21×15mm stickers,
@@ -1176,7 +1176,7 @@ openen om te controleren of de lay-out klopt.
 ### MCP server bouwen
 
 ```
-Implementeer Fase 4 (MCP Server) uit PLAN (1).md.
+Implementeer Fase 4 (MCP Server) uit PLAN.md.
 Maak packages/mcp-server met alle 6 tools uit sectie 6.
 Gebruik @modelcontextprotocol/sdk voor de server.
 Zorg dat get_product_photos signed URLs returnt van Supabase
@@ -1203,4 +1203,4 @@ claude_desktop_config.json.
 
 ---
 
-*Einde PLAN (1).md. Versie 2.0 — Sticker-systeem + Claude Desktop/Code workflow.*
+*Einde PLAN.md. Versie 2.0 — Sticker-systeem + Claude Desktop/Code workflow.*
