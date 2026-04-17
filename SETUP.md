@@ -60,6 +60,25 @@ pnpm dev:mobile           # → scan QR code met Expo Go app
 pnpm -F @verkoopassistent/mcp-server start
 ```
 
+## Mobile EAS Development Build (Fase 3b — camera + ML Kit)
+
+De mobile `Indexeren`-tab gebruikt `expo-camera` + `@react-native-ml-kit/text-recognition`. Die native modules werken **niet in Expo Go** — je hebt een EAS Development Build nodig.
+
+```bash
+npm install -g eas-cli
+cd apps/mobile
+eas login                                              # gratis Expo account
+eas init                                               # vult expo.extra.eas.projectId
+eas build --profile development --platform android     # of --platform ios
+```
+
+Build duurt ~15-20 min op Expo servers. Install de .apk/.ipa op je toestel, dan:
+```bash
+pnpm dev:mobile    # start Metro → scan QR met dev-client app (niet Expo Go)
+```
+
+Features actief in dev build: 3 sticker-modi (OCR separate / OCR inline / manual), on-device ML Kit OCR, EAN barcode scanner, auto-increment sticker-ID.
+
 ## MCP Server installeren in Claude Desktop/Code
 
 Zie [packages/mcp-server/README.md](packages/mcp-server/README.md) voor de
@@ -81,10 +100,10 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 }
 ```
 
-11 tools worden geladen: `ping`, `list_inventory`, `get_product_photos`,
+13 tools geladen: `ping`, `list_inventory`, `get_product_photos`,
 `search_products`, `suggest_bundle`, `create_listing`, `update_product`,
 `lookup_ean`, `fetch_tweakers_prices`, `mark_listing_published`,
-`create_taxatie_pdf`.
+`create_taxatie_pdf`, `lookup_silver_hallmark`, `lookup_tin_mark`.
 
 ## Volledige workflow (end-to-end)
 
@@ -125,10 +144,8 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
         └── app/(tabs)/         # dashboard, capture, inventory, listings
 ```
 
-## Nog niet geïmplementeerd (Fase 3b / 6b / 7b)
+## Nog niet geïmplementeerd
 
-- **expo-camera met 5 custom modi + ML Kit OCR** — vereist EAS Development Build, gebruik voor nu expo-image-picker in de Indexeren-tab
-- **Silver / tin hallmark lookup** — vereist TinVereniging/Zilver.nl scrapers (specialistisch)
 - **Push notificaties** — vereist Expo Push Tokens setup
 - **Offline mode mobiel** — vereist local SQLite + sync-laag
 - **Auto-publish naar Marktplaats/Tweakers** — vereist merchant API OAuth

@@ -45,6 +45,14 @@ import {
   createTaxatiePdfDefinition,
   handleCreateTaxatiePdf,
 } from "./tools/create_taxatie_pdf.js";
+import {
+  lookupSilverHallmarkDefinition,
+  handleLookupSilverHallmark,
+} from "./tools/lookup_silver_hallmark.js";
+import {
+  lookupTinMarkDefinition,
+  handleLookupTinMark,
+} from "./tools/lookup_tin_mark.js";
 
 // Ping tool — handig om de verbinding te checken zonder dat er data hoeft te zijn.
 const pingDefinition = {
@@ -69,6 +77,8 @@ const TOOLS = [
   { def: fetchTweakersPricesDefinition, handler: handleFetchTweakersPrices },
   { def: markListingPublishedDefinition, handler: handleMarkListingPublished },
   { def: createTaxatiePdfDefinition, handler: handleCreateTaxatiePdf },
+  { def: lookupSilverHallmarkDefinition, handler: handleLookupSilverHallmark },
+  { def: lookupTinMarkDefinition, handler: handleLookupTinMark },
 ];
 
 async function handlePing() {

@@ -9,21 +9,40 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "nl.verkoopassistent.app"
+      "bundleIdentifier": "nl.verkoopassistent.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "VerkoopAssistent heeft camera-toegang nodig om foto's van producten, stickers en barcodes te maken.",
+        "NSPhotoLibraryUsageDescription": "VerkoopAssistent heeft toegang tot je fotobibliotheek nodig om bestaande foto's te importeren."
+      }
     },
     "android": {
       "package": "nl.verkoopassistent.app",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "single"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "VerkoopAssistent heeft camera-toegang nodig voor product- en stickerfoto's en barcode scannen."
+        }
+      ]
     ],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    },
     "experiments": {
       "typedRoutes": false
     }
