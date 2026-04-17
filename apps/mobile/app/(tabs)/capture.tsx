@@ -17,6 +17,11 @@ import {
   type BarcodeScanningResult,
 } from "expo-camera";
 import TextRecognition from "@react-native-ml-kit/text-recognition";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+  type ExpoSpeechRecognitionResultEvent,
+} from "expo-speech-recognition";
 import { supabase } from "@/lib/supabase";
 import { stickerIdSchema } from "@verkoopassistent/shared";
 
@@ -48,6 +53,40 @@ export default function CaptureScreen() {
   const [cameraMode, setCameraMode] = useState<"sticker" | "product" | "barcode">(
     "sticker",
   );
+  const [recording, setRecording] = useState(false);
+
+  // Voice-to-text: append transcribed speech to notes (Feat 1).
+  useSpeechRecognitionEvent("result", (event: ExpoSpeechRecognitionResultEvent) => {
+    const transcript = event.results?.[0]?.transcript;
+    if (transcript && event.isFinal) {
+      setNotes((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    }
+  });
+  useSpeechRecognitionEvent("end", () => setRecording(false));
+  useSpeechRecognitionEvent("error", () => setRecording(false));
+
+  async function startVoice() {
+    try {
+      const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("Microfoon-toegang nodig", "Geef permissie in instellingen.");
+        return;
+      }
+      ExpoSpeechRecognitionModule.start({
+        lang: "nl-NL",
+        interimResults: false,
+        continuous: false,
+      });
+      setRecording(true);
+    } catch (err) {
+      Alert.alert("Voice fout", err instanceof Error ? err.message : "onbekend");
+    }
+  }
+
+  function stopVoice() {
+    ExpoSpeechRecognitionModule.stop();
+    setRecording(false);
+  }
   const [ocrProcessing, setOcrProcessing] = useState(false);
 
   const cameraRef = useRef<CameraView>(null);
@@ -352,11 +391,21 @@ export default function CaptureScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>Notitie (optioneel)</Text>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>Notitie (optioneel)</Text>
+              <Pressable
+                onPress={recording ? stopVoice : startVoice}
+                style={[styles.micButton, recording && styles.micButtonActive]}
+              >
+                <Text style={recording ? styles.micTextActive : styles.micText}>
+                  {recording ? "● Stop" : "🎤 Spreek"}
+                </Text>
+              </Pressable>
+            </View>
             <TextInput
               value={notes}
               onChangeText={setNotes}
-              placeholder="kast in garage links"
+              placeholder="kast in garage links (of tik mic om te dicteren)"
               multiline
               style={[styles.input, { minHeight: 60 }]}
             />
@@ -554,6 +603,22 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   hint: { fontSize: 11, color: "#a1a1aa", marginTop: 4 },
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  micButton: {
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  micButtonActive: { backgroundColor: "#dc2626", borderColor: "#dc2626" },
+  micText: { fontSize: 12, color: "#18181b" },
+  micTextActive: { fontSize: 12, color: "#fff", fontWeight: "600" },
 
   modeRow: { flexDirection: "row", gap: 6 },
   modeChip: {

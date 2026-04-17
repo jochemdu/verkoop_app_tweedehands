@@ -6,6 +6,7 @@ const NAV = [
   { href: "/", label: "Dashboard" },
   { href: "/inventory", label: "Inventaris" },
   { href: "/listings", label: "Advertenties" },
+  { href: "/suggestions", label: "Suggesties" },
   { href: "/taxatie", label: "Taxatie" },
   { href: "/upload", label: "Bulk upload" },
   { href: "/stickers", label: "Stickers" },
