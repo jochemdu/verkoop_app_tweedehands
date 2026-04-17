@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@verkoopassistent/shared";
 import { env } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/auth/magic-link"];
 
 type CookieInput = { name: string; value: string; options?: CookieOptions };
 
@@ -30,6 +30,11 @@ export async function updateSession(request: NextRequest) {
       },
     },
   );
+
+  // Correlation ID voor alle requests — logs en client error tracking.
+  const correlationId =
+    request.headers.get("x-correlation-id") ?? crypto.randomUUID();
+  supabaseResponse.headers.set("x-correlation-id", correlationId);
 
   const {
     data: { user },

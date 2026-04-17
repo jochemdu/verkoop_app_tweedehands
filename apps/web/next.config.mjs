@@ -1,15 +1,43 @@
 /** @type {import('next').NextConfig} */
+const securityHeaders = [
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(self), microphone=(self), geolocation=()",
+  },
+  {
+    // Strict-ish CSP. Supabase storage + Vercel + inline style voor Tailwind
+    // dark-mode query. Geen unsafe-eval. 'unsafe-inline' voor style blijft
+    // vanwege @theme-based Tailwind tokens; scripts zijn strict.
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.supabase.co",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; "),
+  },
+];
+
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@verkoopassistent/shared"],
-  // @react-pdf/renderer bundelt slecht via webpack (pdfkit, fontkit zijn
-  // Node-native). Laat Next.js ze extern laten en rechtstreeks uit
-  // node_modules requiren in server routes.
   serverExternalPackages: ["@react-pdf/renderer"],
   typedRoutes: false,
-  // Workaround: shared package is "type": "module" en gebruikt .js extensies
-  // in imports (vereist voor tsx/Node ESM). Webpack moet die .js naar .ts
-  // resolven tijdens de Next.js build.
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   webpack: (config) => {
     config.resolve.extensionAlias = {
       ...config.resolve.extensionAlias,

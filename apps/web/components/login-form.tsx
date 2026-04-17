@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { loginSchema, type LoginInput } from "@verkoopassistent/shared";
-import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const [sent, setSent] = useState(false);
@@ -18,15 +17,19 @@ export function LoginForm() {
   });
 
   async function onSubmit(data: LoginInput) {
-    const supabase = createClient();
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
-    const { error } = await supabase.auth.signInWithOtp({
-      email: data.email,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+    // Via rate-limited proxy endpoint ipv direct Supabase aanroepen.
+    const res = await fetch("/api/auth/magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
     });
-    if (error) {
-      toast.error(error.message);
+    const json = await res.json();
+    if (!res.ok) {
+      if (json.code === "RATE_LIMITED") {
+        toast.error("Te veel pogingen, wacht 15 minuten.");
+      } else {
+        toast.error(json.error ?? "Kon magic link niet versturen");
+      }
       return;
     }
     setSent(true);
