@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { getSupabase } from "./lib/supabase";
 import { errorContent } from "./lib/format";
+import { logger, traceTool } from "./lib/logger.js";
 import {
   listInventoryDefinition,
   handleListInventory,
@@ -128,10 +129,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const tool = TOOLS.find((t) => t.def.name === request.params.name);
   if (!tool) {
+    logger.warn("unknown_tool", { tool: request.params.name });
     return errorContent(`Onbekende tool: ${request.params.name}`);
   }
+  const traced = traceTool(tool.def.name, tool.handler);
   try {
-    return await tool.handler(request.params.arguments ?? {});
+    return await traced(request.params.arguments ?? {});
   } catch (err) {
     return errorContent(err instanceof Error ? err.message : String(err));
   }
