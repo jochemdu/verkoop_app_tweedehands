@@ -24,6 +24,7 @@ import {
 } from "expo-speech-recognition";
 import { supabase } from "@/lib/supabase";
 import { stickerIdSchema } from "@verkoopassistent/shared";
+import { parseClothingLabel } from "@/lib/clothing-parser";
 
 type CapturedPhoto = {
   uri: string;
@@ -50,10 +51,14 @@ export default function CaptureScreen() {
   // Phase tracks waar de gebruiker zit in de flow.
   // 'configure' = instellen mode + sticker, 'capture' = foto's maken, 'done' = klaar om op te slaan.
   const [phase, setPhase] = useState<"configure" | "capture">("configure");
-  const [cameraMode, setCameraMode] = useState<"sticker" | "product" | "barcode">(
-    "sticker",
-  );
+  const [cameraMode, setCameraMode] = useState<
+    "sticker" | "product" | "barcode" | "clothing_label"
+  >("sticker");
   const [recording, setRecording] = useState(false);
+  // Feat 18: kledingkast-bulk — auto-detectie uit OCR label.
+  const [clothingBrand, setClothingBrand] = useState<string | null>(null);
+  const [clothingSize, setClothingSize] = useState<string | null>(null);
+  const [clothingMaterial, setClothingMaterial] = useState<string | null>(null);
 
   // Voice-to-text: append transcribed speech to notes (Feat 1).
   useSpeechRecognitionEvent("result", (event: ExpoSpeechRecognitionResultEvent) => {
@@ -197,6 +202,42 @@ export default function CaptureScreen() {
       setPhotos((p) => [...p, { uri: photo.uri, source: "product" }]);
     } catch (err) {
       Alert.alert("Foto fout", err instanceof Error ? err.message : "onbekend");
+    }
+  }
+
+  // Feat 18: kledingkast-bulk — macro-foto van label → OCR → parse brand/size.
+  async function captureClothingLabel() {
+    if (!cameraRef.current) return;
+    setOcrProcessing(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 });
+      if (!photo) return;
+      const result = await TextRecognition.recognize(photo.uri);
+      const allText = result.blocks.map((b) => b.text).join(" ");
+      const parsed = parseClothingLabel(allText);
+
+      if (parsed.brand) setClothingBrand(parsed.brand);
+      if (parsed.size) setClothingSize(parsed.size);
+      if (parsed.material) setClothingMaterial(parsed.material);
+
+      // Combineer in werktitel als die nog leeg is.
+      const parts = [parsed.brand, parsed.size].filter(Boolean);
+      if (parts.length > 0 && !workingTitle) {
+        setWorkingTitle(parts.join(" — "));
+      }
+      const extraNote = [
+        parsed.material ? `Materiaal: ${parsed.material}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      if (extraNote) setNotes((prev) => (prev ? `${prev}\n${extraNote}` : extraNote));
+
+      setPhotos((p) => [...p, { uri: photo.uri, source: "product" }]);
+      setCameraMode("product");
+    } catch (err) {
+      Alert.alert("Label OCR fout", err instanceof Error ? err.message : "onbekend");
+    } finally {
+      setOcrProcessing(false);
     }
   }
 
@@ -474,6 +515,11 @@ export default function CaptureScreen() {
           onPress={() => setCameraMode("barcode")}
           label="Barcode"
         />
+        <CameraModeChip
+          active={cameraMode === "clothing_label"}
+          onPress={() => setCameraMode("clothing_label")}
+          label="Label"
+        />
       </View>
 
       <View style={styles.cameraWrap}>
@@ -489,7 +535,16 @@ export default function CaptureScreen() {
         {ocrProcessing && (
           <View style={styles.ocrOverlay}>
             <ActivityIndicator color="#fff" />
-            <Text style={styles.ocrText}>Sticker lezen…</Text>
+            <Text style={styles.ocrText}>
+              {cameraMode === "clothing_label" ? "Label lezen…" : "Sticker lezen…"}
+            </Text>
+          </View>
+        )}
+        {(clothingBrand || clothingSize) && (
+          <View style={styles.clothingBadge}>
+            <Text style={styles.clothingBadgeText}>
+              {[clothingBrand, clothingSize, clothingMaterial].filter(Boolean).join(" · ")}
+            </Text>
           </View>
         )}
       </View>
@@ -515,7 +570,13 @@ export default function CaptureScreen() {
           {cameraMode !== "barcode" && (
             <Pressable
               style={styles.shutterButton}
-              onPress={cameraMode === "sticker" ? captureStickerPhoto : captureProductPhoto}
+              onPress={
+                cameraMode === "sticker"
+                  ? captureStickerPhoto
+                  : cameraMode === "clothing_label"
+                  ? captureClothingLabel
+                  : captureProductPhoto
+              }
               disabled={ocrProcessing}
             >
               <View style={styles.shutterInner} />
@@ -709,6 +770,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ocrText: { color: "#fff", fontSize: 14 },
+  clothingBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    right: 12,
+    backgroundColor: "rgba(22,163,74,0.9)",
+    padding: 8,
+    borderRadius: 6,
+  },
+  clothingBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
+  },
 
   bottomBar: { padding: 16, gap: 10, backgroundColor: "#000" },
   thumbStrip: { maxHeight: 80 },

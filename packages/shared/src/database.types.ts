@@ -772,7 +772,7 @@ export type Database = {
     Enums: {
       bundle_type: "ram_kit" | "console_bundle" | "card_lot" | "card_set" | "hardware_bundle" | "custom"
       buyback_service_slug: "levelseven" | "nedgame" | "flashkaartshop" | "rarecards" | "catchcollect" | "itad_broker" | "other"
-      category_slug: "ram_dimm" | "ram_sodimm" | "cpu" | "gpu" | "console" | "console_game" | "smartphone" | "laptop" | "pokemon_card" | "antique_tin" | "antique_silver" | "antique_other" | "electronics_other" | "unknown" | "other"
+      category_slug: "ram_dimm" | "ram_sodimm" | "cpu" | "gpu" | "console" | "console_game" | "smartphone" | "laptop" | "pokemon_card" | "antique_tin" | "antique_silver" | "antique_other" | "electronics_other" | "unknown" | "other" | "clothing"
       listing_status: "draft" | "pending_review" | "approved" | "publishing" | "published" | "sold" | "expired" | "error"
       photo_type: "general" | "front" | "back" | "mark" | "detail" | "damage" | "serial" | "label" | "holo" | "barcode" | "sticker"
       platform_slug: "marktplaats" | "tweakers" | "cardmarket" | "ebay" | "catawiki" | "2dehands" | "facebook"
@@ -789,7 +789,7 @@ export const Constants = {
     Enums: {
       bundle_type: ["ram_kit", "console_bundle", "card_lot", "card_set", "hardware_bundle", "custom"],
       buyback_service_slug: ["levelseven", "nedgame", "flashkaartshop", "rarecards", "catchcollect", "itad_broker", "other"],
-      category_slug: ["ram_dimm", "ram_sodimm", "cpu", "gpu", "console", "console_game", "smartphone", "laptop", "pokemon_card", "antique_tin", "antique_silver", "antique_other", "electronics_other", "unknown", "other"],
+      category_slug: ["ram_dimm", "ram_sodimm", "cpu", "gpu", "console", "console_game", "smartphone", "laptop", "pokemon_card", "antique_tin", "antique_silver", "antique_other", "electronics_other", "unknown", "other", "clothing"],
       listing_status: ["draft", "pending_review", "approved", "publishing", "published", "sold", "expired", "error"],
       photo_type: ["general", "front", "back", "mark", "detail", "damage", "serial", "label", "holo", "barcode", "sticker"],
       platform_slug: ["marktplaats", "tweakers", "cardmarket", "ebay", "catawiki", "2dehands", "facebook"],
