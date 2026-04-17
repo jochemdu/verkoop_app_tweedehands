@@ -7,6 +7,7 @@ import {
   type CategorySlug,
 } from "@verkoopassistent/shared";
 import { AddProductButton } from "./add-product-button";
+import { VirtualTable } from "./virtual-table";
 
 type Search = {
   q?: string;
@@ -178,53 +179,7 @@ export default async function InventoryPage({
         </div>
       ) : (
         <>
-          <div className="overflow-hidden rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                  <th className="p-3 font-medium">Sticker</th>
-                  <th className="p-3 font-medium">Titel</th>
-                  <th className="p-3 font-medium">Categorie</th>
-                  <th className="p-3 font-medium">Status</th>
-                  <th className="p-3 font-medium">Geïndexeerd</th>
-                  <th className="p-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-muted/30">
-                    <td className="p-3 font-mono text-xs">{p.sticker_id ?? "—"}</td>
-                    <td className="p-3">
-                      {p.title ?? p.working_title ?? (
-                        <span className="italic text-muted-foreground">(geen titel)</span>
-                      )}
-                    </td>
-                    <td className="p-3 text-xs text-muted-foreground">{p.category_slug}</td>
-                    <td className="p-3">
-                      <span className="inline-flex rounded-full border px-2 py-0.5 text-xs">
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="p-3 text-xs text-muted-foreground">
-                      {p.indexed_at
-                        ? new Date(p.indexed_at).toLocaleDateString("nl-NL", {
-                            dateStyle: "short",
-                          })
-                        : "—"}
-                    </td>
-                    <td className="p-3 text-right">
-                      <Link
-                        href={`/inventory/${p.sticker_id ?? p.id}`}
-                        className="text-xs underline"
-                      >
-                        Bekijk
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <VirtualTable rows={products} />
 
           <nav className="flex items-center justify-between text-xs text-muted-foreground">
             <span>

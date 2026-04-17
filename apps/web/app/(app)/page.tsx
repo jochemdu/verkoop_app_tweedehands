@@ -9,31 +9,38 @@ type WeeklyPoint = { week: string; count: number };
 export default async function Dashboard() {
   const supabase = await createClient();
 
+  // Fase 14: counts uit materialized view dashboard_stats (refresht elke 15
+  // min via pg_cron). Vervangt 5 losse COUNT queries door 1 row-lookup.
   const [
-    { count: totalProducts },
-    { count: indexedCount },
-    { count: readyCount },
-    { count: listedCount },
-    { count: soldCount },
+    { data: stats },
     { data: recent },
     { data: allProducts },
   ] = await Promise.all([
-    supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "indexed"),
-    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "ready_to_list"),
-    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "listed"),
-    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "sold"),
+    supabase.from("dashboard_stats").select("*").maybeSingle(),
     supabase
       .from("products")
       .select("id, sticker_id, working_title, category_slug, indexed_at")
+      .is("deleted_at", null)
       .order("indexed_at", { ascending: false })
       .limit(5),
-    // Alle rijen voor chart-aggregaties. Voor grotere schaal later migreren
-    // naar een SQL view met geaggregeerde counts.
     supabase
       .from("products")
-      .select("category_slug, status, indexed_at, sold_price, recommended_price"),
+      .select("category_slug, status, indexed_at, sold_price, recommended_price")
+      .is("deleted_at", null),
   ]);
+  const s = stats as {
+    total_products?: number;
+    indexed_count?: number;
+    ready_count?: number;
+    listed_count?: number;
+    sold_count?: number;
+    total_est_value?: number;
+  } | null;
+  const totalProducts = s?.total_products ?? 0;
+  const indexedCount = s?.indexed_count ?? 0;
+  const readyCount = s?.ready_count ?? 0;
+  const listedCount = s?.listed_count ?? 0;
+  const soldCount = s?.sold_count ?? 0;
 
   // Categorieën pie
   const categoryMap = new Map<string, number>();
@@ -86,12 +93,14 @@ export default async function Dashboard() {
     count,
   }));
 
-  // Geschatte inventaris-waarde: som van recommended_price (of sold_price).
-  const totalEstValue =
-    (allProducts ?? []).reduce((sum, p) => {
-      const v = p.sold_price ?? p.recommended_price ?? 0;
-      return sum + Number(v || 0);
-    }, 0);
+  // Geschatte waarde: uit materialized view (pre-aggregated) met fallback
+  // naar on-the-fly als view nog niet gerefreshed.
+  const totalEstValue = s?.total_est_value
+    ? Number(s.total_est_value)
+    : (allProducts ?? []).reduce((sum, p) => {
+        const v = p.sold_price ?? p.recommended_price ?? 0;
+        return sum + Number(v || 0);
+      }, 0);
 
   return (
     <main className="space-y-8">

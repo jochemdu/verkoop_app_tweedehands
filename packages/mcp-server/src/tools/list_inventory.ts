@@ -38,37 +38,40 @@ export async function handleListInventory(input: unknown) {
   const { status, category, sticker_range_start, sticker_range_end, limit } =
     parsed.data;
 
+  // Fase 14: N+1 fix via RPC. OWNER_USER_ID env of fallback: lees uit
+  // eerste app_settings rij (single-user opstelling).
   const supabase = getSupabase();
-  let query = supabase
-    .from("products")
-    .select(
-      "id, sticker_id, working_title, title, category_slug, status, indexed_at, photos(count)",
-    )
-    .is("deleted_at", null)
-    .order("indexed_at", { ascending: false })
-    .limit(limit);
+  const ownerId =
+    process.env.OWNER_USER_ID ??
+    (
+      await supabase.from("app_settings").select("user_id").limit(1).maybeSingle()
+    ).data?.user_id ??
+    null;
+  if (!ownerId) {
+    return errorContent(
+      "Geen OWNER_USER_ID bekend. Zet OWNER_USER_ID env var in claude_desktop_config.json.",
+    );
+  }
 
-  if (status) query = query.eq("status", status);
-  if (category) query = query.eq("category_slug", category);
-  if (sticker_range_start) query = query.gte("sticker_id", sticker_range_start);
-  if (sticker_range_end) query = query.lte("sticker_id", sticker_range_end);
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc("list_inventory_with_counts", {
+    p_user_id: ownerId,
+    p_status: status ?? null,
+    p_category: category ?? null,
+    p_sticker_from: sticker_range_start ?? null,
+    p_sticker_to: sticker_range_end ?? null,
+    p_limit: limit,
+  });
   if (error) return errorContent(error.message);
 
-  const rows = (data ?? []).map((p) => {
-    const photoCount = Array.isArray(p.photos) ? (p.photos[0]?.count ?? 0) : 0;
-    return {
-      id: p.id,
-      sticker_id: p.sticker_id,
-      // Sanitize titles — prompt-injection vector uit user-input velden.
-      title: sanitizeForLLM(p.title ?? p.working_title ?? null) || null,
-      category: p.category_slug,
-      status: p.status,
-      photo_count: photoCount,
-      indexed_at: p.indexed_at,
-    };
-  });
+  const rows = (data ?? []).map((p) => ({
+    id: p.id,
+    sticker_id: p.sticker_id,
+    title: sanitizeForLLM(p.title ?? p.working_title ?? null) || null,
+    category: p.category_slug,
+    status: p.status,
+    photo_count: Number(p.photo_count ?? 0),
+    indexed_at: p.indexed_at,
+  }));
 
   if (parsed.data.has_photos) {
     const filtered = rows.filter((r) => r.photo_count > 0);

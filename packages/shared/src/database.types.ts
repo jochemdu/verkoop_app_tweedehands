@@ -721,11 +721,52 @@ export type Database = {
         ]
       }
     }
-    Views: { [_ in never]: never }
+    Views: {
+      dashboard_stats: {
+        Row: {
+          user_id: string | null
+          total_products: number | null
+          indexed_count: number | null
+          ready_count: number | null
+          listed_count: number | null
+          sold_count: number | null
+          pending_count: number | null
+          approved_count: number | null
+          archived_count: number | null
+          total_est_value: number | null
+          refreshed_at: string | null
+        }
+        Relationships: []
+      }
+    }
     Functions: {
       reserve_next_sticker: {
         Args: { p_count: number; p_user_id: string }
         Returns: string[]
+      }
+      list_inventory_with_counts: {
+        Args: {
+          p_user_id: string
+          p_status?: string | null
+          p_category?: string | null
+          p_sticker_from?: string | null
+          p_sticker_to?: string | null
+          p_limit?: number
+        }
+        Returns: {
+          id: string
+          sticker_id: string | null
+          working_title: string | null
+          title: string | null
+          category_slug: string | null
+          status: string | null
+          indexed_at: string | null
+          photo_count: number
+        }[]
+      }
+      refresh_dashboard_stats: {
+        Args: Record<string, never>
+        Returns: undefined
       }
     }
     Enums: {
