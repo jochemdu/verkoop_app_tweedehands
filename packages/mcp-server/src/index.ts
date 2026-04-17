@@ -41,6 +41,10 @@ import {
   markListingPublishedDefinition,
   handleMarkListingPublished,
 } from "./tools/mark_listing_published.js";
+import {
+  createTaxatiePdfDefinition,
+  handleCreateTaxatiePdf,
+} from "./tools/create_taxatie_pdf.js";
 
 // Ping tool — handig om de verbinding te checken zonder dat er data hoeft te zijn.
 const pingDefinition = {
@@ -64,6 +68,7 @@ const TOOLS = [
   { def: lookupEanDefinition, handler: handleLookupEan },
   { def: fetchTweakersPricesDefinition, handler: handleFetchTweakersPrices },
   { def: markListingPublishedDefinition, handler: handleMarkListingPublished },
+  { def: createTaxatiePdfDefinition, handler: handleCreateTaxatiePdf },
 ];
 
 async function handlePing() {

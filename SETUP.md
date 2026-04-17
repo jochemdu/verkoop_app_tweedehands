@@ -1,6 +1,4 @@
-# VerkoopAssistent — Setup Guide (Fase 1)
-
-Deze gids vult de foundation aan. De code is gescaffold en de Supabase DB staat — je hoeft alleen nog de redirect URLs in te stellen en lokaal te draaien.
+# VerkoopAssistent — Setup Guide
 
 ## Supabase project
 
@@ -12,18 +10,39 @@ Deze gids vult de foundation aan. De code is gescaffold en de Supabase DB staat 
 
 Env-waarden staan al in `apps/web/.env.local` en `apps/mobile/.env` (beide gitignored).
 
-## Vereiste handmatige stap — Redirect URLs toevoegen
+## Eenmalige Supabase configuratie
 
-Supabase beperkt welke URLs magic links mogen openen. Voeg ze toe via het dashboard:
+### 1. Auth redirect URLs (voor magic link login)
 
 1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/auth/url-configuration>
 2. Onder **Site URL**: `http://localhost:3000`
 3. Onder **Redirect URLs** (klik *Add URL* per stuk):
    - `http://localhost:3000/auth/callback`
    - `verkoopassistent://auth/callback`
-   - `exp://**` (voor Expo Go tijdens development — gebruik de wildcard)
+   - `exp://**` (voor Expo Go tijdens development)
 
-Bewaar.
+### 2. Service role key (voor MCP server + price-watcher)
+
+1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/settings/api>
+2. Onder **Project API keys** → klik *Reveal* naast `service_role`
+3. Kopieer de key — je hebt hem nodig voor de MCP server config én voor Vault.
+
+### 3. Vault secret voor price-watcher cron (Fase 7)
+
+De price-watcher Edge Function wordt elk uur aangeroepen door pg_cron.
+Het cron-commando haalt de service role key op uit Supabase Vault zodat
+we hem niet in plain-text SQL hoeven te zetten.
+
+1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/integrations/vault/overview>
+2. Klik *New secret* → name: `service_role_key` → value: <plak service role key>
+3. Save.
+4. Apply migration: `supabase/migrations/0003_price_watcher_cron.sql`  
+   — kopieer en run in <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/sql/new>
+
+Verifieer:
+```sql
+SELECT jobname, schedule, active FROM cron.job;
+```
 
 ## Lokaal draaien
 
@@ -32,63 +51,86 @@ Bewaar.
 pnpm install
 
 # Web dev server (magic link login werkt):
-pnpm dev:web
-# → http://localhost:3000
+pnpm dev:web              # → http://localhost:3000
 
 # Mobile (Expo Go, simulator, of device):
-pnpm dev:mobile
-# → scan QR code met Expo Go app
+pnpm dev:mobile           # → scan QR code met Expo Go app
 
-# MCP server (skeleton met ping tool):
+# MCP server (lokaal testen):
 pnpm -F @verkoopassistent/mcp-server start
 ```
 
-## Verificatie
+## MCP Server installeren in Claude Desktop/Code
 
-### Web
-1. `pnpm dev:web`
-2. Open `http://localhost:3000` → redirect naar `/login`
-3. Voer je e-mail in → klik "Stuur magic link"
-4. Check inbox → klik op link
-5. Je komt op `/` en ziet "Ingelogd als …"
+Zie [packages/mcp-server/README.md](packages/mcp-server/README.md) voor de
+volledige config.
 
-### Mobile (Expo Go)
-1. `pnpm dev:mobile`
-2. Scan QR met Expo Go app
-3. App opent op login scherm
-4. Voer e-mail in → klik "Stuur magic link"
-5. Check inbox op je telefoon → tik op link
-6. App opent automatisch, je bent ingelogd
-
-### MCP server
-```bash
-pnpm -F @verkoopassistent/mcp-server inspector
+Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "verkoopassistent": {
+      "command": "npx",
+      "args": ["-y", "tsx", "D:\\AntiGravity_Projects\\Verkoop_index_app\\packages\\mcp-server\\src\\index.ts"],
+      "env": {
+        "SUPABASE_URL": "https://ffifhjwjauvhohmhhbip.supabase.co",
+        "SUPABASE_SERVICE_KEY": "<plak service role key>"
+      }
+    }
+  }
+}
 ```
-Opent de MCP Inspector UI. Roep `ping` tool aan → moet `pong — verbonden met Supabase. platforms rijen: 7` returneren.
+
+11 tools worden geladen: `ping`, `list_inventory`, `get_product_photos`,
+`search_products`, `suggest_bundle`, `create_listing`, `update_product`,
+`lookup_ean`, `fetch_tweakers_prices`, `mark_listing_published`,
+`create_taxatie_pdf`.
+
+## Volledige workflow (end-to-end)
+
+1. **Print stickers** — web `/stickers` → A4 PDF → plak op producten
+2. **Indexeer** — mobile `Indexeren` tab (foto + sticker-ID) OF web `/upload` (bulk drag-drop)
+3. **Analyseer** — Claude Desktop → `list_inventory` + `get_product_photos` + `lookup_ean` + `update_product`
+4. **Bundel** — Claude → `suggest_bundle` met reasoning
+5. **Prijsonderzoek** — Claude → `fetch_tweakers_prices`
+6. **Listing draft** — Claude → `create_listing` (status=pending_review)
+7. **Review + edit** — web `/listings/[id]` → approve
+8. **Post** — manueel op Marktplaats/Tweakers, kopieer tekst uit de app
+9. **Markeer gepubliceerd** — plak URL + klik knop → product wordt 'listed'
+10. **Taxatie voor antiek** — web `/taxatie` → selecteer items → genereer PDF dossier
+11. **Prijswatchers** — insert rijen in `price_watches`; cron tracked ze automatisch
 
 ## Project structuur
 
 ```
 .
 ├── PLAN.md / PLAN (1).md       # spec (v2 is leidend)
-├── package.json                 # pnpm workspace root
+├── SETUP.md                     # dit bestand
 ├── pnpm-workspace.yaml
-├── tsconfig.base.json
 ├── supabase/
-│   ├── config.toml
-│   └── migrations/0001_initial_schema.sql
+│   ├── migrations/
+│   │   ├── 0001_initial_schema.sql        # Fase 1
+│   │   └── 0003_price_watcher_cron.sql    # Fase 7 (na Vault secret)
+│   └── functions/              # Edge Functions (gedeployed via MCP)
+│       ├── lookup-ean/
+│       ├── fetch-tweakers-prices/
+│       └── price-watcher/
 ├── packages/
 │   ├── shared/                 # types + zod schemas
-│   └── mcp-server/             # MCP skeleton (Fase 4 vult in)
+│   └── mcp-server/             # 11 tools voor Claude Desktop
 └── apps/
-    ├── web/                    # Next.js 14 + Supabase SSR
-    └── mobile/                 # Expo SDK 52 + expo-router
+    ├── web/                    # Next.js 15 + React 19 + Tailwind 4
+    │   └── app/(app)/          # dashboard, inventory, listings, taxatie, upload, stickers
+    └── mobile/                 # Expo SDK 53 + expo-router 5
+        └── app/(tabs)/         # dashboard, capture, inventory, listings
 ```
 
-## Volgende fase
+## Nog niet geïmplementeerd (Fase 3b / 6b / 7b)
 
-**Fase 2 — Sticker systeem** (PLAN (1).md sectie 3 en 10):
-- Edge Function `generate-sticker-sheet` met `@react-pdf/renderer`
-- Web pagina `/stickers` met PDF generator
-- ML Kit OCR in Expo
-- 3 sticker-modi in capture screen
+- **expo-camera met 5 custom modi + ML Kit OCR** — vereist EAS Development Build, gebruik voor nu expo-image-picker in de Indexeren-tab
+- **Silver / tin hallmark lookup** — vereist TinVereniging/Zilver.nl scrapers (specialistisch)
+- **Push notificaties** — vereist Expo Push Tokens setup
+- **Offline mode mobiel** — vereist local SQLite + sync-laag
+- **Auto-publish naar Marktplaats/Tweakers** — vereist merchant API OAuth
+- **Email verzending taxatiedossier** — vereist Resend/SendGrid account
+- **Cardmarket API integratie** — vereist API key

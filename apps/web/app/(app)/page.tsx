@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { DashboardCharts } from "./dashboard-charts";
+
+type CategoryCount = { label: string; value: number };
+type StatusCount = { label: string; value: number };
+type WeeklyPoint = { week: string; count: number };
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -8,41 +13,112 @@ export default async function Dashboard() {
     { count: totalProducts },
     { count: indexedCount },
     { count: readyCount },
+    { count: listedCount },
+    { count: soldCount },
     { data: recent },
+    { data: allProducts },
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "indexed"),
-    supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "ready_to_list"),
+    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "indexed"),
+    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "ready_to_list"),
+    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "listed"),
+    supabase.from("products").select("*", { count: "exact", head: true }).eq("status", "sold"),
     supabase
       .from("products")
       .select("id, sticker_id, working_title, category_slug, indexed_at")
       .order("indexed_at", { ascending: false })
       .limit(5),
+    // Alle rijen voor chart-aggregaties. Voor grotere schaal later migreren
+    // naar een SQL view met geaggregeerde counts.
+    supabase
+      .from("products")
+      .select("category_slug, status, indexed_at, sold_price, recommended_price"),
   ]);
+
+  // Categorieën pie
+  const categoryMap = new Map<string, number>();
+  (allProducts ?? []).forEach((p) => {
+    const k = p.category_slug ?? "unknown";
+    categoryMap.set(k, (categoryMap.get(k) ?? 0) + 1);
+  });
+  const categoryData: CategoryCount[] = [...categoryMap.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value);
+
+  // Status bar
+  const statusMap = new Map<string, number>();
+  (allProducts ?? []).forEach((p) => {
+    const k = p.status ?? "indexed";
+    statusMap.set(k, (statusMap.get(k) ?? 0) + 1);
+  });
+  const statusOrder = [
+    "indexed",
+    "analyzing",
+    "ready_to_list",
+    "pending_review",
+    "approved",
+    "listed",
+    "sold",
+    "archived",
+  ];
+  const statusData: StatusCount[] = statusOrder
+    .map((s) => ({ label: s, value: statusMap.get(s) ?? 0 }))
+    .filter((s) => s.value > 0);
+
+  // Weekly indexed (laatste 12 weken)
+  const weeksMap = new Map<string, number>();
+  const now = new Date();
+  for (let w = 11; w >= 0; w--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - w * 7);
+    const key = isoWeekKey(d);
+    weeksMap.set(key, 0);
+  }
+  (allProducts ?? []).forEach((p) => {
+    if (!p.indexed_at) return;
+    const key = isoWeekKey(new Date(p.indexed_at));
+    if (weeksMap.has(key)) {
+      weeksMap.set(key, (weeksMap.get(key) ?? 0) + 1);
+    }
+  });
+  const weeklyData: WeeklyPoint[] = [...weeksMap.entries()].map(([week, count]) => ({
+    week,
+    count,
+  }));
+
+  // Geschatte inventaris-waarde: som van recommended_price (of sold_price).
+  const totalEstValue =
+    (allProducts ?? []).reduce((sum, p) => {
+      const v = p.sold_price ?? p.recommended_price ?? 0;
+      return sum + Number(v || 0);
+    }, 0);
 
   return (
     <main className="space-y-8">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Stat label="Totaal producten" value={totalProducts ?? 0} />
-        <Stat
-          label="Klaar voor analyse"
-          value={indexedCount ?? 0}
-          hint="Status = indexed"
-        />
-        <Stat
-          label="Klaar om te listen"
-          value={readyCount ?? 0}
-          hint="Status = ready_to_list"
-        />
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <Stat label="Totaal" value={totalProducts ?? 0} />
+        <Stat label="Indexed" value={indexedCount ?? 0} hint="klaar voor analyse" />
+        <Stat label="Ready" value={readyCount ?? 0} hint="klaar voor listing" />
+        <Stat label="Listed" value={listedCount ?? 0} hint="actieve ads" />
+        <Stat label="Sold" value={soldCount ?? 0} />
       </section>
+
+      <section className="rounded-lg border p-5">
+        <p className="text-sm text-muted-foreground">
+          Geschatte inventaris-waarde (sold of recommended_price)
+        </p>
+        <p className="mt-1 text-3xl font-semibold">
+          € {totalEstValue.toFixed(2).replace(".", ",")}
+        </p>
+      </section>
+
+      <DashboardCharts
+        category={categoryData}
+        status={statusData}
+        weekly={weeklyData}
+      />
 
       <section className="rounded-lg border p-5">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -51,28 +127,15 @@ export default async function Dashboard() {
         {!recent || recent.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Nog niks geïndexeerd. Begin via{" "}
-            <Link className="underline" href="/upload">
-              bulk upload
-            </Link>{" "}
-            of voeg een product toe op{" "}
-            <Link className="underline" href="/inventory">
-              Inventaris
-            </Link>
-            .
+            <Link className="underline" href="/upload">bulk upload</Link>.
           </p>
         ) : (
           <ul className="divide-y text-sm">
             {recent.map((p) => (
               <li key={p.id} className="flex items-center gap-3 py-2">
-                <span className="w-16 font-mono text-xs">
-                  {p.sticker_id ?? "—"}
-                </span>
-                <span className="flex-1">
-                  {p.working_title ?? "(geen titel)"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {p.category_slug}
-                </span>
+                <span className="w-16 font-mono text-xs">{p.sticker_id ?? "—"}</span>
+                <span className="flex-1">{p.working_title ?? "(geen titel)"}</span>
+                <span className="text-xs text-muted-foreground">{p.category_slug}</span>
                 <Link
                   href={`/inventory/${p.sticker_id ?? p.id}`}
                   className="text-xs underline"
@@ -85,49 +148,26 @@ export default async function Dashboard() {
         )}
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Action
-          href="/upload"
-          title="Bulk foto upload"
-          body="Sleep meerdere foto's vanaf je pc, ken sticker-ID's toe en maak producten aan."
-        />
-        <Action
-          href="/stickers"
-          title="Print stickervel"
-          body="Genereer een A4 met 160 stickers om op je producten te plakken."
-        />
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Action href="/upload" title="Bulk upload" body="Sleep foto's → auto sticker-ID." />
+        <Action href="/stickers" title="Print stickers" body="A4 stickervel genereren." />
+        <Action href="/taxatie" title="Taxatie dossier" body="PDF voor antiek-taxateur." />
       </section>
     </main>
   );
 }
 
-function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: number;
-  hint?: string;
-}) {
+function Stat({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
-    <div className="rounded-lg border p-5">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 text-3xl font-semibold">{value}</p>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+    <div className="rounded-lg border p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
+      {hint && <p className="mt-1 text-[10px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
 
-function Action({
-  href,
-  title,
-  body,
-}: {
-  href: string;
-  title: string;
-  body: string;
-}) {
+function Action({ href, title, body }: { href: string; title: string; body: string }) {
   return (
     <Link
       href={href}
@@ -137,4 +177,14 @@ function Action({
       <p className="mt-1 text-sm text-muted-foreground">{body}</p>
     </Link>
   );
+}
+
+// ISO week: "2026-W16"
+function isoWeekKey(date: Date): string {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, "0")}`;
 }
