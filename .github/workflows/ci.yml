@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck-and-test:
+    name: Typecheck + unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck all workspaces
+        run: pnpm -r --parallel --if-present typecheck
+
+      - name: Run unit tests
+        run: pnpm -F @verkoopassistent/shared test
+
+  build-web:
+    name: Web production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Build-time env vars (placeholders — productie waarden zitten in Vercel).
+      - name: Next.js build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ffifhjwjauvhohmhhbip.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder' }}
+          NEXT_PUBLIC_SITE_URL: https://verkoopassistent.vercel.app
+        run: pnpm -F web build
+
+  e2e:
+    name: E2E smoke tests
+    runs-on: ubuntu-latest
+    needs: build-web
+    # E2E draait tegen productie URL — alleen op push naar main (post-deploy smoke).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F web test:e2e:install
+      - name: Run Playwright
+        env:
+          PLAYWRIGHT_BASE_URL: https://verkoopassistent.vercel.app
+        run: pnpm -F web test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 14

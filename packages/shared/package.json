@@ -13,12 +13,16 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "@vitest/ui": "^4.1.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.4"
   }
 }
