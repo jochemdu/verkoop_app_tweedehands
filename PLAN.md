@@ -1,41 +1,75 @@
 # VerkoopAssistent — Volledig Technisch Plan
-*Persoonlijke AI-verkoopassistent voor tweedehands spullen — NL markt*
-*Geoptimaliseerd voor gebruik met Claude Code*
+
+*Persoonlijke inventaris- en verkoopmanager voor tweedehands spullen — NL markt*
+*Geoptimaliseerd voor gebruik met Claude Code en Claude Desktop*
 
 ---
 
 ## Snelle Start voor Claude Code
-
-Dit document is het complete referentieplan. Gebruik het als volgt:
 
 ```
 # 1. Plaats dit bestand als PLAN.md in de root van je project
 # 2. Start Claude Code in de projectmap
 # 3. Vraag Claude Code:
 #    "Lees PLAN.md en implementeer Fase 1 (Foundation)"
-#
-# Of voor specifieke stappen:
-#    "Lees PLAN.md sectie 3 en rol het database-schema uit via de Supabase MCP"
-#    "Lees PLAN.md sectie 9 en maak de Expo app structuur aan"
 ```
-
-**Werkwijze:** Het plan is opgedeeld in fases met concrete taken. Elke grote sectie heeft een `## ✅ Claude Code Taken` blok met kopieerbare prompts. MCP-servers (Supabase, Vercel) zijn actief — Claude Code kan direct tabellen aanmaken en deployen.
 
 ---
 
-## 1. Architectuuroverzicht
+## 🎯 Kernfilosofie — BELANGRIJKE WIJZIGING
+
+Deze app werkt in **twee duidelijk gescheiden fases**:
+
+### Fase A — Indexeren (inventariseren)
+
+Je loopt met je telefoon langs je spullen, plakt genummerde stickers op elk item, maakt foto's. De app slaat alles op met het sticker-ID gekoppeld. **Nog geen verkoop, nog geen prijzen, nog geen advertenties.** Doel: een complete fotocatalogus van alles wat je hebt.
+
+### Fase B — Verkoop voorbereiden (analyse & bundeling)
+
+Als je klaar bent met indexeren, open je Claude Desktop of Claude Code. Via een **custom MCP server** krijgt Claude toegang tot je inventaris-database. Jij vraagt dan bijvoorbeeld:
+
+> "Bekijk de foto's van sticker 0042 t/m 0067 en bedenk welke items samen een logische bundel vormen voor Marktplaats."
+
+> "Welke RAM-modules in mijn inventaris zijn compatibel als kit? Geef me de sticker-nummers."
+
+> "Analyseer de pokémon-kaarten met sticker 0100-0150 en maak een verkoopstrategie."
+
+Claude kijkt dan naar de foto's (niet via Vision API, maar omdat jij ze deelt in het gesprek) en komt met bundel-suggesties, advertentieteksten en prijsadviezen.
+
+### Wat er weggaat
+
+- ❌ Geen `analyze-product` Edge Function met Claude Vision API
+- ❌ Geen automatische productherkenning bij upload
+- ❌ Geen automatisch gegenereerde advertenties
+- ❌ Geen AI-kosten meer (Claude Vision API afgeschaft)
+
+### Wat er bij komt
+
+- ✅ Sticker-ID systeem met drie input-methoden
+- ✅ A4 stickervel generator
+- ✅ Custom MCP server als primaire interface voor analyse
+- ✅ Twee-fasen workflow (eerst indexeren, dan verkopen)
+- ✅ Inventaris-focused UI
+
+---
+
+## 1. Architectuuroverzicht (aangepast)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    JOUW DEVICES                                  │
 │                                                                  │
-│  📱 Expo App (iOS/Android)      💻 Next.js Web (Vercel)         │
-│  • Camera & foto's maken        • Bulk foto upload              │
-│  • Barcode/EAN scanner          • Dashboard & statistieken      │
-│  • Snel scannen onderweg        • Bulk advertenties bewerken    │
-│  • Merkteken macro-modus        • Database beheer               │
-│  • Notificaties                 • PDF export (taxatie)          │
-│  • Listings goedkeuren                                          │
+│  📱 Expo App                💻 Next.js Web (Vercel)             │
+│                                                                  │
+│  FASE A — Indexeren:        FASE A — Indexeren:                 │
+│  • Foto's maken             • Bulk upload vanaf pc              │
+│  • Sticker-ID koppelen      • Stickervel PDF genereren          │
+│    (OCR / typen / foto)     • Inventaris tabel                  │
+│                                                                  │
+│  FASE B — Verkoop:          FASE B — Verkoop:                   │
+│  • Bundels goedkeuren       • Bundels beheren                   │
+│  • Advertenties plakken     • Advertenties bewerken             │
+│  • Status bijhouden         • PDF exports (taxatie)             │
 └──────────────┬──────────────────────────┬───────────────────────┘
                │                          │
                └──────────┬───────────────┘
@@ -44,83 +78,196 @@ Dit document is het complete referentieplan. Gebruik het als volgt:
          │           SUPABASE                  │
          │                                     │
          │  🗄️  PostgreSQL Database            │
-         │  🔐  Auth (magic link / email)      │
-         │  📁  Storage (foto's)               │
-         │  ⚡  Edge Functions (AI-proxy)      │
-         │  ⏰  pg_cron (prijswatchers)        │
-         │  🔴  Realtime (sync app ↔ web)     │
+         │  🔐  Auth (magic link)              │
+         │  📁  Storage (foto's + PDFs)        │
+         │  ⚡  Edge Functions                 │
+         │      (NIET voor AI-analyse)         │
          └──────────────┬──────────────────────┘
                         │
-         ┌──────────────┼──────────────────────┐
-         │              │                      │
-    ┌────▼────┐   ┌─────▼─────┐   ┌───────────▼──────┐
-    │ Claude  │   │Cardmarket │   │  Marktplaats API  │
-    │ Vision  │   │  API v2   │   │  Tweakers scraper │
-    │ Sonnet  │   │  (kaarten)│   │  eBay API         │
-    └─────────┘   └───────────┘   │  Opkoopdiensten   │
-                                  └──────────────────┘
+                        │ (MCP protocol)
+                        │
+         ┌──────────────▼──────────────────┐
+         │   Custom MCP Server             │
+         │   "verkoopassistent-mcp"        │
+         │                                 │
+         │   Tools:                        │
+         │   • list_inventory              │
+         │   • get_product_photos          │
+         │   • suggest_bundle              │
+         │   • create_listing              │
+         │   • search_products             │
+         └──────────────┬──────────────────┘
+                        │
+         ┌──────────────▼──────────────────┐
+         │   Claude Desktop / Claude Code  │
+         │                                 │
+         │   JIJ analyseert foto's,        │
+         │   suggereert bundels, schrijft  │
+         │   advertenties via chat         │
+         └─────────────────────────────────┘
 ```
 
-### Waarom deze keuze
-- **Supabase voor alles**: één platform voor database, auth, storage en serverside logica
-- **Next.js op Vercel voor web**: beste PC-ervaring, native Vercel+Supabase integratie
-- **Expo voor mobiel**: gedeelde React-kennis met de web-app, beste camera-integratie
-- **Supabase Edge Functions** als AI-proxy: API-keys blijven server-side, caching mogelijk
-- **pg_cron** voor prijswatchers: draait onafhankelijk van jouw telefoon/pc
+### Waarom dit werkt
+
+- **Jij (Claude) ziet foto's** als ze in het gesprek worden gedeeld — geen aparte Vision API nodig
+- **MCP server** geeft Claude structured access tot de database (welke producten, welke foto's, welke bundels)
+- **Claude Desktop** is ideaal voor interactieve analyse met foto's
+- **Claude Code** is ideaal voor bulk-operaties ("genereer advertenties voor alle RAM")
+- **Geen recurring AI-kosten** want je betaalt al voor Claude Pro/Max
 
 ---
 
-## 2. Volledige Tech Stack
+## 2. Tech Stack (aangepast)
 
 ### Mobiele App (Expo)
+
 | Pakket | Gebruik |
 |--------|---------|
 | `expo` SDK 55 | Framework |
 | `expo-router` v7 | File-based navigatie |
 | `expo-camera` | Camera + foto's maken |
-| `expo-barcode-scanner` | **EAN barcode scannen** (nieuw) |
+| `expo-barcode-scanner` | EAN barcode scannen |
+| **`@react-native-ml-kit/text-recognition`** | **On-device OCR voor stickers** (nieuw) |
 | `expo-image-picker` | Galerij multi-select |
 | `expo-image-manipulator` | Resize voor upload |
 | `expo-image` | Geoptimaliseerde weergave |
 | `expo-notifications` | Push notificaties |
-| `expo-file-system` | Lokale opslag |
 | `@supabase/supabase-js` v2 | Database + Auth + Storage |
-| `react-native-mmkv` | Snelle lokale opslag |
+| `react-native-mmkv` | Lokale opslag (laatste gebruikte sticker-ID) |
 | `zustand` v4 | State management |
 | `@tanstack/react-query` v5 | Server state + caching |
 
 ### Web App (Next.js op Vercel)
+
 | Pakket | Gebruik |
 |--------|---------|
 | `next` v14+ (App Router) | Framework |
 | `@supabase/supabase-js` + `@supabase/ssr` | Database + Auth |
-| `tailwindcss` v4 + `shadcn/ui` | Styling & componenten |
-| `recharts` | Grafieken & statistieken |
-| `@tanstack/react-table` | Bulk-tabel met sorteren/filteren |
+| `tailwindcss` v4 + `shadcn/ui` | Styling |
+| `recharts` | Grafieken |
+| `@tanstack/react-table` | Bulk-tabel |
 | `react-dropzone` | Drag & drop foto upload |
-| `react-hook-form` + `zod` | Formuliervalidatie |
-| `@react-pdf/renderer` | **PDF export voor taxatie** (nieuw) |
+| `react-hook-form` + `zod` | Formulieren |
+| `@react-pdf/renderer` | **PDF voor taxatie + stickervel** (dubbel gebruik) |
+
+### Custom MCP Server (nieuw)
+
+| Pakket | Gebruik |
+|--------|---------|
+| `@modelcontextprotocol/sdk` | MCP server framework |
+| `@supabase/supabase-js` | Database toegang |
+| `tsx` | TypeScript runner |
+| Draait **lokaal** via Claude Desktop config | Geen hosting nodig |
 
 ### Backend (Supabase Edge Functions — Deno/TypeScript)
+
+Alleen nog voor écht server-side werk — geen AI meer:
+
 | Functie | Beschrijving |
 |---------|-------------|
-| `analyze-product` | Claude Vision aanroepen, resultaat opslaan |
-| `lookup-ean` | **EAN/barcode → Tweakers prijs + productinfo** (nieuw) |
-| `generate-listing` | Advertentietekst genereren per platform |
+| `lookup-ean` | EAN/barcode → Tweakers prijs + productinfo |
 | `fetch-prices` | Marktplaats/Tweakers/Cardmarket/eBay prijzen |
-| `fetch-buyback-quotes` | **Opkoopdiensten-prijzen ophalen** (nieuw) |
-| `identify-card` | Pokémon-kaart herkennen |
-| `identify-antique` | Antiek + merkteken opzoeken |
+| `fetch-buyback-quotes` | Opkoopdiensten-prijzen |
+| `identify-card-by-id` | Pokémon kaart-ID → Cardmarket EUR prijs |
+| `lookup-silver-hallmark` | Zilver.nl keurmerk lookup |
+| `lookup-tin-mark` | TinVereniging merkteken lookup |
 | `publish-listing` | Advertentie publiceren via platform-API |
-| `generate-taxatie-pdf` | **PDF-dossier voor taxateur** (nieuw) |
-| `price-watcher-cron` | Elke 6 uur prijzen bijwerken (pg_cron) |
-| `push-notifier` | Push notificaties via Expo |
+| `generate-taxatie-pdf` | PDF-dossier voor taxateur |
+| `generate-sticker-sheet` | **Stickervel PDF genereren** (nieuw) |
+| `price-watcher-cron` | Prijzen bijwerken via pg_cron |
 
 ---
 
-## 3. Database Schema (Supabase PostgreSQL)
+## 3. Sticker-ID Systeem
+
+### Stickervel Layout
+
+A4 portrait, verdeeld in 4 kwartieren (2×2 grid). Elk kwartier heeft 40 stickers in 5 kolommen × 8 rijen.
+
+```
+┌─────────────────────────────────┐
+│  Kwartier 1     │  Kwartier 2   │  ← Elk kwartier: 105×148mm
+│  40 stickers    │  40 stickers  │
+│  0001-0040      │  0041-0080    │
+├─────────────────┼───────────────┤
+│  Kwartier 3     │  Kwartier 4   │
+│  40 stickers    │  40 stickers  │
+│  0081-0120      │  0121-0160    │
+└─────────────────────────────────┘
+
+Totaal: 160 stickers per A4-vel
+```
+
+**Sticker afmetingen:** 21×15mm per sticker (middel), 4-cijferig nummer in een goed leesbaar lettertype (bijv. **JetBrains Mono Bold** of **Source Code Pro Bold**, 11pt zwart op wit). Rondom elke sticker 1mm marge zodat je makkelijk kunt uitknippen.
+
+### Stickervel-generator
+
+De web-app genereert een PDF met een startnummer. Je kiest bijvoorbeeld "start bij 0001" → 160 stickers tot 0160. Volgende keer "start bij 0161" etc.
+
+```typescript
+// Edge Function: generate-sticker-sheet
+// Input:  { startNumber: 1, count: 160 }
+// Output: { pdfUrl: "..." } (signed URL, 1 uur geldig)
+
+// De PDF:
+// - A4 portrait
+// - 4 kwartieren met 40 stickers elk (5 cols × 8 rows)
+// - 4-cijferig zero-padded: 0001, 0002, ...
+// - Snijlijnen tussen stickers (optioneel)
+// - Header per kwartier met range (bijv "0001-0040")
+```
+
+### Sticker-koppeling bij fotograferen (3 modi beschikbaar)
+
+```typescript
+// apps/mobile/lib/stickerCapture.ts
+
+type StickerMode = 'ocr_inline' | 'ocr_separate_photo' | 'manual_increment';
+
+// MODE A: OCR uit productfoto
+// Je plakt sticker op product. Maakt een normale productfoto.
+// App scant op de achtergrond de foto met ML Kit OCR.
+// Detecteert 4-cijferige nummers automatisch.
+// Kans op mis-detectie: gebruiker krijgt bevestiging voor opslaan.
+
+// MODE B: Aparte sticker-foto eerst
+// Stap 1: close-up foto van alleen de sticker
+//         → ML Kit OCR leest nummer met hoge zekerheid
+//         → Sessie wordt gekoppeld aan dit nummer
+// Stap 2-N: productfoto's (sticker hoeft niet meer zichtbaar)
+
+// MODE C: Handmatig met auto-increment
+// Je typt eerst 0042 bij sessie-start.
+// Volgende sessie stelt de app automatisch 0043 voor.
+// Je kunt altijd afwijken.
+```
+
+### Database ondersteuning
+
+Zie sectie 4 voor het volledige schema. Kernvelden:
+
+- `products.sticker_id` (TEXT UNIQUE, 4-cijferig)
+- `products.sticker_input_method` ('ocr_inline' / 'ocr_separate' / 'manual')
+- `products.sticker_confidence` (DECIMAL, bij OCR: hoe zeker is de herkenning)
+- `photos.sticker_visible` (BOOLEAN, of sticker op deze foto zichtbaar is)
+- `sticker_sheets` (tabel met uitgeprinte vellen om dubbele uitgifte te voorkomen)
+
+### ✅ Claude Code Taken — Sectie 3
+
+```
+Taak 3.1: Implementeer generate-sticker-sheet Edge Function met @react-pdf/renderer.
+          Test door PDF te genereren met nummers 0001-0160.
+Taak 3.2: Voeg sticker PDF-download knop toe op web-app settings pagina.
+Taak 3.3: Installeer @react-native-ml-kit/text-recognition in apps/mobile.
+Taak 3.4: Implementeer 3 stickerCapture modes in apps/mobile/lib/stickerCapture.ts.
+```
+
+---
+
+## 4. Database Schema (Supabase PostgreSQL)
 
 ### Extensies
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -129,14 +276,22 @@ CREATE EXTENSION IF NOT EXISTS "pg_net";
 ```
 
 ### Enum types
+
 ```sql
 CREATE TYPE product_condition AS ENUM (
   'mint', 'near_mint', 'excellent', 'very_good', 'good', 'fair', 'poor'
 );
 
+-- AANGEPAST: nieuwe statussen voor 2-fasen flow
 CREATE TYPE product_status AS ENUM (
-  'draft', 'analyzing', 'pending_review', 'approved',
-  'listed', 'sold', 'archived'
+  'indexed',         -- Fase A: opgenomen in inventaris, nog geen verkoopintentie
+  'analyzing',       -- Claude bekijkt via MCP
+  'ready_to_list',   -- Analyse gedaan, klaar om te verkopen
+  'pending_review',  -- Advertentietekst klaar, wacht op jouw goedkeuring
+  'approved',        -- Goedgekeurd, nog niet geplaatst
+  'listed',          -- Actief op >= 1 platform
+  'sold',
+  'archived'
 );
 
 CREATE TYPE listing_status AS ENUM (
@@ -146,7 +301,15 @@ CREATE TYPE listing_status AS ENUM (
 
 CREATE TYPE photo_type AS ENUM (
   'general', 'front', 'back', 'mark', 'detail',
-  'damage', 'serial', 'label', 'holo', 'barcode'
+  'damage', 'serial', 'label', 'holo', 'barcode',
+  'sticker'           -- nieuw: foto van alleen de sticker
+);
+
+CREATE TYPE sticker_input_method AS ENUM (
+  'ocr_inline',       -- OCR uit productfoto
+  'ocr_separate',     -- Aparte sticker-foto
+  'manual',           -- Handmatig getypt
+  'manual_increment'  -- Auto-incremented vanaf vorige
 );
 
 CREATE TYPE platform_slug AS ENUM (
@@ -163,7 +326,7 @@ CREATE TYPE category_slug AS ENUM (
   'ram_dimm', 'ram_sodimm', 'cpu', 'gpu',
   'console', 'console_game', 'smartphone', 'laptop',
   'pokemon_card', 'antique_tin', 'antique_silver',
-  'antique_other', 'electronics_other', 'other'
+  'antique_other', 'electronics_other', 'unknown', 'other'
 );
 
 CREATE TYPE bundle_type AS ENUM (
@@ -172,206 +335,72 @@ CREATE TYPE bundle_type AS ENUM (
 );
 ```
 
-### Platforms
-```sql
-CREATE TABLE platforms (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug              platform_slug UNIQUE NOT NULL,
-  name              TEXT NOT NULL,
-  base_url          TEXT,
-  commission_rate   DECIMAL DEFAULT 0,
-  fixed_fee         DECIMAL DEFAULT 0,
-  api_available     BOOLEAN DEFAULT false,
-  api_type          TEXT,
-  supports_bulk     BOOLEAN DEFAULT false,
-  is_active         BOOLEAN DEFAULT true
-);
+### Sticker sheets (nieuw)
 
-INSERT INTO platforms (slug, name, base_url, commission_rate, api_available, api_type) VALUES
-  ('marktplaats', 'Marktplaats.nl', 'https://marktplaats.nl', 0, true, 'rest'),
-  ('tweakers', 'Tweakers V&A', 'https://tweakers.net/aanbod', 0, false, 'scraping'),
-  ('cardmarket', 'Cardmarket', 'https://cardmarket.com', 0.05, true, 'rest'),
-  ('ebay', 'eBay', 'https://ebay.nl', 0.1153, true, 'rest'),
-  ('catawiki', 'Catawiki', 'https://catawiki.nl', 0.125, false, 'manual'),
-  ('2dehands', '2dehands.be', 'https://2dehands.be', 0, true, 'rest'),
-  ('facebook', 'Facebook Marketplace', 'https://facebook.com/marketplace', 0, false, 'manual');
+```sql
+CREATE TABLE sticker_sheets (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  start_number  INTEGER NOT NULL,
+  end_number    INTEGER NOT NULL,
+  sheet_count   INTEGER DEFAULT 1,    -- hoeveel vellen uitgeprint
+  pdf_storage_path TEXT,
+  printed_at    TIMESTAMPTZ,
+  notes         TEXT,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(start_number)
+);
 ```
 
-### Opkoopdiensten (nieuw)
-```sql
-CREATE TABLE buyback_services (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug              buyback_service_slug UNIQUE NOT NULL,
-  name              TEXT NOT NULL,
-  website_url       TEXT,
-  specialization    TEXT,
-  api_available     BOOLEAN DEFAULT false,
-  typical_discount  DECIMAL,
-  is_active         BOOLEAN DEFAULT true,
-  notes             TEXT
-);
+### Platforms, categories, buyback_services
 
-INSERT INTO buyback_services (slug, name, website_url, specialization, typical_discount) VALUES
-  ('levelseven', 'Level Seven', 'https://levelseven.nl', 'retro_games', 0.55),
-  ('nedgame', 'Nedgame', 'https://nedgame.nl/online-inruilen', 'retro_games', 0.50),
-  ('flashkaartshop', 'Flashkaartshop', 'https://flashkaartshop.nl', 'retro_games', 0.60),
-  ('rarecards', 'RareCards', 'https://rarecards.nl', 'pokemon_cards', 0.60),
-  ('catchcollect', 'CatchCollect', 'https://catchcollect.nl', 'pokemon_cards', 0.55);
+*(INSERT statements staan in `supabase/migrations/0001_initial_schema.sql` — 7 platforms, 5 buyback services, 15 categories met spec_schemas per categorie.)*
+
+```sql
+CREATE TABLE platforms (...);
+CREATE TABLE buyback_services (...);
+CREATE TABLE categories (...);
 ```
 
-### Categorieën met spec-schemas
-```sql
-CREATE TABLE categories (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug        category_slug UNIQUE NOT NULL,
-  name        TEXT NOT NULL,
-  parent_slug category_slug REFERENCES categories(slug),
-  spec_schema JSONB DEFAULT '{}',
-  preferred_platforms platform_slug[] DEFAULT '{}',
-  preferred_buyback_services buyback_service_slug[] DEFAULT '{}'
-);
+### Producten (grondig aangepast)
 
-INSERT INTO categories (slug, name, spec_schema, preferred_platforms, preferred_buyback_services) VALUES
-  ('ram_dimm', 'RAM DIMM', '{
-    "generation": {"type": "enum", "values": ["DDR1","DDR2","DDR3","DDR4","DDR5"]},
-    "capacity_gb": {"type": "number"},
-    "speed_mhz": {"type": "number"},
-    "brand": {"type": "string"},
-    "ecc": {"type": "boolean"},
-    "registered": {"type": "boolean"}
-  }', ARRAY['marktplaats','tweakers']::platform_slug[],
-     ARRAY[]::buyback_service_slug[]),
-
-  ('ram_sodimm', 'RAM SODIMM (laptop)', '{
-    "generation": {"type": "enum", "values": ["DDR1","DDR2","DDR3","DDR4","DDR5"]},
-    "capacity_gb": {"type": "number"},
-    "speed_mhz": {"type": "number"},
-    "brand": {"type": "string"}
-  }', ARRAY['marktplaats','tweakers']::platform_slug[],
-     ARRAY[]::buyback_service_slug[]),
-
-  ('cpu', 'Processor (CPU)', '{
-    "brand": {"type": "enum", "values": ["Intel","AMD","Other"]},
-    "model": {"type": "string"},
-    "socket": {"type": "string"},
-    "cores": {"type": "number"},
-    "tdp_w": {"type": "number"}
-  }', ARRAY['marktplaats','tweakers']::platform_slug[],
-     ARRAY[]::buyback_service_slug[]),
-
-  ('gpu', 'Videokaart (GPU)', '{
-    "brand": {"type": "enum", "values": ["NVIDIA","AMD","Intel"]},
-    "model": {"type": "string"},
-    "vram_gb": {"type": "number"},
-    "interface": {"type": "string"}
-  }', ARRAY['marktplaats','tweakers','ebay']::platform_slug[],
-     ARRAY[]::buyback_service_slug[]),
-
-  ('console', 'Spelcomputer', '{
-    "brand": {"type": "enum", "values": ["Microsoft","Sony","Nintendo","Sega","Other"]},
-    "model": {"type": "string"},
-    "region": {"type": "enum", "values": ["PAL","NTSC","NTSC-J"]},
-    "includes_controller": {"type": "boolean"},
-    "includes_cables": {"type": "boolean"},
-    "storage_gb": {"type": "number"}
-  }', ARRAY['marktplaats','ebay','catawiki']::platform_slug[],
-     ARRAY['levelseven','nedgame','flashkaartshop']::buyback_service_slug[]),
-
-  ('console_game', 'Spelletje', '{
-    "platform": {"type": "string"},
-    "title": {"type": "string"},
-    "region": {"type": "string"},
-    "includes_manual": {"type": "boolean"},
-    "includes_box": {"type": "boolean"}
-  }', ARRAY['marktplaats','ebay']::platform_slug[],
-     ARRAY['levelseven','nedgame']::buyback_service_slug[]),
-
-  ('smartphone', 'Smartphone', '{
-    "brand": {"type": "string"},
-    "model": {"type": "string"},
-    "storage_gb": {"type": "number"},
-    "color": {"type": "string"},
-    "imei": {"type": "string"},
-    "battery_health_pct": {"type": "number"}
-  }', ARRAY['marktplaats','ebay']::platform_slug[],
-     ARRAY[]::buyback_service_slug[]),
-
-  ('pokemon_card', 'Pokémon Kaart', '{
-    "card_name": {"type": "string"},
-    "set_name": {"type": "string"},
-    "set_number": {"type": "string"},
-    "rarity": {"type": "enum", "values": ["common","uncommon","rare","holo_rare","ultra_rare","secret_rare","promo"]},
-    "language": {"type": "enum", "values": ["NL","EN","DE","FR","JP","Other"]},
-    "is_holo": {"type": "boolean"},
-    "is_first_edition": {"type": "boolean"},
-    "is_shadowless": {"type": "boolean"},
-    "graded_by": {"type": "string"},
-    "grade_score": {"type": "number"},
-    "cardmarket_id": {"type": "string"},
-    "tcg_api_id": {"type": "string"}
-  }', ARRAY['cardmarket','ebay','marktplaats']::platform_slug[],
-     ARRAY['rarecards','catchcollect']::buyback_service_slug[]),
-
-  ('antique_tin', 'Antiek Tin / Tinnewerk', '{
-    "period": {"type": "string"},
-    "maker_mark": {"type": "string"},
-    "maker_mark_identified": {"type": "string"},
-    "region_of_origin": {"type": "string"},
-    "material": {"type": "enum", "values": ["tin","pewter","britannia_metal","other"]},
-    "item_type": {"type": "string"},
-    "height_cm": {"type": "number"},
-    "width_cm": {"type": "number"},
-    "weight_g": {"type": "number"},
-    "provenance": {"type": "string"}
-  }', ARRAY['catawiki','marktplaats','ebay']::platform_slug[],
-     ARRAY[]::buyback_service_slug[]),
-
-  ('antique_silver', 'Antiek Zilver', '{
-    "hallmarks": {"type": "array"},
-    "silver_grade": {"type": "enum", "values": ["925","835","800","unknown"]},
-    "period": {"type": "string"},
-    "maker": {"type": "string"},
-    "weight_g": {"type": "number"},
-    "item_type": {"type": "string"},
-    "provenance": {"type": "string"}
-  }', ARRAY['catawiki','ebay','marktplaats']::platform_slug[],
-     ARRAY[]::buyback_service_slug[]);
-```
-
-### Producten (kern) — inclusief EAN, gebreken en accessoires
 ```sql
 CREATE TABLE products (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  category_slug         category_slug REFERENCES categories(slug),
-  title                 TEXT,
+
+  -- Sticker-ID (nieuw, primaire identifier naast UUID)
+  sticker_id            TEXT UNIQUE,                -- '0042', 4-cijferig
+  sticker_input_method  sticker_input_method,
+  sticker_confidence    DECIMAL,                    -- bij OCR: 0.0-1.0
+
+  -- Fase A: Indexering
+  category_slug         category_slug REFERENCES categories(slug)
+                        DEFAULT 'unknown',
+  working_title         TEXT,                       -- jouw ruwe omschrijving
+  indexing_notes        TEXT,                       -- korte aantekening bij opname
+
+  -- Fase B: Verkoop (pas ingevuld bij analyse)
+  title                 TEXT,                       -- definitieve titel
   description           TEXT,
   condition             product_condition,
-  status                product_status DEFAULT 'draft',
-
-  -- EAN/barcode (nieuw)
-  ean                   TEXT,
-  barcode_type          TEXT,
-  identified_via        TEXT,           -- 'barcode', 'ai_vision', 'manual'
-
-  -- AI-analyse resultaten
-  ai_title              TEXT,
-  ai_description        TEXT,
-  ai_condition          product_condition,
-  ai_confidence         DECIMAL,
-  ai_category_detected  TEXT,
   specs                 JSONB DEFAULT '{}',
-
-  -- Gebreken en accessoires (nieuw)
   defects               TEXT[] DEFAULT '{}',
   included_accessories  TEXT[] DEFAULT '{}',
   missing_items         TEXT[] DEFAULT '{}',
 
-  -- Waardering
+  -- EAN/barcode
+  ean                   TEXT,
+  barcode_type          TEXT,
+  identified_via        TEXT,                       -- 'barcode', 'claude_analysis', 'manual'
+
+  -- Waardering (ingevuld tijdens analyse)
   estimated_value_min   DECIMAL,
   estimated_value_max   DECIMAL,
   recommended_price     DECIMAL,
   new_price             DECIMAL,
   new_price_source_url  TEXT,
+
+  -- Status
+  status                product_status DEFAULT 'indexed',
 
   -- Verkoop
   selling_tier          TEXT CHECK (selling_tier IN ('individual','bundle','bulk')),
@@ -379,9 +408,12 @@ CREATE TABLE products (
   sold_platform_id      UUID REFERENCES platforms(id),
   sold_at               TIMESTAMPTZ,
 
-  -- Meta
-  notes                 TEXT,
+  -- Antiek-specifiek
   provenance_notes      TEXT,
+
+  -- Tijdstempels
+  indexed_at            TIMESTAMPTZ DEFAULT NOW(),  -- wanneer toegevoegd aan inventaris
+  analyzed_at           TIMESTAMPTZ,                -- wanneer Claude analyse deed
   created_at            TIMESTAMPTZ DEFAULT NOW(),
   updated_at            TIMESTAMPTZ DEFAULT NOW()
 );
@@ -395,26 +427,35 @@ CREATE TRIGGER products_updated_at
   BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+CREATE INDEX idx_products_sticker ON products(sticker_id);
 CREATE INDEX idx_products_status ON products(status);
 CREATE INDEX idx_products_category ON products(category_slug);
 CREATE INDEX idx_products_ean ON products(ean) WHERE ean IS NOT NULL;
+CREATE INDEX idx_products_indexed_at ON products(indexed_at DESC);
 ```
 
-### Foto's met capture-mode
+### Foto's (aangepast)
+
 ```sql
 CREATE TABLE photos (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id     UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
-  storage_path   TEXT NOT NULL,
-  thumbnail_path TEXT,
-  order_index    INTEGER DEFAULT 0,
-  photo_type     photo_type DEFAULT 'general',
-  capture_mode   TEXT,            -- 'normal', 'macro_mark', 'detail_damage', 'barcode'
-  width          INTEGER,
-  height         INTEGER,
-  size_bytes     INTEGER,
-  ai_labels      JSONB DEFAULT '{}',
-  created_at     TIMESTAMPTZ DEFAULT NOW()
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id        UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  storage_path      TEXT NOT NULL,
+  thumbnail_path    TEXT,
+  order_index       INTEGER DEFAULT 0,
+  photo_type        photo_type DEFAULT 'general',
+  capture_mode      TEXT,                           -- 'normal', 'macro_mark', 'detail', 'barcode', 'sticker'
+
+  -- Sticker detectie (nieuw)
+  sticker_visible   BOOLEAN DEFAULT false,          -- is de sticker zichtbaar op deze foto
+  detected_sticker  TEXT,                           -- wat OCR las, kan afwijken van uiteindelijk gekoppelde sticker
+  ocr_confidence    DECIMAL,
+
+  -- Image meta
+  width             INTEGER,
+  height            INTEGER,
+  size_bytes        INTEGER,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_photos_product ON photos(product_id);
@@ -422,231 +463,68 @@ CREATE INDEX idx_photos_order ON photos(product_id, order_index);
 CREATE INDEX idx_photos_type ON photos(photo_type);
 ```
 
-### Opkoop-offertes (nieuw)
-```sql
-CREATE TABLE buyback_quotes (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id            UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
-  buyback_service_id    UUID REFERENCES buyback_services(id) NOT NULL,
-  quoted_price          DECIMAL,
-  quote_source          TEXT,         -- 'manual', 'api', 'scraped'
-  quote_url             TEXT,
-  conditions            TEXT,
-  valid_until           TIMESTAMPTZ,
-  fetched_at            TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(product_id, buyback_service_id)
-);
-
-CREATE INDEX idx_buyback_quotes_product ON buyback_quotes(product_id);
-```
-
-### Listings
-```sql
-CREATE TABLE listings (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id            UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
-  platform_id           UUID REFERENCES platforms(id) NOT NULL,
-  status                listing_status DEFAULT 'draft',
-  price                 DECIMAL NOT NULL,
-  shipping_price        DECIMAL DEFAULT 0,
-  generated_title       TEXT,
-  generated_description TEXT,
-  final_title           TEXT,
-  final_description     TEXT,
-  platform_category_id  TEXT,
-  platform_attrs        JSONB DEFAULT '{}',
-  external_id           TEXT,
-  listing_url           TEXT,
-  approved_at           TIMESTAMPTZ,
-  published_at          TIMESTAMPTZ,
-  expires_at            TIMESTAMPTZ,
-  sold_at               TIMESTAMPTZ,
-  error_message         TEXT,
-  created_at            TIMESTAMPTZ DEFAULT NOW(),
-  updated_at            TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(product_id, platform_id)
-);
-
-CREATE TRIGGER listings_updated_at
-  BEFORE UPDATE ON listings
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE INDEX idx_listings_product ON listings(product_id);
-CREATE INDEX idx_listings_status ON listings(status);
-CREATE INDEX idx_listings_platform ON listings(platform_id);
-```
-
 ### Overige tabellen
-```sql
--- Prijsgeschiedenis
-CREATE TABLE price_history (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id     UUID REFERENCES products(id) ON DELETE CASCADE,
-  platform_id    UUID REFERENCES platforms(id),
-  search_query   TEXT,
-  price_low      DECIMAL,
-  price_avg      DECIMAL,
-  price_high     DECIMAL,
-  price_trend    DECIMAL,
-  sample_count   INTEGER,
-  currency       TEXT DEFAULT 'EUR',
-  source_url     TEXT,
-  fetched_at     TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX idx_price_history_product ON price_history(product_id, fetched_at DESC);
 
--- Bundles
+```sql
+-- Opkoop-offertes (zelfde als vorige plan)
+CREATE TABLE buyback_quotes (...);
+
+-- Listings (zelfde als vorige plan)
+CREATE TABLE listings (...);
+
+-- Prijsgeschiedenis (zelfde)
+CREATE TABLE price_history (...);
+
+-- Bundles (aangepast: meer metadata)
 CREATE TABLE bundles (
   id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title                  TEXT NOT NULL,
+  description            TEXT,
   bundle_type            bundle_type DEFAULT 'custom',
-  suggested_by           TEXT DEFAULT 'user',
+  suggested_by           TEXT DEFAULT 'user',    -- 'user' | 'claude_mcp'
+  claude_reasoning       TEXT,                   -- waarom Claude deze bundel suggereerde
   total_individual_value DECIMAL,
   suggested_price        DECIMAL,
-  status                 product_status DEFAULT 'draft',
+  status                 product_status DEFAULT 'ready_to_list',
   notes                  TEXT,
   created_at             TIMESTAMPTZ DEFAULT NOW(),
   updated_at             TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE bundle_items (
-  bundle_id  UUID REFERENCES bundles(id) ON DELETE CASCADE,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  position   INTEGER DEFAULT 0,
+  bundle_id   UUID REFERENCES bundles(id) ON DELETE CASCADE,
+  product_id  UUID REFERENCES products(id) ON DELETE CASCADE,
+  position    INTEGER DEFAULT 0,
   PRIMARY KEY (bundle_id, product_id)
 );
 
--- AI analyses log
-CREATE TABLE ai_analyses (
+-- Claude analyses log (AANGEPAST, niet meer Vision API)
+CREATE TABLE claude_analyses (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id      UUID REFERENCES products(id) ON DELETE CASCADE,
-  analysis_type   TEXT,
-  model_used      TEXT,
-  input_photo_ids UUID[],
-  prompt_hash     TEXT,
-  raw_response    JSONB,
-  parsed_result   JSONB,
-  confidence      DECIMAL,
-  tokens_input    INTEGER,
-  tokens_output   INTEGER,
-  cost_usd        DECIMAL,
-  duration_ms     INTEGER,
+  analysis_type   TEXT,                   -- 'identification','bundle_suggestion','pricing','description'
+  subject_products UUID[],                -- welke producten Claude analyseerde
+  claude_source   TEXT,                   -- 'claude_desktop' | 'claude_code' | 'web_chat'
+  user_prompt     TEXT,                   -- wat jij aan Claude vroeg
+  claude_response JSONB,                  -- Claude's output
+  applied         BOOLEAN DEFAULT false,  -- of jij het suggestieresultaat hebt overgenomen
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_ai_analyses_product ON ai_analyses(product_id);
 
--- Prijswatchers
-CREATE TABLE price_watches (
-  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name                 TEXT,
-  search_query         TEXT NOT NULL,
-  platform_id          UUID REFERENCES platforms(id),
-  category_slug        category_slug,
-  target_price         DECIMAL,
-  current_lowest       DECIMAL,
-  alert_on_below       DECIMAL,
-  last_checked_at      TIMESTAMPTZ,
-  check_interval_hours INTEGER DEFAULT 6,
-  is_active            BOOLEAN DEFAULT true,
-  created_at           TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Taxatie dossiers (nieuw)
-CREATE TABLE taxatie_exports (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id       UUID REFERENCES products(id),
-  bundle_id        UUID REFERENCES bundles(id),
-  pdf_storage_path TEXT,
-  recipient_name   TEXT,
-  recipient_email  TEXT,
-  exported_at      TIMESTAMPTZ DEFAULT NOW(),
-  CHECK (product_id IS NOT NULL OR bundle_id IS NOT NULL)
-);
-
--- App instellingen
-CREATE TABLE app_settings (
-  key   TEXT PRIMARY KEY,
-  value JSONB NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-INSERT INTO app_settings (key, value) VALUES
-  ('default_location', '"Oss, Nederland"'),
-  ('default_shipping', '{"postnl": true, "dhl": true, "pickup": true}'),
-  ('platforms_enabled', '["marktplaats","tweakers","cardmarket","ebay"]'),
-  ('ai_model', '"claude-sonnet-4-6"'),
-  ('language', '"nl"'),
-  ('seller_name', '""'),
-  ('whatsapp_number', '""'),
-  ('cardmarket_credentials', '{}'),
-  ('marktplaats_credentials', '{}'),
-  ('ebay_credentials', '{}'),
-  ('quick_replies', '[
-    "Ja, dit is nog beschikbaar!",
-    "De prijs is helaas vast.",
-    "Ik verstuur via PostNL, kosten zijn €4,25.",
-    "Ophalen kan in Oss, afspraak maken via WhatsApp."
-  ]');
+-- Prijswatchers, taxatie_exports, app_settings (zelfde als vorig plan)
+CREATE TABLE price_watches (...);
+CREATE TABLE taxatie_exports (...);
+CREATE TABLE app_settings (...);
 ```
 
-### Row Level Security (solo gebruiker)
-```sql
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE photos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE bundles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE bundle_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE price_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_analyses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE price_watches ENABLE ROW LEVEL SECURITY;
-ALTER TABLE buyback_quotes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE taxatie_exports ENABLE ROW LEVEL SECURITY;
-ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+### RLS (zelfde als vorig plan, alle tabellen alleen authenticated)
 
--- Alleen authenticated users hebben toegang
-CREATE POLICY "auth_full_access_products" ON products
-  FOR ALL USING (auth.role() = 'authenticated');
--- Herhaal dit voor elke tabel...
-
--- Publieke referentie-tabellen
-ALTER TABLE platforms ENABLE ROW LEVEL SECURITY;
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE buyback_services ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "read_platforms" ON platforms FOR SELECT USING (true);
-CREATE POLICY "read_categories" ON categories FOR SELECT USING (true);
-CREATE POLICY "read_buyback_services" ON buyback_services FOR SELECT USING (true);
-```
-
-### ✅ Claude Code Taken — Sectie 3
+### ✅ Claude Code Taken — Sectie 4
 
 ```
-Taak 3.1: Maak een Supabase project aan via de Supabase MCP.
-Taak 3.2: Rol het volledige schema uit (extensies → enums → platforms →
-          buyback_services → categories → products → photos → listings →
-          overige tabellen → RLS policies).
-Taak 3.3: Verifieer met SELECT * FROM platforms dat alle 7 platforms erin staan.
-Taak 3.4: Maak Storage buckets aan: 'product-photos' (private),
-          'bulk-uploads' (private) en 'taxatie-pdfs' (private).
-```
-
----
-
-## 4. Supabase Storage Structuur
-
-```
-product-photos/           (private bucket)
-└── {product_id}/
-    ├── original/
-    │   ├── {photo_id}.jpg
-    │   └── ...
-    └── thumbnails/       (auto via Storage transforms)
-
-bulk-uploads/             (tijdelijke, cleanup na 7 dagen)
-└── {timestamp}_{filename}.jpg
-
-taxatie-pdfs/             (voor taxatie dossiers)
-└── {product_id}_{timestamp}.pdf
+Taak 4.1: Rol het volledige schema uit via Supabase MCP.
+Taak 4.2: Verifieer alle enums met: SELECT typname FROM pg_type
+          WHERE typtype = 'e';
+Taak 4.3: Test insert met sticker_id='0001' en lees terug.
 ```
 
 ---
@@ -655,674 +533,674 @@ taxatie-pdfs/             (voor taxatie dossiers)
 
 ```
 verkoopassistent/
-├── PLAN.md                        ← dit document
+├── PLAN.md
 ├── .env.example
 ├── supabase/
 │   ├── migrations/
 │   │   └── 0001_initial_schema.sql
 │   ├── functions/
-│   │   ├── analyze-product/
 │   │   ├── lookup-ean/
-│   │   ├── generate-listing/
 │   │   ├── fetch-prices/
 │   │   ├── fetch-buyback-quotes/
-│   │   ├── identify-card/
-│   │   ├── identify-antique/
+│   │   ├── identify-card-by-id/
+│   │   ├── lookup-silver-hallmark/
+│   │   ├── lookup-tin-mark/
 │   │   ├── publish-listing/
 │   │   ├── generate-taxatie-pdf/
-│   │   ├── price-watcher-cron/
-│   │   └── push-notifier/
+│   │   ├── generate-sticker-sheet/
+│   │   └── price-watcher-cron/
 │   └── config.toml
 ├── packages/
-│   └── shared/
+│   ├── shared/                        ← gedeelde types (web + mobile + mcp)
+│   └── mcp-server/                    ← custom MCP server voor Claude
 │       ├── src/
-│       │   ├── types.ts
-│       │   ├── schemas.ts
-│       │   └── index.ts
-│       └── package.json
+│       │   ├── index.ts
+│       │   ├── tools/
+│       │   │   ├── list_inventory.ts
+│       │   │   ├── get_product_photos.ts
+│       │   │   ├── search_products.ts
+│       │   │   ├── suggest_bundle.ts
+│       │   │   ├── create_listing.ts
+│       │   │   └── update_product.ts
+│       │   └── lib/
+│       │       └── supabase.ts
+│       ├── package.json
+│       └── README.md                  ← installatie in Claude Desktop
 ├── apps/
-│   ├── web/                       ← Next.js (Vercel)
-│   │   ├── app/
-│   │   ├── components/
-│   │   ├── lib/
-│   │   └── package.json
-│   └── mobile/                    ← Expo
-│       ├── app/
-│       ├── components/
-│       ├── lib/
-│       └── package.json
-└── package.json                   ← pnpm workspace root
+│   ├── web/                           ← Next.js (Vercel)
+│   └── mobile/                        ← Expo
+└── package.json                       ← pnpm workspace
 ```
 
 ---
 
-## 6. Supabase Edge Functions
+## 6. Custom MCP Server — Kernstuk van Fase B
 
-### `analyze-product` — Claude Vision
-```typescript
-// Input:  { productId, photoIds[], analysisType }
-// Output: { category, title, condition, specs, defects,
-//           accessories, confidence }
-// Kosten: ~$0,033 per call (Claude Sonnet, 4 foto's)
+De MCP server is het belangrijkste onderdeel sinds we Claude Vision API niet meer gebruiken. Via deze server kan Claude Desktop (of Claude Code) met jouw inventaris werken.
+
+### Installatie in Claude Desktop
+
+Je voegt dit toe aan `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) of `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "verkoopassistent": {
+      "command": "npx",
+      "args": ["tsx", "/pad/naar/verkoopassistent/packages/mcp-server/src/index.ts"],
+      "env": {
+        "SUPABASE_URL": "https://xxxxx.supabase.co",
+        "SUPABASE_SERVICE_KEY": "eyJhb..."
+      }
+    }
+  }
+}
 ```
 
-### `lookup-ean` (nieuw) — EAN → Tweakers
+### Beschikbare Tools
+
 ```typescript
-// Input: { ean, barcodeType }
-// Flow:
-//   1. Check cache in price_history
-//   2. Tweakers Pricewatch scraper: tweakers.net/pricewatch/zoeken?keyword={ean}
-//   3. Parse lowest price + product name + URL
-//   4. Update products.new_price + new_price_source_url
-// Output: { productName, newPrice, sourceUrl, tweakersId? }
+// packages/mcp-server/src/tools/list_inventory.ts
+{
+  name: 'list_inventory',
+  description: 'Lijst producten uit inventaris met filters',
+  inputSchema: {
+    status: 'indexed | ready_to_list | listed | sold | archived',
+    category: 'optioneel',
+    sticker_range_start: 'optioneel, bijv 0042',
+    sticker_range_end: 'optioneel, bijv 0067',
+    limit: 'default 50'
+  }
+}
+
+// get_product_photos.ts
+{
+  name: 'get_product_photos',
+  description: 'Haal foto-URLs op van een product (signed URLs, 1u geldig). Claude kan deze URLs zien als je ze in het gesprek deelt.',
+  inputSchema: {
+    product_id: 'uuid | sticker_id'
+  }
+}
+
+// search_products.ts
+{
+  name: 'search_products',
+  description: 'Vrije zoekopdracht in producten',
+  inputSchema: {
+    query: 'tekst, matcht op title/working_title/notes/specs',
+    category: 'optioneel'
+  }
+}
+
+// suggest_bundle.ts
+{
+  name: 'suggest_bundle',
+  description: 'Maak een bundle-voorstel in de database. Status blijft draft.',
+  inputSchema: {
+    title: 'bundle titel',
+    product_ids_or_stickers: ['uuid of sticker_id'],
+    suggested_price: 'optioneel',
+    reasoning: 'waarom deze items samen'
+  }
+}
+
+// create_listing.ts
+{
+  name: 'create_listing',
+  description: 'Maak een draft advertentie voor product + platform. Status: pending_review.',
+  inputSchema: {
+    product_id: 'uuid | sticker_id',
+    platform: 'marktplaats | tweakers | cardmarket | ebay',
+    title: 'advertentie titel',
+    description: 'advertentie tekst',
+    price: 'in EUR'
+  }
+}
+
+// update_product.ts
+{
+  name: 'update_product',
+  description: 'Werk productgegevens bij (specs, condition, title, etc.)',
+  inputSchema: {
+    product_id: 'uuid | sticker_id',
+    updates: '{ title?, condition?, specs?, defects?, ... }'
+  }
+}
 ```
 
-### `fetch-buyback-quotes` (nieuw) — Opkoopprijzen
-```typescript
-// Input: { productId, serviceSlug? }
-// Flow:
-//   - levelseven.nl: scrape inkooppagina
-//   - nedgame.nl: publieke inruillijst
-//   - rarecards.nl / catchcollect.nl: voor pokémon bulk
-// Output: Array<{ service, price, conditions, validUntil }>
-// Schrijft naar buyback_quotes tabel
-```
+### Typische workflow met Claude Desktop
 
-### `generate-taxatie-pdf` (nieuw) — PDF voor taxateur
-```typescript
-// Input: { productId | bundleId, recipientName?, recipientEmail? }
-// Flow:
-//   1. Haal product + foto's + merkteken-data op
-//   2. Genereer PDF met @react-pdf/renderer
-//   3. Bevat: voor/achter foto's, merkteken macro-foto's, specs,
-//      provenance_notes, geschatte waarde, jouw contactgegevens
-//   4. Upload naar taxatie-pdfs bucket
-//   5. Log in taxatie_exports
-// Output: { pdfUrl, downloadUrl (signed, 7 dagen geldig) }
 ```
+Jij:    "Laat me de inventaris zien van sticker 0042 t/m 0060"
 
-### `price-watcher-cron` — pg_cron scheduled
-```sql
-SELECT cron.schedule('price-watcher', '0 */6 * * *',
-  $$SELECT net.http_post(
-    url := 'https://{ref}.functions.supabase.co/price-watcher-cron',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer ' || current_setting('app.service_key')
-    ),
-    body := '{}'::jsonb
-  )$$
-);
+Claude: [roept list_inventory aan met sticker_range_start='0042',
+         sticker_range_end='0060']
+        "Ik zie 19 producten in dat bereik. 12 zijn al gecategoriseerd
+         (7x RAM, 3x Pokémon kaarten, 2x consoles), 7 staan als
+         'unknown'. Wil je dat ik de foto's van de unknowns bekijk?"
+
+Jij:    "Ja graag"
+
+Claude: [roept get_product_photos aan voor elk unknown product]
+        [ontvangt signed URLs, rendert foto's in het gesprek]
+        "Op basis van de foto's:
+        - Sticker 0045: antieke tinnen kandelaar met merkteken
+        - Sticker 0048: DDR2 SODIMM 2GB Samsung
+        - Sticker 0052: PlayStation 2 controller (Dual Shock)
+        ...
+        Zal ik deze categoriseren?"
+
+Jij:    "Ja, en stel een bundel voor met alle RAM die compatibel is"
+
+Claude: [roept update_product aan voor de 7 items]
+        [roept list_inventory aan met category='ram_dimm' en 'ram_sodimm']
+        [analyseert specs]
+        [roept suggest_bundle aan]
+        "Ik heb een bundel 'DDR2 SODIMM 8GB Kit (4×2GB Samsung)'
+         aangemaakt met stickers 0048, 0051, 0058, 0061.
+         Voorgestelde prijs: €45 (matched kit premium)."
 ```
 
 ### ✅ Claude Code Taken — Sectie 6
 
 ```
-Taak 6.1: Maak supabase/functions/ map met alle 11 functies (stubs + README).
-Taak 6.2: Implementeer lookup-ean eerst (kleinste, geen AI).
-Taak 6.3: Implementeer analyze-product met Claude Sonnet Vision.
-Taak 6.4: Implementeer generate-listing (Claude tekstgeneratie).
-Taak 6.5: Zet prijswatcher cron op via Supabase MCP.
+Taak 6.1: Zet packages/mcp-server op met @modelcontextprotocol/sdk.
+Taak 6.2: Implementeer alle 6 tools.
+Taak 6.3: Test lokaal met: npx @modelcontextprotocol/inspector
+          tsx src/index.ts
+Taak 6.4: Voeg README toe met installatie-instructies voor Claude Desktop
+          en Claude Code.
 ```
 
 ---
 
-## 7. AI-Pipeline: Foto naar Advertentie
+## 7. Twee-Fasen Workflow
 
-### Stap 1 — Input bepalen
+### Fase A — Indexeren
+
 ```
-Mobiel:
-  • Barcode gedetecteerd? → lookup-ean → skip AI identificatie
-  • Geen barcode → Camera sessie → Claude Vision
+Stap 1: Print stickervel (via web-app)
+        → generate-sticker-sheet genereert PDF
+        → Uitprinten, uitknippen
 
-Web (PC):
-  • Drag & drop foto's → optioneel EAN invullen
-  • Auto-grouping op tijdstempel (<30s = zelfde product)
-  • Batch-analyse knop
-```
+Stap 2: Plak sticker op product
+        → Schrijf het nummer in stikkervel-tracking (optioneel)
 
-### Stap 2 — Productherkenning
+Stap 3: Maak foto's (mobiele app)
+        → Kies sticker-modus:
+          A) OCR inline (sticker in productfoto)
+          B) Aparte sticker-foto eerst
+          C) Handmatig typen
+        → Maak 2-8 productfoto's
+        → Optioneel: barcode scannen, merkteken macro, schade detail
+        → Optioneel: korte notitie ("kast in garage links")
 
-**Met EAN (sneller, goedkoper):**
-```
-EAN → lookup-ean → Tweakers product match → category auto-detected →
-Claude Vision alleen voor: conditie + gebreken + accessoires
-```
-
-**Zonder EAN (Claude Vision volledig):**
-```
-Foto's → analyze-product → Claude Sonnet Vision met prompt:
-
-"Analyseer deze foto's van een te verkopen item. Retourneer JSON met:
-- category: één van [ram_dimm, ram_sodimm, cpu, gpu, console, ...]
-- title: Nederlandse producttitel
-- condition: mint/near_mint/excellent/very_good/good/fair/poor
-- confidence: 0.0-1.0
-- specs: {categorie-specifieke velden}
-- defects: [zichtbare gebreken]
-- included_accessories: [zichtbare meegeleverde items]
-- missing_items: [wat ontbreekt]
-- selling_points: [verkoopargumenten]"
+Stap 4: Opslaan
+        → status = 'indexed'
+        → category_slug = 'unknown' als onbekend
+        → Geen prijsopzoek, geen AI-analyse, geen advertentie
 ```
 
-### Stap 3 — Categorie-specifieke logica
+### Fase B — Verkoop voorbereiden (via Claude Desktop / Code)
 
-**RAM:** detecteer generatie, capaciteit, snelheid → check meerdere identieke sticks → suggereer KIT-bundle.
-
-**Pokémon-kaart:**
 ```
-1. GiblTCG API (gratis) → card_id + set + nummer
-2. Pokémon TCG API → Cardmarket EUR prijs
-3. Holo-detectie (meerdere hoeken)
-4. Grading aanbeveling: IF rawValue > €50 AND condition >= near_mint
-```
+Stap 1: Open Claude Desktop of Claude Code
+        → MCP server is actief
 
-**Antiek tin/zilver:**
-```
-1. Claude Vision: algemene ID + periode-schatting
-2. Gebruiker maakt merkteken-foto in "Merkteken (macro)" modus
-3. identify-antique Edge Function:
-   • Claude leest merkteken transcriptie
-   • Nederlandse TinVereniging database lookup
-   • Zilver.nl keurmerken database lookup
-4. Handmatige validatie vóór publicatie
-```
+Stap 2: Vraag Claude om inventaris-analyse
+        "Welke items in mijn inventaris zijn nog 'indexed' (unknown)
+         en niet gecategoriseerd? Bekijk de foto's en categoriseer ze."
 
-### Stap 4 — Prijsvergelijking
-```
-Hardware met EAN:    nieuw = Tweakers Pricewatch
-                     tweedehands = Marktplaats + Tweakers V&A
-Hardware zonder EAN: Claude schatting + Marktplaats zoekopdracht
-Kaarten:             Cardmarket API (EUR)
-Antiek:              Catawiki afgeronde veilingen
-Consoles:            eBay sold listings + Marktplaats + opkoopdiensten
-```
+Stap 3: Claude gebruikt MCP tools:
+        - list_inventory → vindt unknowns
+        - get_product_photos → bekijkt foto's (jij ziet ze ook)
+        - update_product → categoriseert
 
-### Stap 5 — Advertentietekst per platform
-```
-Marktplaats (NL, 200-400 woorden):
-  Opening → specs bulletpoints → staat + gebreken →
-  accessoires → bezorging → contact
+Stap 4: Vraag Claude om bundle-analyse
+        "Welke producten passen goed samen als bundel?"
+        → Claude bekijkt compatibele RAM, console+games combos,
+          kaart-collecties per set
+        → Claude roept suggest_bundle aan met reasoning
 
-Tweakers V&A (NL, technisch):
-  Specs eerst → staat in 1-2 zinnen → reden verkoop
+Stap 5: Vraag Claude om prijsonderzoek (via Edge Functions)
+        "Zoek de tweedehandsprijzen op voor bundle X"
+        → Claude roept (via MCP) een wrapper rond fetch-prices aan
 
-Cardmarket (EN):
-  Card name + set + number → language + condition → shipping
+Stap 6: Vraag Claude om advertenties
+        "Schrijf Marktplaats-advertentie voor bundle X"
+        → Claude genereert tekst, roept create_listing aan
+        → Status wordt 'pending_review'
 
-eBay (EN, keywords voor SEO):
-  Titel met merk + model → bulletpoints → condition notes
+Stap 7: Goedkeuren in web-app of mobiele app
+        → Bekijk listing
+        → Bewerk indien nodig
+        → [Publiceren] → publish-listing Edge Function
 ```
 
-### Stap 6 — Review & Publicatie
-```
-Review scherm toont:
-  ✓ Foto's (reorderbaar, verwijderbaar)
-  ✓ Herkende specs (bewerkbaar)
-  ✓ Gebreken + accessoires (bewerkbaar)
-  ✓ Gegenereerde tekst per platform (bewerkbaar)
-  ✓ Prijs per platform (met commissie-berekening)
-  ✓ Bundel-suggestie indien toepasselijk
-  ✓ Opkoopdienst-prijzen ter vergelijking
+### ✅ Claude Code Taken — Sectie 7
 
-Knoppen:
-  [Goedkeuren & Publiceren]  → via API indien mogelijk
-  [Kopieer tekst + foto's]    → voor handmatig plakken
-  [Opslaan als concept]
-  [Archiveren]
+```
+Taak 7.1: Maak een 'Workflow guide' pagina op de web-app
+          die de 2-fasen-flow uitlegt.
+Taak 7.2: Maak een dashboard-widget "Klaar voor analyse"
+          die toont hoeveel items nog 'indexed' staan.
 ```
 
 ---
 
-## 8. Bundle-logica
+## 8. App Schermen
 
-```typescript
-// Edge Function suggest-bundles (pseudocode)
-
-async function suggestBundles(newProduct) {
-  const suggestions = [];
-
-  // RAM Kit
-  if (newProduct.category_slug.startsWith('ram_')) {
-    const matches = await findMatchingRam(newProduct);
-    if (matches.length >= 1) {
-      suggestions.push({
-        type: 'ram_kit',
-        items: [newProduct, ...matches],
-        price: sumValues * 1.10,
-        reason: 'Matched kit levert 10% premium op'
-      });
-    }
-  }
-
-  // Console + games
-  if (newProduct.category_slug === 'console') {
-    const games = await findGamesForPlatform(newProduct.specs.model);
-    const lowValue = games.filter(g => g.estimated_value < 7);
-    const highValue = games.filter(g => g.estimated_value >= 7);
-
-    if (lowValue.length > 0) {
-      suggestions.push({
-        type: 'console_bundle',
-        items: [newProduct, ...lowValue],
-        note: `${highValue.length} games apart verkopen (>€7)`
-      });
-    }
-  }
-
-  // Pokémon: set + bulk
-  if (newProduct.category_slug === 'pokemon_card') {
-    const sameSet = await findSameSet(newProduct.specs.set_name);
-    const bulk = sameSet.filter(c => c.estimated_value < 1);
-    const lot = sameSet.filter(c => c.estimated_value >= 1 &&
-                                    c.estimated_value <= 20);
-
-    if (bulk.length >= 50) {
-      suggestions.push({
-        type: 'card_lot',
-        items: bulk,
-        price: bulk.length * 0.02
-      });
-    }
-    if (lot.length >= 5) {
-      suggestions.push({
-        type: 'card_lot',
-        items: lot,
-        price: sumValues * 0.75
-      });
-    }
-  }
-
-  return suggestions;
-}
-```
-
----
-
-## 9. App Schermen — Mobiel (Expo Router)
+### Mobiele app — Gefocust op Fase A (indexeren)
 
 ```
 apps/mobile/app/
-├── (auth)/
-│   └── login.tsx
+├── (auth)/login.tsx
 ├── (tabs)/
 │   ├── _layout.tsx
-│   ├── index.tsx                  # Dashboard
-│   ├── camera.tsx                 # Camera met 4 modes
-│   ├── products.tsx               # Productenlijst
-│   ├── listings.tsx               # Advertenties
+│   ├── index.tsx              # Dashboard: recent geïndexeerd + teller
+│   ├── capture.tsx            # KERN: camera + sticker flow
+│   ├── inventory.tsx          # Lijst/grid van geïndexeerde items
+│   ├── listings.tsx           # Actieve advertenties (status tracking)
 │   └── settings.tsx
 ├── product/
-│   ├── [id].tsx
-│   ├── [id]/edit.tsx
-│   └── [id]/listings.tsx
+│   ├── [sticker].tsx          # Navigeren via sticker-ID
+│   └── [sticker]/edit.tsx
 ├── listing/
-│   ├── [id].tsx                   # Goedkeuringsscherm
-│   └── create.tsx
-├── bundle/
-│   ├── index.tsx
-│   ├── [id].tsx
-│   └── suggest.tsx
-└── price-watch/
-    └── index.tsx
+│   └── [id].tsx               # Goedkeuringsscherm voor advertenties
+└── settings/
+    └── sticker-mode.tsx       # Standaard sticker-methode instellen
 ```
 
-### Camera Modes (belangrijk)
+### Capture scherm (kern van mobiele app)
+
+```
+┌─────────────────────────────┐
+│ ← Sessie #12 (sticker 0043) │
+├─────────────────────────────┤
+│                             │
+│                             │
+│      [CAMERA PREVIEW]       │
+│                             │
+│                             │
+├─────────────────────────────┤
+│ Mode: [📸 Product ▼]        │
+│       [🔢 Sticker]          │
+│       [🏷️ Merkteken macro]  │
+│       [🔎 Detail/schade]    │
+│       [1️⃣ Barcode EAN]      │
+├─────────────────────────────┤
+│ Foto's deze sessie: 3       │
+│ [thumb] [thumb] [thumb]     │
+├─────────────────────────────┤
+│         [Opname]            │
+│  [Sessie afsluiten]         │
+└─────────────────────────────┘
+```
+
+Bij sessie-start: keuze sticker-methode:
+
+```
+┌─────────────────────────────┐
+│ Nieuwe productsessie        │
+│                             │
+│ Sticker-ID:                 │
+│                             │
+│ [A] OCR uit productfoto     │
+│     (app leest nummer       │
+│      automatisch)           │
+│                             │
+│ [B] Eerst sticker-foto      │
+│     (hogere zekerheid)      │
+│                             │
+│ [C] Handmatig typen         │
+│     Laatst gebruikt: 0042   │
+│     Volgende: 0043 [typ]    │
+│                             │
+│ [Start sessie]              │
+└─────────────────────────────┘
+```
+
+### Web app — Gefocust op Fase B (analyse + verkoop)
+
+```
+apps/web/app/
+├── (auth)/login/page.tsx
+├── page.tsx                       # Dashboard
+├── inventory/
+│   ├── page.tsx                   # Bulk-tabel van alle items
+│   └── [sticker]/page.tsx         # Product detail
+├── listings/
+│   ├── page.tsx                   # Bulk-beheer advertenties
+│   └── [id]/page.tsx
+├── bundles/
+│   └── page.tsx                   # Bundle manager
+├── upload/
+│   └── page.tsx                   # Bulk foto upload van pc
+├── stickers/
+│   └── page.tsx                   # Stickervel PDF generator
+├── taxatie/
+│   ├── page.tsx
+│   └── [id]/preview.tsx
+├── prices/page.tsx
+├── analytics/page.tsx
+├── database/page.tsx              # Read-only query interface
+└── settings/page.tsx
+```
+
+### Stickervel generator scherm
+
+```
+┌──────────────────────────────────────┐
+│ Stickervel genereren                 │
+├──────────────────────────────────────┤
+│ Laatst gebruikt: 0160                │
+│ Volgende start: 0161                 │
+│                                      │
+│ Startnummer:  [0161]                 │
+│ Aantal:       [160]                  │
+│                                      │
+│ [Voorbeeld PDF]  [Genereer & Print]  │
+│                                      │
+│ Eerder geprint:                      │
+│ • 0001-0160  (3 januari)             │
+│ • 0161-0320  (nog niet)              │
+└──────────────────────────────────────┘
+```
+
+### ✅ Claude Code Taken — Sectie 8
+
+```
+Taak 8.1: Implementeer mobiele CaptureScreen met 5 camera-modi.
+Taak 8.2: Implementeer sticker-mode selector bij sessie-start.
+Taak 8.3: Implementeer ML Kit OCR integratie met confidence threshold.
+Taak 8.4: Implementeer web stickers/page.tsx met PDF preview.
+Taak 8.5: Implementeer web inventory tabel met sticker-range filter.
+```
+
+---
+
+## 9. Supabase Edge Functions
+
+### `generate-sticker-sheet` (nieuw)
 
 ```typescript
-// apps/mobile/app/(tabs)/camera.tsx
-
-type CameraMode = 'product' | 'barcode' | 'mark_macro' | 'detail_damage';
-
-const modeConfig = {
-  product: {
-    hint: 'Foto van het hele product',
-    icon: '📸',
-    autoCapture: false
-  },
-  barcode: {
-    hint: 'Richt op barcode, scan automatisch',
-    icon: '🔢',
-    autoCapture: true,
-    scanner: 'expo-barcode-scanner'
-  },
-  mark_macro: {
-    hint: 'Merkteken/stempel — 10cm afstand, schuin licht',
-    icon: '🔍',
-    autoCapture: false,
-    tips: [
-      'Schuin licht maakt reliëf zichtbaar',
-      'Zwarte achtergrond voor metaal',
-      'Gebruik macro-modus'
-    ]
-  },
-  detail_damage: {
-    hint: 'Close-up van schade/detail',
-    icon: '🔎',
-    autoCapture: false
-  }
-};
+// Input: { startNumber: number, count: number }
+// Output: { pdfUrl: string } signed URL
+//
+// Genereert A4 PDF met 4 kwartieren, elk 40 stickers (5×8 grid).
+// Font: JetBrains Mono Bold 11pt.
+// Sticker afmeting: 21×15mm.
+// Snijlijnen tussen stickers (dashed, 0.25mm, #ccc).
+// Header per kwartier: range "0001-0040" etc.
+//
+// Slaat PDF op in taxatie-pdfs bucket + record in sticker_sheets tabel.
 ```
 
-### Dashboard widgets
-- Statistieken: actief / concept / verkocht / totale waarde
-- Recente activiteit (tijdlijn)
-- Bundles die op goedkeuring wachten
-- Prijswatcher alerts
-- "Producten zonder EAN" teller (incentive barcode scanner)
-- "Antiek in concept — exporteer naar taxateur" knop
+### `lookup-ean`, `fetch-prices`, `fetch-buyback-quotes`
+
+*(Zelfde als vorig plan)*
+
+### `identify-card-by-id` (aangepast, niet meer Vision)
+
+```typescript
+// Input: { setName, cardNumber, cardName? }  ← jij vult in via Claude
+// Output: { tcgApiId, cardmarketId, trendPrice, lowPrice, avgSellPrice }
+//
+// Deze functie doet ALLEEN lookup, geen herkenning uit foto.
+// Claude leest zelf de kaart uit de foto en geeft set+nummer door.
+```
+
+### `lookup-silver-hallmark`, `lookup-tin-mark`
+
+```typescript
+// Input: { markText: "bijv ANNO 1762 D.B.", category: 'tin' | 'silver' }
+// Output: { matches: [{ maker, period, region, source, confidence }] }
+//
+// Raadpleegt:
+// - Nederlandse TinVereniging database (gescrapt/gecached)
+// - Zilver.nl keurmerken database
+//
+// Claude bekijkt de macro-foto van het merkteken en typt de tekst over.
+// Deze functie zoekt dan in de database.
+```
+
+### `generate-taxatie-pdf`, `publish-listing`, `price-watcher-cron`
+
+*(Zelfde als vorig plan)*
 
 ### ✅ Claude Code Taken — Sectie 9
 
 ```
-Taak 9.1: npx create-expo-app@latest apps/mobile --template tabs
-Taak 9.2: Installeer dependencies uit sectie 2
-Taak 9.3: Implementeer CameraScreen met 4 modes
-Taak 9.4: Implementeer dashboard met Supabase Realtime
-Taak 9.5: Implementeer product detail + listing goedkeuringsscherm
+Taak 9.1: Implementeer generate-sticker-sheet met @react-pdf/renderer.
+Taak 9.2: Implementeer lookup-ean (Tweakers scraper).
+Taak 9.3: Implementeer lookup-silver-hallmark met Zilver.nl scraping.
+Taak 9.4: Implementeer lookup-tin-mark met TinVereniging scraping.
 ```
 
 ---
 
-## 10. Web Interface — PC (Next.js op Vercel)
+## 10. Stickervel PDF Specificatie
 
-```
-apps/web/app/
-├── (auth)/
-│   └── login/page.tsx
-├── page.tsx                       # Dashboard
-├── products/
-│   ├── page.tsx                   # Bulk-tabel
-│   └── [id]/page.tsx
-├── listings/
-│   ├── page.tsx
-│   └── [id]/page.tsx
-├── upload/
-│   └── page.tsx                   # Bulk foto upload
-├── bundles/
-│   └── page.tsx
-├── taxatie/
-│   ├── page.tsx                   # Taxatie dossiers
-│   └── [id]/preview.tsx           # PDF preview
-├── prices/
-│   └── page.tsx
-├── analytics/
-│   └── page.tsx
-├── database/
-│   └── page.tsx                   # DB browser
-└── settings/
-    └── page.tsx
-```
-
-### Database Browser (PC-exclusief)
-Simpele query-interface (read-only) met whitelist van views:
 ```typescript
-const ALLOWED_VIEWS = [
-  'products_summary',
-  'inventory_value',
-  'listings_by_platform',
-  'sales_last_30_days',
-  'ram_by_generation',
-  'pokemon_cards_by_set'
+// supabase/functions/generate-sticker-sheet/lib/pdfLayout.ts
+
+const PAGE_WIDTH_MM = 210;
+const PAGE_HEIGHT_MM = 297;
+
+const QUARTERS = [
+  { x: 0, y: 0, label: 'kwartier_1' },          // linksboven
+  { x: 105, y: 0, label: 'kwartier_2' },        // rechtsboven
+  { x: 0, y: 148.5, label: 'kwartier_3' },      // linksonder
+  { x: 105, y: 148.5, label: 'kwartier_4' }     // rechtsonder
 ];
+
+const QUARTER_WIDTH = 105;      // mm
+const QUARTER_HEIGHT = 148.5;   // mm
+
+const GRID_COLS = 5;
+const GRID_ROWS = 8;
+const STICKER_WIDTH = 21;       // mm
+const STICKER_HEIGHT = 15;      // mm
+
+const QUARTER_PADDING_TOP = 4;  // mm (voor header)
+const QUARTER_PADDING_SIDES = 0;
+
+const STICKERS_PER_QUARTER = GRID_COLS * GRID_ROWS;  // 40
+const STICKERS_PER_SHEET = STICKERS_PER_QUARTER * 4;  // 160
+
+// Binnen elk kwartier:
+// - Header: "0001-0040" (klein, lichtgrijs)
+// - Grid: 5 kolommen × 8 rijen = 40 stickers
+// - Horizontale afstand tussen stickers: 0mm (stickers tegen elkaar)
+// - Snijlijnen: dashed 0.25mm grijs tussen alle stickers
+//
+// Elk sticker bevat:
+// - Nummer in JetBrains Mono Bold 11pt, zwart, gecentreerd
+// - 4-cijferig zero-padded: 0001, 0042, 0160
+
+export function generateStickerSheet(startNumber: number): PDFDocument {
+  // Implementatie met @react-pdf/renderer
+  // Returns PDF binary
+}
 ```
 
-### Taxatie Workflow (PC-exclusief)
-```
-1. Selecteer één of meer antiek-items
-2. Vul dossier-metadata in
-3. Preview PDF in browser
-4. [Genereren] → generate-taxatie-pdf
-5. Download PDF of verstuur via email
-6. PDF opgeslagen in taxatie-pdfs bucket + logged
-```
+### Printtips
 
-### PDF inhoud voor taxatie
-```
-╔══════════════════════════════════════╗
-║   TAXATIE DOSSIER                    ║
-║   {product.title}                    ║
-║   Datum: {today}                     ║
-╠══════════════════════════════════════╣
-║   📸 Productfoto's (voor + achter)   ║
-║   🔍 Merktekens (macro)              ║
-║   📋 Kenmerken:                      ║
-║      - Type / Periode / Materiaal    ║
-║      - Afmetingen / Gewicht          ║
-║   📜 Herkomst:                       ║
-║      {product.provenance_notes}      ║
-║   💰 Geschatte marktwaarde:          ║
-║      €{min} - €{max}                 ║
-║   📞 Contact: {seller_name}          ║
-║      WhatsApp: {whatsapp_number}     ║
-╚══════════════════════════════════════╝
-```
-
-### ✅ Claude Code Taken — Sectie 10
-
-```
-Taak 10.1: npx create-next-app@latest apps/web --typescript --tailwind --app
-Taak 10.2: shadcn/ui init + installeer recharts, react-table, react-dropzone
-Taak 10.3: Implementeer bulk upload met drag-and-drop + auto-grouping
-Taak 10.4: Implementeer producten-tabel met bulk-acties
-Taak 10.5: Implementeer taxatie PDF flow
-Taak 10.6: Deploy naar Vercel via Vercel MCP
-```
+- **Papier:** stickerpapier A4 (Avery L7651, L7656 of soortgelijk, of universeel)
+- **Print-instelling:** "Werkelijk formaat" (geen schaling), hoogste kwaliteit
+- **Kleur:** zwart-wit
+- Na printen uitknippen met een snijmachine of schaar
 
 ---
 
-## 11. Klantcommunicatie
-
-### In-app notificaties
-Supabase Realtime + Expo Push voor:
-- Prijsdaling prijswatcher
-- Listing verlopen
-- Bundle-suggestie klaar
-- Taxatie PDF gegenereerd
-
-### WhatsApp (simpel, zonder Business API)
-```typescript
-const whatsappLink = `https://wa.me/31${number}?text=${
-  encodeURIComponent(`Hoi, ik heb interesse in "${listing.final_title}"`)
-}`;
-```
-
-### Quick-reply templates (in `app_settings`)
-Bewerkbaar op web-app. Mobiel: één-tik-kopiëren.
-
----
-
-## 12. MCP Servers
-
-### Voor development in Claude Code
-| Server | URL | Gebruik |
-|--------|-----|---------|
-| **Supabase MCP** | `https://mcp.supabase.com/mcp` | Schema, migraties, queries |
-| **Vercel MCP** | `https://mcp.vercel.com` | Deployments, logs |
-| **Playwright MCP** | via `npx` | Scraping prototyping |
-| **Fetch MCP** | via `npx` | Webpagina's ophalen |
-
-### Custom MCP server voor jouw app (Fase 7)
-```typescript
-// tools/verkoopassistent-mcp/index.ts
-const server = new MCPServer('verkoopassistent', {
-  tools: [
-    { name: 'list_products', inputSchema: { status, category } },
-    { name: 'get_product_details', inputSchema: { id } },
-    { name: 'generate_listing_for_product', inputSchema: { productId, platform } },
-    { name: 'get_inventory_summary' },
-    { name: 'find_bundle_candidates' }
-  ]
-});
-```
-
----
-
-## 13. Kosten
+## 11. Kosten (flink lager)
 
 | Service | Plan | Kosten/maand |
 |---------|------|-------------|
 | Supabase | Free tier | €0 |
 | Vercel | Hobby | €0 |
-| Claude API (Sonnet) ~200 listings × $0,033 | Pay-as-go | ~$7 |
-| Cardmarket / Pokémon TCG / eBay API | Gratis | €0 |
-| **Totaal normaal gebruik** | | **~$7** |
-| **Totaal zwaar gebruik (1000+ listings)** | Supabase Pro | **~$58** |
+| **Claude (via Desktop/Code)** | Bestaande Claude Pro/Max | Al betaald |
+| Cardmarket / eBay / Tweakers API | Gratis | €0 |
+| **Totaal nieuwe kosten** | | **€0** |
+
+De app genereert geen Claude API-kosten meer omdat Claude Desktop/Code wordt gebruikt die je al hebt.
 
 ---
 
-## 14. Implementatieroadmap voor Claude Code
+## 12. Implementatieroadmap
 
 ### 🏁 Fase 1 — Foundation (~2 dagen)
-**Doel:** Database draait, auth werkt, lege app structuur staat.
 
 ```
-[ ] Supabase project aanmaken (Supabase MCP)
-[ ] Database schema uitrollen (sectie 3)
-[ ] Storage buckets aanmaken
-[ ] Monorepo opzetten met pnpm workspaces
+[ ] Supabase project via MCP
+[ ] Schema uitrollen (sectie 4)
+[ ] Storage buckets: product-photos, bulk-uploads, taxatie-pdfs, sticker-sheets
+[ ] Monorepo met pnpm workspaces
 [ ] apps/web: Next.js + shadcn/ui + Supabase SSR auth
 [ ] apps/mobile: Expo + expo-router + Supabase auth
 [ ] packages/shared: types + zod schemas
-[ ] .env.example + .env.local
-[ ] Deploy apps/web naar Vercel (Vercel MCP)
+[ ] packages/mcp-server: skeleton
 
-Verificatie: inloggen werkt op beide apps met magic link.
+Verificatie: inloggen werkt op beide apps.
 ```
 
-### 📸 Fase 2 — Camera & Upload (~2 dagen)
+### 🏷️ Fase 2 — Sticker systeem (~2 dagen)
+
 ```
-[ ] CameraScreen mobiel met 4 modes (product/barcode/mark_macro/detail)
-[ ] expo-barcode-scanner → fills products.ean
-[ ] Foto upload naar Supabase Storage
-[ ] Bulk upload web met drag-and-drop + auto-grouping
-[ ] Productenlijst mobiel + web
+[ ] Edge Function generate-sticker-sheet
+[ ] Web-pagina /stickers met PDF generator
+[ ] ML Kit Text Recognition in Expo
+[ ] Sticker-mode selector in CaptureScreen
+[ ] Drie modi implementeren (OCR inline/separate/manual)
+[ ] Database: sticker_sheets tabel gebruiken
+
+Verificatie: PDF genereren → uitprinten → foto maken →
+             sticker ID automatisch gekoppeld.
+```
+
+### 📸 Fase 3 — Indexeren (Fase A) (~3 dagen)
+
+```
+[ ] CaptureScreen mobiel met 5 modi
+    (product/barcode/merkteken/detail/sticker)
+[ ] Foto upload naar Storage
+[ ] Bulk upload web met drag-drop
+[ ] Inventory tabel mobiel + web
 [ ] Product detail scherm
+[ ] EAN barcode scanner
 
-Verificatie: 5 foto's maken op telefoon → meteen zichtbaar op pc.
+Verificatie: 50 items indexeren in 1 sessie.
 ```
 
-### 🤖 Fase 3 — AI Pipeline (~3 dagen)
-```
-[ ] Edge Function lookup-ean (Tweakers scraper)
-[ ] Edge Function analyze-product (Claude Sonnet Vision)
-[ ] Edge Function generate-listing (per platform)
-[ ] Edge Function fetch-prices
-[ ] Review/goedkeuringsscherm mobiel
-[ ] Listing editor web (split-view)
-[ ] Gebreken + accessoires velden in UI
+### 🤖 Fase 4 — MCP Server (Fase B) (~3 dagen)
 
-Verificatie: RAM foto → app herkent DDR3 8GB Corsair → stelt prijs voor →
-             genereert Marktplaats tekst.
+```
+[ ] MCP server package opzetten
+[ ] Tools: list_inventory, get_product_photos, search_products
+[ ] Tools: suggest_bundle, create_listing, update_product
+[ ] Lokale test met Claude Desktop
+[ ] README met installatie-instructies
+
+Verificatie: Claude Desktop kan foto's bekijken en bundles suggereren.
 ```
 
-### 🔗 Fase 4 — Platform Integraties (~3 dagen)
-```
-[ ] Cardmarket API v2 (OAuth 1.0)
-[ ] eBay API (OAuth 2.0)
-[ ] Tweakers V&A scraper (of copy-paste knop)
-[ ] Marktplaats API aanvragen + integreren
-[ ] Edge Function publish-listing
-[ ] Status tracking
+### 💰 Fase 5 — Lookup & Publicatie (~3 dagen)
 
-Verificatie: kaart → Cardmarket listing live <30 seconden.
 ```
-
-### 💰 Fase 5 — Bundles, Opkoop & Watcher (~2 dagen)
-```
-[ ] Bundle-suggestie Edge Function
-[ ] Bundle manager web + mobiel
+[ ] Edge Function lookup-ean
+[ ] Edge Function fetch-prices (Marktplaats/Tweakers/Cardmarket/eBay)
 [ ] Edge Function fetch-buyback-quotes
-[ ] Opkoopdiensten-vergelijking in product detail
-[ ] Prijswatcher met pg_cron
-[ ] Push notificaties via Expo
+[ ] Edge Function identify-card-by-id
+[ ] Edge Function lookup-silver-hallmark + lookup-tin-mark
+[ ] Edge Function publish-listing
+[ ] Listing goedkeuringsscherm mobiel + web
 
-Verificatie: console toegevoegd → bundle-suggestie met games <€7 +
-             levelseven.nl opkoopprijs ter vergelijking.
+Verificatie: product via Claude → listing draft → goedkeuren → live op platform.
 ```
 
 ### 🏛️ Fase 6 — Antiek & Taxatie (~2 dagen)
+
 ```
 [ ] Merkteken macro-camera modus met tips
-[ ] Edge Function identify-antique
-    (Nederlandse TinVereniging + Zilver.nl lookup)
-[ ] Edge Function generate-taxatie-pdf (react-pdf)
+[ ] Edge Function generate-taxatie-pdf
 [ ] Taxatie workflow op web
-[ ] PDF preview scherm
-[ ] Email integratie (optioneel)
+[ ] PDF preview + email
 
-Verificatie: tinnen kan → merkteken scan → identificatie → PDF →
-             klaar voor taxateur.
+Verificatie: tinnen kan → merkteken foto → Claude leest tekst →
+             TinVereniging lookup → PDF klaar voor taxateur.
 ```
 
 ### 🎨 Fase 7 — Afwerking (~2 dagen)
-```
-[ ] Statistieken dashboard web (recharts)
-[ ] Database browser web
-[ ] Offline support mobiel (react-query persistQueryClient)
-[ ] Custom MCP server voor Claude Code
-[ ] Error monitoring (Sentry free tier)
-[ ] Backup strategie (Supabase daily backups)
 
-Verificatie: vanuit Claude Code: "Welke producten heb ik deze week verkocht?"
+```
+[ ] Statistieken dashboard (recharts)
+[ ] Database browser
+[ ] Prijswatchers met pg_cron
+[ ] Push notificaties
+[ ] Offline support mobiel
+[ ] Backups
+
+Verificatie: alles werkt end-to-end.
 ```
 
 ---
 
-## 15. Startcommando's voor Claude Code
-
-Plaats dit bestand (`PLAN.md`) in de root van je project en gebruik deze prompts:
+## 13. Startcommando's voor Claude Code
 
 ### Helemaal nieuw starten
+
 ```
 Ik wil de verkoopassistent app bouwen zoals beschreven in PLAN.md.
 Start met Fase 1 (Foundation):
-1. Maak de monorepo structuur aan
+1. Maak de monorepo structuur aan (apps/web, apps/mobile,
+   packages/shared, packages/mcp-server, supabase)
 2. Gebruik de Supabase MCP om een nieuw project aan te maken
-3. Rol het volledige database schema uit uit sectie 3
-4. Verifieer dat alle tabellen zijn aangemaakt
+3. Rol het volledige database schema uit uit sectie 4
+4. Verifieer dat alle tabellen en enums zijn aangemaakt
 
-Rapporteer wat je hebt gedaan en wat de volgende stap is.
-```
-
-### Per fase verder
-```
-PLAN.md staat in de root. Fase 1 is af. Begin nu Fase 2.
-Implementeer alle taken in de Fase 2 checklist.
-Begin met apps/mobile CameraScreen.
+Rapporteer wat je hebt gedaan.
 ```
 
-### Specifieke taak
+### Stickersysteem bouwen
+
 ```
-Implementeer Edge Function `analyze-product` zoals beschreven in
-PLAN.md sectie 6. Gebruik Claude Sonnet 4.6 (claude-sonnet-4-6).
-Input: { productId, photoIds, analysisType }.
-Output: JSON volgens schema in sectie 7 stap 2.
-Sla analyse op in ai_analyses tabel.
+Implementeer Fase 2 (Sticker systeem) uit PLAN.md.
+Begin met de generate-sticker-sheet Edge Function.
+Gebruik @react-pdf/renderer voor de PDF generatie.
+Volg de specificatie in sectie 10 exact (21×15mm stickers,
+4 kwartieren, 5×8 grid per kwartier, JetBrains Mono Bold).
+Test door PDF te genereren met startNumber=1 en deze te
+openen om te controleren of de lay-out klopt.
 ```
 
-### Debuggen
+### MCP server bouwen
+
 ```
-Ik krijg een error in apps/web bij /products.
-Gebruik de Supabase MCP om te controleren of products tabel bestaat
-en de juiste RLS policies heeft volgens PLAN.md sectie 3.
+Implementeer Fase 4 (MCP Server) uit PLAN.md.
+Maak packages/mcp-server met alle 6 tools uit sectie 6.
+Gebruik @modelcontextprotocol/sdk voor de server.
+Zorg dat get_product_photos signed URLs returnt van Supabase
+Storage die 1 uur geldig zijn.
+Voeg een README toe met stap-voor-stap installatie in
+claude_desktop_config.json.
 ```
 
 ---
 
-## 16. Belangrijke Ontwerpbeslissingen
+## 14. Belangrijke Ontwerpbeslissingen
 
 | Beslissing | Waarom |
 |-----------|--------|
-| Solo gebruiker, geen multi-tenant | Simpeler schema + RLS |
-| Supabase over Neon | Alles-in-één |
-| Expo over React Native CLI | Snellere setup, OTA updates |
-| Next.js App Router | Server components, betere Supabase SSR |
-| pnpm workspaces | Shared types zonder publishing |
-| pg_cron over externe scheduler | Geen extra service |
-| Claude Sonnet default | Betere identificatie antiek + kaarten |
-| Expliciete goedkeuring vereist | Voorkomt fouten + EU wet |
-| EAN-scanner eerst, AI als fallback | 80% elektronica heeft EAN |
+| 2-fasen flow (indexeren dan verkopen) | Realistische workflow — je hebt niet ineens alles klaar |
+| Geen Claude Vision API | Claude Desktop/Code kan foto's al bekijken, bespaart kosten |
+| MCP server als analyse-interface | Geeft Claude gestructureerde database-toegang |
+| Sticker-ID systeem | Fysieke ↔ digitale koppeling, voorkomt fouten |
+| ML Kit OCR on-device | Geen internet nodig, privacy-vriendelijk, gratis |
+| 3 sticker-modi | Flexibiliteit: snel (OCR) of zeker (aparte foto) of offline (manual) |
+| 160 stickers per A4 | Goede balans tussen formaat en aantal |
+| 4-cijferig zero-padded | Tot 9999 items, consistente sortering |
+| JetBrains Mono voor sticker-font | Uitstekende OCR-herkenning van cijfers |
 
 ---
 
-*Einde PLAN.md. Versie 1.0 — Klaar voor Claude Code.*
+*Einde PLAN.md. Versie 2.0 — Sticker-systeem + Claude Desktop/Code workflow.*

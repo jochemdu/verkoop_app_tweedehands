@@ -1,7 +1,8 @@
 -- ─────────────────────────────────────────────────────────────────
 -- VerkoopAssistent — 0001_initial_schema
--- Bronnen: PLAN (1).md sectie 4 (leidend, v2 sticker-systeem)
---          PLAN.md sectie 3 (voor verwijzingen "zelfde als vorig plan")
+-- Bron: PLAN.md (v2, sticker-systeem + Claude Desktop/MCP workflow).
+-- Geen Claude Vision API, geen ai_* velden: Claude analyseert foto's via
+-- MCP signed URLs in de conversatie.
 -- ─────────────────────────────────────────────────────────────────
 
 -- ═══ Extensies ═══════════════════════════════════════════════════
@@ -133,7 +134,7 @@ INSERT INTO buyback_services (slug, name, website_url, specialization, typical_d
   ('rarecards', 'RareCards', 'https://rarecards.nl', 'pokemon_cards', 0.60),
   ('catchcollect', 'CatchCollect', 'https://catchcollect.nl', 'pokemon_cards', 0.55);
 
--- Categories (spec_schemas uit PLAN.md)
+-- Categories (spec_schemas per categorie — zie PLAN.md sectie 4)
 CREATE TABLE categories (
   id                         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug                       category_slug UNIQUE NOT NULL,

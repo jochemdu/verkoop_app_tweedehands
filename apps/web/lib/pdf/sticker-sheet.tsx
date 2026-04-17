@@ -1,6 +1,6 @@
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
 
-// Layout-constanten volgen PLAN (1).md sectie 10 exact.
+// Layout-constanten volgen PLAN.md sectie 10 exact.
 const PAGE_WIDTH_MM = 210;
 const PAGE_HEIGHT_MM = 297;
 const QUARTER_WIDTH_MM = PAGE_WIDTH_MM / 2;       // 105

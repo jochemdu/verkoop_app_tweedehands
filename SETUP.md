@@ -104,7 +104,7 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 
 ```
 .
-├── PLAN.md / PLAN (1).md       # spec (v2 is leidend)
+├── PLAN.md                      # spec (v2 — sticker-systeem + MCP workflow)
 ├── SETUP.md                     # dit bestand
 ├── pnpm-workspace.yaml
 ├── supabase/
