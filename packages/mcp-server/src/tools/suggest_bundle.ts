@@ -29,6 +29,12 @@ const schema = z.object({
     .describe(
       "Waarom deze items samen een bundel vormen (bijv. 'matched DDR2 SODIMM kit, zelfde snelheid en merk'). Wordt opgeslagen zodat de gebruiker later kan reviewen.",
     ),
+  confirm: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Security: mutaties vereisen expliciete confirm=true. Zonder confirm krijg je een dry-run response met wat er zou gebeuren — vraag de gebruiker om bevestiging en roep dan opnieuw aan met confirm=true.",
+    ),
 });
 
 export const suggestBundleDefinition = {
@@ -58,6 +64,25 @@ export async function handleSuggestBundle(input: unknown) {
   if (missing.length > 0) {
     return errorContent(
       `Deze ID's zijn niet gevonden: ${missing.join(", ")}. Controleer sticker-ID's en probeer opnieuw.`,
+    );
+  }
+
+  if (!parsed.data.confirm) {
+    return jsonContent(
+      {
+        dry_run: true,
+        would_create_bundle: {
+          title,
+          bundle_type,
+          product_count: resolved.length,
+          suggested_price: suggested_price ?? null,
+          reasoning,
+          status: "ready_to_list",
+        },
+        action_required:
+          "Herhaal deze call met confirm=true om daadwerkelijk aan te maken. Vraag eerst aan de gebruiker of dit juist is.",
+      },
+      `DRY-RUN: bundel-voorstel nog niet opgeslagen.`,
     );
   }
 

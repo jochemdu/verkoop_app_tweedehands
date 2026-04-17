@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { CATEGORY_SLUGS } from "@verkoopassistent/shared";
-import { getSupabase } from "../lib/supabase";
-import { jsonContent, errorContent } from "../lib/format";
+import { CATEGORY_SLUGS, sanitizeForLLM } from "@verkoopassistent/shared";
+import { getSupabase } from "../lib/supabase.js";
+import { jsonContent, errorContent } from "../lib/format.js";
 
 const schema = z.object({
   query: z
@@ -38,6 +38,7 @@ export async function handleSearchProducts(input: unknown) {
     .select(
       "id, sticker_id, working_title, title, description, category_slug, status, indexing_notes, indexed_at",
     )
+    .is("deleted_at", null)
     .or(
       `title.ilike.%${escaped}%,working_title.ilike.%${escaped}%,description.ilike.%${escaped}%,indexing_notes.ilike.%${escaped}%`,
     )
@@ -48,8 +49,17 @@ export async function handleSearchProducts(input: unknown) {
   const { data, error } = await q;
   if (error) return errorContent(error.message);
 
+  // Sanitize alle user-input velden voordat Claude ze leest.
+  const sanitized = (data ?? []).map((p) => ({
+    ...p,
+    title: sanitizeForLLM(p.title),
+    working_title: sanitizeForLLM(p.working_title),
+    description: sanitizeForLLM(p.description),
+    indexing_notes: sanitizeForLLM(p.indexing_notes),
+  }));
+
   return jsonContent(
-    { query: escaped, hits: data?.length ?? 0, products: data ?? [] },
-    `${data?.length ?? 0} treffer(s) voor "${escaped}":`,
+    { query: escaped, hits: sanitized.length, products: sanitized },
+    `${sanitized.length} treffer(s) voor "${escaped}":`,
   );
 }

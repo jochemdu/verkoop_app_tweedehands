@@ -37,6 +37,12 @@ const schema = z.object({
     .describe(
       "Wanneer true, wordt `analyzed_at` op NOW() gezet om te markeren dat Claude dit product heeft geanalyseerd.",
     ),
+  confirm: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Security: mutaties vereisen confirm=true. Zonder confirm: dry-run met preview van wijzigingen.",
+    ),
 });
 
 export const updateProductDefinition = {
@@ -53,7 +59,7 @@ export async function handleUpdateProduct(input: unknown) {
       `Ongeldige invoer: ${parsed.error.issues.map((i) => i.path.join(".") + ": " + i.message).join("; ")}`,
     );
   }
-  const { product, specs, mark_analyzed, ...fields } = parsed.data;
+  const { product, specs, mark_analyzed, confirm, ...fields } = parsed.data;
 
   let productId: string;
   try {
@@ -87,6 +93,19 @@ export async function handleUpdateProduct(input: unknown) {
 
   if (Object.keys(update).length === 0) {
     return errorContent("Geen velden opgegeven om te updaten.");
+  }
+
+  if (!confirm) {
+    return jsonContent(
+      {
+        dry_run: true,
+        product_id: productId,
+        would_update_fields: Object.keys(update),
+        preview: update,
+        action_required: "Herhaal met confirm=true na gebruikersbevestiging.",
+      },
+      `DRY-RUN: product ${productId} nog niet gewijzigd.`,
+    );
   }
 
   const supabase = getSupabase();

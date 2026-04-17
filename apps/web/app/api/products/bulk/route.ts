@@ -1,36 +1,26 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { stickerIdSchema } from "@verkoopassistent/shared";
+import { stickerIdSchema, isSafeInboxPath } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-// Bulk upload: client uploadt N foto's naar storage, daarna POST naar deze
-// route met de paden + optioneel een startSticker om auto-increment toe te
-// passen per foto.
 const bodySchema = z.object({
-  photo_paths: z.array(z.string().min(1)).min(1).max(100),
+  photo_paths: z
+    .array(z.string().min(1).refine(isSafeInboxPath, "Ongeldig storage pad"))
+    .min(1)
+    .max(100),
   startSticker: stickerIdSchema.optional(),
-  // Wanneer mode = 'single', alle foto's komen aan één product.
-  // Wanneer mode = 'per_photo' (default), één product per foto.
   mode: z.enum(["per_photo", "single"]).default("per_photo"),
-  workingTitle: z.string().max(200).optional(),
+  workingTitle: z.string().max(200).trim().optional(),
 });
-
-function nextSticker(current: string): string {
-  const n = parseInt(current, 10) + 1;
-  if (n > 9999) throw new Error("sticker-bereik 9999 overschreden");
-  return String(n).padStart(4, "0");
-}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
 
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {
@@ -39,16 +29,15 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  const { photo_paths, startSticker, mode, workingTitle } = parsed.data;
+  const { photo_paths, mode, workingTitle } = parsed.data;
 
-  // ── Mode: single ─────────────────────────────────────────────
-  // Alle foto's naar één product.
+  // Mode: single — alle foto's naar één product.
   if (mode === "single") {
     const { data: product, error: productErr } = await supabase
       .from("products")
       .insert({
-        sticker_id: startSticker ?? null,
-        sticker_input_method: startSticker ? "manual" : null,
+        sticker_id: parsed.data.startSticker ?? null,
+        sticker_input_method: parsed.data.startSticker ? "manual" : null,
         working_title: workingTitle ?? null,
       })
       .select()
@@ -70,14 +59,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ created: 1, products: [product] });
   }
 
-  // ── Mode: per_photo ──────────────────────────────────────────
-  // Eén product per foto, optioneel met auto-incrementing sticker.
-  let sticker = startSticker ?? null;
+  // Mode: per_photo — reserveer atomisch N sticker-ID's via DB function.
+  let stickers: string[] | null = null;
+  if (parsed.data.startSticker) {
+    // Legacy: user geeft expliciet startSticker → gebruik oude path voor backward compat.
+    // We vertrouwen op UNIQUE constraint op sticker_id om conflicten te vangen.
+    stickers = [];
+    let cur = parseInt(parsed.data.startSticker, 10);
+    for (let i = 0; i < photo_paths.length; i++) {
+      if (cur > 9999) break;
+      stickers.push(String(cur).padStart(4, "0"));
+      cur++;
+    }
+  } else {
+    const { data: reserved, error: reserveErr } = await supabase.rpc(
+      "reserve_next_sticker",
+      { p_count: photo_paths.length, p_user_id: user.id },
+    );
+    if (reserveErr || !reserved) {
+      return NextResponse.json(
+        { error: `Sticker-reservering mislukt: ${reserveErr?.message}` },
+        { status: 500 },
+      );
+    }
+    stickers = reserved as string[];
+  }
+
   const created: Array<{ product_id: string; sticker_id: string | null }> = [];
   const errors: Array<{ photo_path: string; error: string }> = [];
 
   for (let i = 0; i < photo_paths.length; i++) {
     const path = photo_paths[i]!;
+    const sticker = stickers[i] ?? null;
     const { data: product, error: productErr } = await supabase
       .from("products")
       .insert({
@@ -98,31 +111,12 @@ export async function POST(req: NextRequest) {
       photo_type: "general",
     });
     if (photoErr) {
+      // Rollback product rij als photo insert faalt — voorkomt dangling product.
+      await supabase.from("products").delete().eq("id", product.id);
       errors.push({ photo_path: path, error: photoErr.message });
+      continue;
     }
     created.push({ product_id: product.id, sticker_id: sticker });
-    if (sticker) {
-      try {
-        sticker = nextSticker(sticker);
-      } catch {
-        // stop incrementing als bereik vol is
-        sticker = null;
-      }
-    }
-  }
-
-  // Bump last_sticker_number als we sticker-ID's hebben toegekend.
-  if (startSticker && created.length > 0) {
-    const last = created
-      .filter((c) => c.sticker_id !== null)
-      .map((c) => parseInt(c.sticker_id!, 10))
-      .sort((a, b) => b - a)[0];
-    if (last !== undefined) {
-      await supabase
-        .from("app_settings")
-        .update({ value: last })
-        .eq("key", "last_sticker_number");
-    }
   }
 
   return NextResponse.json({

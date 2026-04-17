@@ -14,6 +14,12 @@ const schema = z.object({
   description: z.string().min(10).max(5000),
   price: z.number().nonnegative(),
   shipping_price: z.number().nonnegative().default(0),
+  confirm: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Security: mutaties vereisen expliciete confirm=true. Zonder confirm krijg je een dry-run response.",
+    ),
 });
 
 export const createListingDefinition = {
@@ -31,6 +37,17 @@ export async function handleCreateListing(input: unknown) {
     );
   }
   const { product, platform, title, description, price, shipping_price } = parsed.data;
+
+  if (!parsed.data.confirm) {
+    return jsonContent(
+      {
+        dry_run: true,
+        would_create_listing: { product, platform, title, price, shipping_price, status: "pending_review" },
+        action_required: "Herhaal met confirm=true na gebruikersbevestiging.",
+      },
+      `DRY-RUN: listing nog niet aangemaakt.`,
+    );
+  }
 
   let productId: string;
   try {

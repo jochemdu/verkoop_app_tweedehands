@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -18,16 +16,19 @@ export type Database = {
         Row: {
           key: string
           updated_at: string | null
+          user_id: string | null
           value: Json
         }
         Insert: {
           key: string
           updated_at?: string | null
+          user_id?: string | null
           value: Json
         }
         Update: {
           key?: string
           updated_at?: string | null
+          user_id?: string | null
           value?: Json
         }
         Relationships: []
@@ -37,32 +38,23 @@ export type Database = {
           bundle_id: string
           position: number | null
           product_id: string
+          user_id: string | null
         }
         Insert: {
           bundle_id: string
           position?: number | null
           product_id: string
+          user_id?: string | null
         }
         Update: {
           bundle_id?: string
           position?: number | null
           product_id?: string
+          user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "bundle_items_bundle_id_fkey"
-            columns: ["bundle_id"]
-            isOneToOne: false
-            referencedRelation: "bundles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bundle_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "bundle_items_bundle_id_fkey"; columns: ["bundle_id"]; isOneToOne: false; referencedRelation: "bundles"; referencedColumns: ["id"] },
+          { foreignKeyName: "bundle_items_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
         ]
       }
       bundles: {
@@ -70,6 +62,7 @@ export type Database = {
           bundle_type: Database["public"]["Enums"]["bundle_type"] | null
           claude_reasoning: string | null
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           notes: string | null
@@ -79,11 +72,13 @@ export type Database = {
           title: string
           total_individual_value: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           bundle_type?: Database["public"]["Enums"]["bundle_type"] | null
           claude_reasoning?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           notes?: string | null
@@ -93,11 +88,13 @@ export type Database = {
           title: string
           total_individual_value?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           bundle_type?: Database["public"]["Enums"]["bundle_type"] | null
           claude_reasoning?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           notes?: string | null
@@ -107,6 +104,7 @@ export type Database = {
           title?: string
           total_individual_value?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -120,6 +118,7 @@ export type Database = {
           quote_source: string | null
           quote_url: string | null
           quoted_price: number | null
+          user_id: string | null
           valid_until: string | null
         }
         Insert: {
@@ -131,6 +130,7 @@ export type Database = {
           quote_source?: string | null
           quote_url?: string | null
           quoted_price?: number | null
+          user_id?: string | null
           valid_until?: string | null
         }
         Update: {
@@ -142,23 +142,12 @@ export type Database = {
           quote_source?: string | null
           quote_url?: string | null
           quoted_price?: number | null
+          user_id?: string | null
           valid_until?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "buyback_quotes_buyback_service_id_fkey"
-            columns: ["buyback_service_id"]
-            isOneToOne: false
-            referencedRelation: "buyback_services"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "buyback_quotes_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "buyback_quotes_buyback_service_id_fkey"; columns: ["buyback_service_id"]; isOneToOne: false; referencedRelation: "buyback_services"; referencedColumns: ["id"] },
+          { foreignKeyName: "buyback_quotes_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
         ]
       }
       buyback_services: {
@@ -202,12 +191,8 @@ export type Database = {
           id: string
           name: string
           parent_slug: Database["public"]["Enums"]["category_slug"] | null
-          preferred_buyback_services:
-            | Database["public"]["Enums"]["buyback_service_slug"][]
-            | null
-          preferred_platforms:
-            | Database["public"]["Enums"]["platform_slug"][]
-            | null
+          preferred_buyback_services: Database["public"]["Enums"]["buyback_service_slug"][] | null
+          preferred_platforms: Database["public"]["Enums"]["platform_slug"][] | null
           slug: Database["public"]["Enums"]["category_slug"]
           spec_schema: Json | null
         }
@@ -215,12 +200,8 @@ export type Database = {
           id?: string
           name: string
           parent_slug?: Database["public"]["Enums"]["category_slug"] | null
-          preferred_buyback_services?:
-            | Database["public"]["Enums"]["buyback_service_slug"][]
-            | null
-          preferred_platforms?:
-            | Database["public"]["Enums"]["platform_slug"][]
-            | null
+          preferred_buyback_services?: Database["public"]["Enums"]["buyback_service_slug"][] | null
+          preferred_platforms?: Database["public"]["Enums"]["platform_slug"][] | null
           slug: Database["public"]["Enums"]["category_slug"]
           spec_schema?: Json | null
         }
@@ -228,23 +209,13 @@ export type Database = {
           id?: string
           name?: string
           parent_slug?: Database["public"]["Enums"]["category_slug"] | null
-          preferred_buyback_services?:
-            | Database["public"]["Enums"]["buyback_service_slug"][]
-            | null
-          preferred_platforms?:
-            | Database["public"]["Enums"]["platform_slug"][]
-            | null
+          preferred_buyback_services?: Database["public"]["Enums"]["buyback_service_slug"][] | null
+          preferred_platforms?: Database["public"]["Enums"]["platform_slug"][] | null
           slug?: Database["public"]["Enums"]["category_slug"]
           spec_schema?: Json | null
         }
         Relationships: [
-          {
-            foreignKeyName: "categories_parent_slug_fkey"
-            columns: ["parent_slug"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["slug"]
-          },
+          { foreignKeyName: "categories_parent_slug_fkey"; columns: ["parent_slug"]; isOneToOne: false; referencedRelation: "categories"; referencedColumns: ["slug"] }
         ]
       }
       claude_analyses: {
@@ -256,6 +227,7 @@ export type Database = {
           created_at: string | null
           id: string
           subject_products: string[] | null
+          user_id: string | null
           user_prompt: string | null
         }
         Insert: {
@@ -266,6 +238,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           subject_products?: string[] | null
+          user_id?: string | null
           user_prompt?: string | null
         }
         Update: {
@@ -276,6 +249,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           subject_products?: string[] | null
+          user_id?: string | null
           user_prompt?: string | null
         }
         Relationships: []
@@ -284,6 +258,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           created_at: string | null
+          deleted_at: string | null
           error_message: string | null
           expires_at: string | null
           external_id: string | null
@@ -303,10 +278,12 @@ export type Database = {
           sold_at: string | null
           status: Database["public"]["Enums"]["listing_status"] | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           approved_at?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           error_message?: string | null
           expires_at?: string | null
           external_id?: string | null
@@ -326,10 +303,12 @@ export type Database = {
           sold_at?: string | null
           status?: Database["public"]["Enums"]["listing_status"] | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           approved_at?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           error_message?: string | null
           expires_at?: string | null
           external_id?: string | null
@@ -349,28 +328,18 @@ export type Database = {
           sold_at?: string | null
           status?: Database["public"]["Enums"]["listing_status"] | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "listings_platform_id_fkey"
-            columns: ["platform_id"]
-            isOneToOne: false
-            referencedRelation: "platforms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "listings_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "listings_platform_id_fkey"; columns: ["platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] },
+          { foreignKeyName: "listings_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
         ]
       }
       photos: {
         Row: {
           capture_mode: string | null
           created_at: string | null
+          deleted_at: string | null
           detected_sticker: string | null
           height: number | null
           id: string
@@ -382,11 +351,13 @@ export type Database = {
           sticker_visible: boolean | null
           storage_path: string
           thumbnail_path: string | null
+          user_id: string | null
           width: number | null
         }
         Insert: {
           capture_mode?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           detected_sticker?: string | null
           height?: number | null
           id?: string
@@ -398,11 +369,13 @@ export type Database = {
           sticker_visible?: boolean | null
           storage_path: string
           thumbnail_path?: string | null
+          user_id?: string | null
           width?: number | null
         }
         Update: {
           capture_mode?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           detected_sticker?: string | null
           height?: number | null
           id?: string
@@ -414,16 +387,11 @@ export type Database = {
           sticker_visible?: boolean | null
           storage_path?: string
           thumbnail_path?: string | null
+          user_id?: string | null
           width?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "photos_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "photos_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
         ]
       }
       platforms: {
@@ -479,6 +447,7 @@ export type Database = {
           sample_count: number | null
           search_query: string | null
           source_url: string | null
+          user_id: string | null
         }
         Insert: {
           currency?: string | null
@@ -493,6 +462,7 @@ export type Database = {
           sample_count?: number | null
           search_query?: string | null
           source_url?: string | null
+          user_id?: string | null
         }
         Update: {
           currency?: string | null
@@ -507,22 +477,11 @@ export type Database = {
           sample_count?: number | null
           search_query?: string | null
           source_url?: string | null
+          user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "price_history_platform_id_fkey"
-            columns: ["platform_id"]
-            isOneToOne: false
-            referencedRelation: "platforms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "price_history_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "price_history_platform_id_fkey"; columns: ["platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] },
+          { foreignKeyName: "price_history_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
         ]
       }
       price_watches: {
@@ -539,6 +498,7 @@ export type Database = {
           platform_id: string | null
           search_query: string
           target_price: number | null
+          user_id: string | null
         }
         Insert: {
           alert_on_below?: number | null
@@ -553,6 +513,7 @@ export type Database = {
           platform_id?: string | null
           search_query: string
           target_price?: number | null
+          user_id?: string | null
         }
         Update: {
           alert_on_below?: number | null
@@ -567,15 +528,10 @@ export type Database = {
           platform_id?: string | null
           search_query?: string
           target_price?: number | null
+          user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "price_watches_platform_id_fkey"
-            columns: ["platform_id"]
-            isOneToOne: false
-            referencedRelation: "platforms"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "price_watches_platform_id_fkey"; columns: ["platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] }
         ]
       }
       products: {
@@ -586,6 +542,7 @@ export type Database = {
           condition: Database["public"]["Enums"]["product_condition"] | null
           created_at: string | null
           defects: string[] | null
+          deleted_at: string | null
           description: string | null
           ean: string | null
           estimated_value_max: number | null
@@ -608,11 +565,10 @@ export type Database = {
           status: Database["public"]["Enums"]["product_status"] | null
           sticker_confidence: number | null
           sticker_id: string | null
-          sticker_input_method:
-            | Database["public"]["Enums"]["sticker_input_method"]
-            | null
+          sticker_input_method: Database["public"]["Enums"]["sticker_input_method"] | null
           title: string | null
           updated_at: string | null
+          user_id: string | null
           working_title: string | null
         }
         Insert: {
@@ -622,6 +578,7 @@ export type Database = {
           condition?: Database["public"]["Enums"]["product_condition"] | null
           created_at?: string | null
           defects?: string[] | null
+          deleted_at?: string | null
           description?: string | null
           ean?: string | null
           estimated_value_max?: number | null
@@ -644,11 +601,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["product_status"] | null
           sticker_confidence?: number | null
           sticker_id?: string | null
-          sticker_input_method?:
-            | Database["public"]["Enums"]["sticker_input_method"]
-            | null
+          sticker_input_method?: Database["public"]["Enums"]["sticker_input_method"] | null
           title?: string | null
           updated_at?: string | null
+          user_id?: string | null
           working_title?: string | null
         }
         Update: {
@@ -658,6 +614,7 @@ export type Database = {
           condition?: Database["public"]["Enums"]["product_condition"] | null
           created_at?: string | null
           defects?: string[] | null
+          deleted_at?: string | null
           description?: string | null
           ean?: string | null
           estimated_value_max?: number | null
@@ -680,28 +637,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["product_status"] | null
           sticker_confidence?: number | null
           sticker_id?: string | null
-          sticker_input_method?:
-            | Database["public"]["Enums"]["sticker_input_method"]
-            | null
+          sticker_input_method?: Database["public"]["Enums"]["sticker_input_method"] | null
           title?: string | null
           updated_at?: string | null
+          user_id?: string | null
           working_title?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "products_category_slug_fkey"
-            columns: ["category_slug"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["slug"]
-          },
-          {
-            foreignKeyName: "products_sold_platform_id_fkey"
-            columns: ["sold_platform_id"]
-            isOneToOne: false
-            referencedRelation: "platforms"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "products_category_slug_fkey"; columns: ["category_slug"]; isOneToOne: false; referencedRelation: "categories"; referencedColumns: ["slug"] },
+          { foreignKeyName: "products_sold_platform_id_fkey"; columns: ["sold_platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] }
         ]
       }
       sticker_sheets: {
@@ -714,6 +658,7 @@ export type Database = {
           printed_at: string | null
           sheet_count: number | null
           start_number: number
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -724,6 +669,7 @@ export type Database = {
           printed_at?: string | null
           sheet_count?: number | null
           start_number: number
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -734,6 +680,7 @@ export type Database = {
           printed_at?: string | null
           sheet_count?: number | null
           start_number?: number
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -746,6 +693,7 @@ export type Database = {
           product_id: string | null
           recipient_email: string | null
           recipient_name: string | null
+          user_id: string | null
         }
         Insert: {
           bundle_id?: string | null
@@ -755,6 +703,7 @@ export type Database = {
           product_id?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
+          user_id?: string | null
         }
         Update: {
           bundle_id?: string | null
@@ -764,332 +713,48 @@ export type Database = {
           product_id?: string | null
           recipient_email?: string | null
           recipient_name?: string | null
+          user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "taxatie_exports_bundle_id_fkey"
-            columns: ["bundle_id"]
-            isOneToOne: false
-            referencedRelation: "bundles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "taxatie_exports_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
+          { foreignKeyName: "taxatie_exports_bundle_id_fkey"; columns: ["bundle_id"]; isOneToOne: false; referencedRelation: "bundles"; referencedColumns: ["id"] },
+          { foreignKeyName: "taxatie_exports_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
         ]
       }
     }
-    Views: {
-      [_ in never]: never
-    }
+    Views: { [_ in never]: never }
     Functions: {
-      [_ in never]: never
+      reserve_next_sticker: {
+        Args: { p_count: number; p_user_id: string }
+        Returns: string[]
+      }
     }
     Enums: {
-      bundle_type:
-        | "ram_kit"
-        | "console_bundle"
-        | "card_lot"
-        | "card_set"
-        | "hardware_bundle"
-        | "custom"
-      buyback_service_slug:
-        | "levelseven"
-        | "nedgame"
-        | "flashkaartshop"
-        | "rarecards"
-        | "catchcollect"
-        | "itad_broker"
-        | "other"
-      category_slug:
-        | "ram_dimm"
-        | "ram_sodimm"
-        | "cpu"
-        | "gpu"
-        | "console"
-        | "console_game"
-        | "smartphone"
-        | "laptop"
-        | "pokemon_card"
-        | "antique_tin"
-        | "antique_silver"
-        | "antique_other"
-        | "electronics_other"
-        | "unknown"
-        | "other"
-      listing_status:
-        | "draft"
-        | "pending_review"
-        | "approved"
-        | "publishing"
-        | "published"
-        | "sold"
-        | "expired"
-        | "error"
-      photo_type:
-        | "general"
-        | "front"
-        | "back"
-        | "mark"
-        | "detail"
-        | "damage"
-        | "serial"
-        | "label"
-        | "holo"
-        | "barcode"
-        | "sticker"
-      platform_slug:
-        | "marktplaats"
-        | "tweakers"
-        | "cardmarket"
-        | "ebay"
-        | "catawiki"
-        | "2dehands"
-        | "facebook"
-      product_condition:
-        | "mint"
-        | "near_mint"
-        | "excellent"
-        | "very_good"
-        | "good"
-        | "fair"
-        | "poor"
-      product_status:
-        | "indexed"
-        | "analyzing"
-        | "ready_to_list"
-        | "pending_review"
-        | "approved"
-        | "listed"
-        | "sold"
-        | "archived"
-      sticker_input_method:
-        | "ocr_inline"
-        | "ocr_separate"
-        | "manual"
-        | "manual_increment"
+      bundle_type: "ram_kit" | "console_bundle" | "card_lot" | "card_set" | "hardware_bundle" | "custom"
+      buyback_service_slug: "levelseven" | "nedgame" | "flashkaartshop" | "rarecards" | "catchcollect" | "itad_broker" | "other"
+      category_slug: "ram_dimm" | "ram_sodimm" | "cpu" | "gpu" | "console" | "console_game" | "smartphone" | "laptop" | "pokemon_card" | "antique_tin" | "antique_silver" | "antique_other" | "electronics_other" | "unknown" | "other"
+      listing_status: "draft" | "pending_review" | "approved" | "publishing" | "published" | "sold" | "expired" | "error"
+      photo_type: "general" | "front" | "back" | "mark" | "detail" | "damage" | "serial" | "label" | "holo" | "barcode" | "sticker"
+      platform_slug: "marktplaats" | "tweakers" | "cardmarket" | "ebay" | "catawiki" | "2dehands" | "facebook"
+      product_condition: "mint" | "near_mint" | "excellent" | "very_good" | "good" | "fair" | "poor"
+      product_status: "indexed" | "analyzing" | "ready_to_list" | "pending_review" | "approved" | "listed" | "sold" | "archived"
+      sticker_input_method: "ocr_inline" | "ocr_separate" | "manual" | "manual_increment"
     }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    CompositeTypes: { [_ in never]: never }
   }
 }
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
 
 export const Constants = {
   public: {
     Enums: {
-      bundle_type: [
-        "ram_kit",
-        "console_bundle",
-        "card_lot",
-        "card_set",
-        "hardware_bundle",
-        "custom",
-      ],
-      buyback_service_slug: [
-        "levelseven",
-        "nedgame",
-        "flashkaartshop",
-        "rarecards",
-        "catchcollect",
-        "itad_broker",
-        "other",
-      ],
-      category_slug: [
-        "ram_dimm",
-        "ram_sodimm",
-        "cpu",
-        "gpu",
-        "console",
-        "console_game",
-        "smartphone",
-        "laptop",
-        "pokemon_card",
-        "antique_tin",
-        "antique_silver",
-        "antique_other",
-        "electronics_other",
-        "unknown",
-        "other",
-      ],
-      listing_status: [
-        "draft",
-        "pending_review",
-        "approved",
-        "publishing",
-        "published",
-        "sold",
-        "expired",
-        "error",
-      ],
-      photo_type: [
-        "general",
-        "front",
-        "back",
-        "mark",
-        "detail",
-        "damage",
-        "serial",
-        "label",
-        "holo",
-        "barcode",
-        "sticker",
-      ],
-      platform_slug: [
-        "marktplaats",
-        "tweakers",
-        "cardmarket",
-        "ebay",
-        "catawiki",
-        "2dehands",
-        "facebook",
-      ],
-      product_condition: [
-        "mint",
-        "near_mint",
-        "excellent",
-        "very_good",
-        "good",
-        "fair",
-        "poor",
-      ],
-      product_status: [
-        "indexed",
-        "analyzing",
-        "ready_to_list",
-        "pending_review",
-        "approved",
-        "listed",
-        "sold",
-        "archived",
-      ],
-      sticker_input_method: [
-        "ocr_inline",
-        "ocr_separate",
-        "manual",
-        "manual_increment",
-      ],
+      bundle_type: ["ram_kit", "console_bundle", "card_lot", "card_set", "hardware_bundle", "custom"],
+      buyback_service_slug: ["levelseven", "nedgame", "flashkaartshop", "rarecards", "catchcollect", "itad_broker", "other"],
+      category_slug: ["ram_dimm", "ram_sodimm", "cpu", "gpu", "console", "console_game", "smartphone", "laptop", "pokemon_card", "antique_tin", "antique_silver", "antique_other", "electronics_other", "unknown", "other"],
+      listing_status: ["draft", "pending_review", "approved", "publishing", "published", "sold", "expired", "error"],
+      photo_type: ["general", "front", "back", "mark", "detail", "damage", "serial", "label", "holo", "barcode", "sticker"],
+      platform_slug: ["marktplaats", "tweakers", "cardmarket", "ebay", "catawiki", "2dehands", "facebook"],
+      product_condition: ["mint", "near_mint", "excellent", "very_good", "good", "fair", "poor"],
+      product_status: ["indexed", "analyzing", "ready_to_list", "pending_review", "approved", "listed", "sold", "archived"],
+      sticker_input_method: ["ocr_inline", "ocr_separate", "manual", "manual_increment"],
     },
   },
 } as const

@@ -1,14 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { productIndexSchema } from "@verkoopassistent/shared";
+import { productIndexSchema, isSafeInboxPath } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-// Client uploadt eerst foto's naar product-photos storage, dan POST naar
-// deze route met de resulterende storage_paths + metadata.
 const bodySchema = productIndexSchema.extend({
-  photo_paths: z.array(z.string().min(1)).default([]),
+  photo_paths: z
+    .array(z.string().min(1).refine(isSafeInboxPath, "Ongeldig storage pad"))
+    .default([]),
 });
 
 export async function POST(req: NextRequest) {
@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
   if (productErr || !product) {
-    // Cleanup uploaded photos als product-insert faalt.
     if (photo_paths.length > 0) {
       await supabase.storage.from("product-photos").remove(photo_paths);
     }
@@ -51,8 +50,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: isSticker
-          ? `Sticker-ID ${productData.sticker_id} bestaat al. Kies een ander nummer.`
-          : `Product aanmaken mislukt: ${productErr?.message}`,
+          ? `Sticker-ID ${productData.sticker_id} bestaat al.`
+          : "Product aanmaken mislukt.",
       },
       { status: isSticker ? 409 : 500 },
     );
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           product,
-          warning: `Product aangemaakt maar foto metadata opslaan mislukt: ${photosErr.message}`,
+          warning: `Product aangemaakt maar foto metadata opslaan mislukt.`,
         },
         { status: 207 },
       );

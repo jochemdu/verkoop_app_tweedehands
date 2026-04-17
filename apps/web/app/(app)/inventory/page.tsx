@@ -14,6 +14,8 @@ type Search = {
   category?: string;
   sticker_from?: string;
   sticker_to?: string;
+  page?: string;
+  deleted?: string;
 };
 
 const PAGE_SIZE = 50;
@@ -25,15 +27,25 @@ export default async function InventoryPage({
 }) {
   const params = await searchParams;
   const supabase = await createClient();
+  const page = Math.max(1, Number(params.page ?? 1) || 1);
+  const showDeleted = params.deleted === "1";
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
   let query = supabase
     .from("products")
     .select(
-      "id, sticker_id, working_title, title, category_slug, status, indexed_at",
+      "id, sticker_id, working_title, title, category_slug, status, indexed_at, deleted_at",
       { count: "exact" },
     )
     .order("indexed_at", { ascending: false })
-    .limit(PAGE_SIZE);
+    .range(from, to);
+
+  if (showDeleted) {
+    query = query.not("deleted_at", "is", null);
+  } else {
+    query = query.is("deleted_at", null);
+  }
 
   if (params.q) {
     query = query.or(
@@ -54,6 +66,20 @@ export default async function InventoryPage({
   }
 
   const { data: products, count } = await query;
+  const totalPages = count ? Math.max(1, Math.ceil(count / PAGE_SIZE)) : 1;
+
+  const pageQueryParams = new URLSearchParams();
+  if (params.q) pageQueryParams.set("q", params.q);
+  if (params.status) pageQueryParams.set("status", params.status);
+  if (params.category) pageQueryParams.set("category", params.category);
+  if (params.sticker_from) pageQueryParams.set("sticker_from", params.sticker_from);
+  if (params.sticker_to) pageQueryParams.set("sticker_to", params.sticker_to);
+  if (showDeleted) pageQueryParams.set("deleted", "1");
+  const buildPageUrl = (p: number) => {
+    const q = new URLSearchParams(pageQueryParams);
+    q.set("page", String(p));
+    return `/inventory?${q.toString()}`;
+  };
 
   return (
     <main className="space-y-6">
@@ -61,10 +87,18 @@ export default async function InventoryPage({
         <div>
           <h1 className="text-2xl font-semibold">Inventaris</h1>
           <p className="text-sm text-muted-foreground">
-            {count ?? 0} producten totaal
+            {count ?? 0} producten {showDeleted ? "(verwijderd)" : "totaal"}
           </p>
         </div>
-        <AddProductButton />
+        <div className="flex gap-2">
+          <Link
+            href={showDeleted ? "/inventory" : "/inventory?deleted=1"}
+            className="rounded-md border px-3 py-1.5 text-sm"
+          >
+            {showDeleted ? "← Actief" : "Prullenbak"}
+          </Link>
+          {!showDeleted && <AddProductButton />}
+        </div>
       </div>
 
       <form className="grid grid-cols-1 gap-3 rounded-lg border p-4 sm:grid-cols-5">
@@ -132,10 +166,7 @@ export default async function InventoryPage({
           >
             Filter
           </button>
-          <Link
-            href="/inventory"
-            className="rounded-md border px-3 py-1.5 text-sm"
-          >
+          <Link href="/inventory" className="rounded-md border px-3 py-1.5 text-sm">
             Reset
           </Link>
         </div>
@@ -143,62 +174,76 @@ export default async function InventoryPage({
 
       {!products || products.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Geen producten gevonden. Voeg er één toe met de knop rechtsboven.
+          Geen producten gevonden.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                <th className="p-3 font-medium">Sticker</th>
-                <th className="p-3 font-medium">Titel</th>
-                <th className="p-3 font-medium">Categorie</th>
-                <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium">Geïndexeerd</th>
-                <th className="p-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {products.map((p) => (
-                <tr key={p.id} className="hover:bg-muted/30">
-                  <td className="p-3 font-mono text-xs">
-                    {p.sticker_id ?? "—"}
-                  </td>
-                  <td className="p-3">
-                    {p.title ?? p.working_title ?? (
-                      <span className="italic text-muted-foreground">
-                        (geen titel)
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-3 text-xs text-muted-foreground">
-                    {p.category_slug}
-                  </td>
-                  <td className="p-3">
-                    <span className="inline-flex rounded-full border px-2 py-0.5 text-xs">
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-xs text-muted-foreground">
-                    {p.indexed_at
-                      ? new Date(p.indexed_at).toLocaleDateString("nl-NL", {
-                          dateStyle: "short",
-                        })
-                      : "—"}
-                  </td>
-                  <td className="p-3 text-right">
-                    <Link
-                      href={`/inventory/${p.sticker_id ?? p.id}`}
-                      className="text-xs underline"
-                    >
-                      Bekijk
-                    </Link>
-                  </td>
+        <>
+          <div className="overflow-hidden rounded-lg border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50">
+                <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                  <th className="p-3 font-medium">Sticker</th>
+                  <th className="p-3 font-medium">Titel</th>
+                  <th className="p-3 font-medium">Categorie</th>
+                  <th className="p-3 font-medium">Status</th>
+                  <th className="p-3 font-medium">Geïndexeerd</th>
+                  <th className="p-3" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y">
+                {products.map((p) => (
+                  <tr key={p.id} className="hover:bg-muted/30">
+                    <td className="p-3 font-mono text-xs">{p.sticker_id ?? "—"}</td>
+                    <td className="p-3">
+                      {p.title ?? p.working_title ?? (
+                        <span className="italic text-muted-foreground">(geen titel)</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-xs text-muted-foreground">{p.category_slug}</td>
+                    <td className="p-3">
+                      <span className="inline-flex rounded-full border px-2 py-0.5 text-xs">
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-xs text-muted-foreground">
+                      {p.indexed_at
+                        ? new Date(p.indexed_at).toLocaleDateString("nl-NL", {
+                            dateStyle: "short",
+                          })
+                        : "—"}
+                    </td>
+                    <td className="p-3 text-right">
+                      <Link
+                        href={`/inventory/${p.sticker_id ?? p.id}`}
+                        className="text-xs underline"
+                      >
+                        Bekijk
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <nav className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              Pagina {page} van {totalPages} ({count} totaal)
+            </span>
+            <div className="flex gap-2">
+              {page > 1 && (
+                <Link href={buildPageUrl(page - 1)} className="rounded-md border px-2 py-1">
+                  ← Vorige
+                </Link>
+              )}
+              {page < totalPages && (
+                <Link href={buildPageUrl(page + 1)} className="rounded-md border px-2 py-1">
+                  Volgende →
+                </Link>
+              )}
+            </div>
+          </nav>
+        </>
       )}
     </main>
   );

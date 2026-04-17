@@ -4,9 +4,10 @@ import {
   PRODUCT_STATUSES,
   CATEGORY_SLUGS,
   stickerIdSchema,
+  sanitizeForLLM,
 } from "@verkoopassistent/shared";
-import { getSupabase } from "../lib/supabase";
-import { jsonContent, errorContent } from "../lib/format";
+import { getSupabase } from "../lib/supabase.js";
+import { jsonContent, errorContent } from "../lib/format.js";
 
 const schema = z.object({
   status: z.enum(PRODUCT_STATUSES).optional(),
@@ -43,6 +44,7 @@ export async function handleListInventory(input: unknown) {
     .select(
       "id, sticker_id, working_title, title, category_slug, status, indexed_at, photos(count)",
     )
+    .is("deleted_at", null)
     .order("indexed_at", { ascending: false })
     .limit(limit);
 
@@ -59,7 +61,8 @@ export async function handleListInventory(input: unknown) {
     return {
       id: p.id,
       sticker_id: p.sticker_id,
-      title: p.title ?? p.working_title ?? null,
+      // Sanitize titles — prompt-injection vector uit user-input velden.
+      title: sanitizeForLLM(p.title ?? p.working_title ?? null) || null,
       category: p.category_slug,
       status: p.status,
       photo_count: photoCount,
