@@ -3,7 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "declaration": true,
-    "noEmit": true
+    "noEmit": true,
+    // DOM voor de fetch-API types in lookups.ts (runtime: Node 18+, browser,
+    // React Native — allemaal met globale fetch).
+    "lib": ["ES2022", "DOM"]
   },
   "include": ["src/**/*.ts"]
 }

@@ -52,5 +52,23 @@ export {
   sanitizeAll,
 } from "./security";
 
+export {
+  productIdentifierColumn,
+  resolveProductId,
+  resolveProductIds,
+  softDeleteProducts,
+  restoreProducts,
+  hardDeleteProducts,
+  signedPhotoUrls,
+  type Db,
+} from "./repo";
+
+export {
+  lookupEan,
+  lookupBook,
+  type EanLookupResult,
+  type BookLookupResult,
+} from "./lookups";
+
 export type { Database, Json } from "./database.types";
 export { Constants } from "./database.types";

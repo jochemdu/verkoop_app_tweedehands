@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { productIdentifierColumn, signedPhotoUrls } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { analyzeProductPhotos } from "@/lib/ai/analyze-product";
 
@@ -19,47 +20,36 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
 
   const { id } = await params;
-  const column = /^\d{4}$/.test(id) ? "sticker_id" : "id";
   const { data: product } = await supabase
     .from("products")
     .select("*")
-    .eq(column, id)
+    .eq(productIdentifierColumn(id), id)
     .is("deleted_at", null)
     .maybeSingle();
   if (!product) {
     return NextResponse.json({ error: "Product niet gevonden" }, { status: 404 });
   }
 
-  const { data: photos } = await supabase
-    .from("photos")
-    .select("storage_path")
-    .eq("product_id", product.id)
-    .is("deleted_at", null)
-    .order("order_index")
-    .limit(MAX_PHOTOS);
-  if (!photos || photos.length === 0) {
+  // Signed URLs die het model kan ophalen. 15 min is ruim voldoende.
+  let photoUrls: string[];
+  try {
+    const photos = await signedPhotoUrls(supabase, product.id, {
+      expiresIn: 900,
+      limit: MAX_PHOTOS,
+    });
+    photoUrls = photos.map((p) => p.url).filter((u): u is string => Boolean(u));
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Signed URLs mislukt" },
+      { status: 500 },
+    );
+  }
+  if (photoUrls.length === 0) {
     return NextResponse.json(
       { error: "Product heeft geen foto's om te analyseren." },
       { status: 400 },
     );
   }
-
-  // Signed URLs die het model kan ophalen. 15 min is ruim voldoende.
-  const { data: signed, error: signErr } = await supabase.storage
-    .from("product-photos")
-    .createSignedUrls(
-      photos.map((p) => p.storage_path),
-      900,
-    );
-  if (signErr || !signed) {
-    return NextResponse.json(
-      { error: `Signed URLs mislukt: ${signErr?.message}` },
-      { status: 500 },
-    );
-  }
-  const photoUrls = signed
-    .map((s) => s.signedUrl)
-    .filter((u): u is string => Boolean(u));
 
   // Status → analyzing zolang de call loopt (dashboard/inventory tonen dit).
   await supabase

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { productIdentifierColumn } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
@@ -15,11 +16,10 @@ export default async function ProductDetailPage({
   const supabase = await createClient();
 
   // Accepteer zowel UUID als 4-cijferig sticker_id in de URL.
-  const column = /^\d{4}$/.test(sticker) ? "sticker_id" : "id";
   const { data: product } = await supabase
     .from("products")
     .select("*")
-    .eq(column, sticker)
+    .eq(productIdentifierColumn(sticker), sticker)
     .maybeSingle();
 
   if (!product) notFound();
