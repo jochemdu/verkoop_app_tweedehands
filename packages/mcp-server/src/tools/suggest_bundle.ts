@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase";
 import { resolveProductIds } from "../lib/resolve";
 import { jsonContent, errorContent } from "../lib/format";
@@ -41,7 +40,7 @@ export const suggestBundleDefinition = {
   name: "suggest_bundle",
   description:
     "Maak een voorstel voor een productbundel aan (status: ready_to_list). De gebruiker kan dit later goedkeuren. Je reasoning is verplicht zodat de gebruiker weet waarom je deze items voorstelt.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleSuggestBundle(input: unknown) {

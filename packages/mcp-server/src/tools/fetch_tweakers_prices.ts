@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
 
@@ -17,7 +16,7 @@ export const fetchTweakersPricesDefinition = {
   name: "fetch_tweakers_prices",
   description:
     "Haal actuele Tweakers V&A zoekresultaten op voor een zoekterm. Returnt listings met titel/prijs/URL plus samenvattende stats (min/max/avg/sample). Gebruik dit om een prijsindicatie te krijgen voor tweedehands hardware.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleFetchTweakersPrices(input: unknown) {

@@ -4,7 +4,7 @@ import {
   loginSchema,
   productIndexSchema,
   stickerSheetGenerateSchema,
-} from "./schemas.js";
+} from "./schemas";
 
 describe("stickerIdSchema", () => {
   it("accepteert 4 cijfers", () => {

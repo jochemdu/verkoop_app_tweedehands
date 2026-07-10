@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
 
@@ -21,7 +20,7 @@ export const markListingPublishedDefinition = {
   name: "mark_listing_published",
   description:
     "Markeer een listing als gepubliceerd nadat de gebruiker hem handmatig op het platform heeft geplaatst. Zet status=published, slaat listing_url + external_id + published_at op.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleMarkListingPublished(input: unknown) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sanitizeForLLM, isSafeInboxPath } from "./security.js";
+import { sanitizeForLLM, isSafeInboxPath } from "./security";
 
 describe("sanitizeForLLM", () => {
   it("passes clean text through unchanged", () => {

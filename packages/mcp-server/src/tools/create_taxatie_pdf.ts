@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase.js";
 import { resolveProductIds } from "../lib/resolve.js";
 import { jsonContent, errorContent } from "../lib/format.js";
@@ -23,7 +22,7 @@ export const createTaxatiePdfDefinition = {
   name: "create_taxatie_pdf",
   description:
     "Genereer een professioneel taxatiedossier (PDF) met foto's, specs, herkomst en waarde-indicatie per product. Slaat op in Storage + taxatie_exports tabel. Returnt een 1-uur geldige download URL. Gebruik dit wanneer de gebruiker een antiek-taxatie wil aanvragen.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleCreateTaxatiePdf(input: unknown) {

@@ -19,7 +19,6 @@ function write(level: LogLevel, message: string, ctx: LogContext = {}) {
     message,
     ...ctx,
   });
-  // eslint-disable-next-line no-console
   if (level === "error" || level === "warn") console.error(line);
   else console.log(line);
 }

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { PLATFORM_SLUGS } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase";
 import { resolveProductId } from "../lib/resolve";
@@ -26,7 +25,7 @@ export const createListingDefinition = {
   name: "create_listing",
   description:
     "Maak een concept-advertentie aan voor een product op een platform. Status is 'pending_review' — de gebruiker moet hem nog goedkeuren in de web-app voordat hij gepubliceerd wordt.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleCreateListing(input: unknown) {

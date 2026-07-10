@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "verkoopassistent",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "nl.verkoopassistent.app",
@@ -36,7 +35,8 @@
         {
           "cameraPermission": "VerkoopAssistent heeft camera-toegang nodig voor product- en stickerfoto's en barcode scannen."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

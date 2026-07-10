@@ -24,7 +24,7 @@ export default async function TaxatiePage() {
         <h1 className="text-2xl font-semibold">Taxatiedossier</h1>
         <p className="text-sm text-muted-foreground">
           Selecteer antieke items → genereer PDF dossier voor de taxateur
-          met foto's, specs, herkomst en waardering.
+          met foto&apos;s, specs, herkomst en waardering.
         </p>
       </div>
 

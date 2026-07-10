@@ -21,7 +21,7 @@ export {
   type BuybackServiceSlug,
   type CategorySlug,
   type BundleType,
-} from "./enums.js";
+} from "./enums";
 
 export {
   stickerIdSchema,
@@ -38,13 +38,13 @@ export {
   type PhotoInsertInput,
   type StickerSheetGenerateInput,
   type StickerSheetGenerateData,
-} from "./schemas.js";
+} from "./schemas";
 
 export {
   sanitizeForLLM,
   isSafeInboxPath,
   sanitizeAll,
-} from "./security.js";
+} from "./security";
 
-export type { Database, Json } from "./database.types.js";
-export { Constants } from "./database.types.js";
+export type { Database, Json } from "./database.types";
+export { Constants } from "./database.types";

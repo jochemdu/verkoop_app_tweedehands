@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { CATEGORY_SLUGS, sanitizeForLLM } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
@@ -19,7 +18,7 @@ export const searchProductsDefinition = {
   name: "search_products",
   description:
     "Full-text zoek in producten op titel/omschrijving/notities. Gebruik voor 'welke RAM modules heb ik' of 'zoek Pokémon kaarten uit 1999'.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleSearchProducts(input: unknown) {

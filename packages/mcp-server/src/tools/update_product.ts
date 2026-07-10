@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   PRODUCT_CONDITIONS,
   PRODUCT_STATUSES,
@@ -49,7 +48,7 @@ export const updateProductDefinition = {
   name: "update_product",
   description:
     "Werk productgegevens bij. Gebruik deze om een 'unknown' product te categoriseren, conditie in te vullen, of na analyse de status naar ready_to_list te zetten. Velden die je niet meestuurt blijven ongewijzigd.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleUpdateProduct(input: unknown) {

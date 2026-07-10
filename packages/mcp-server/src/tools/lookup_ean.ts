@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
 
@@ -14,7 +13,7 @@ export const lookupEanDefinition = {
   name: "lookup_ean",
   description:
     "Zoek een EAN/UPC barcode op in de Open*Facts publieke databases (Food, Beauty, Products). Werkt goed voor consumentenproducten; voor hardware/games/cards komt meestal geen match.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleLookupEan(input: unknown) {

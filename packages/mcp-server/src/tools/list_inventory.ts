@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   PRODUCT_STATUSES,
   CATEGORY_SLUGS,
@@ -25,7 +24,7 @@ export const listInventoryDefinition = {
   name: "list_inventory",
   description:
     "Lijst producten uit de inventaris met filters. Returnt een samenvatting per product (sticker_id, werktitel, titel, categorie, status, foto-aantal, laatst geïndexeerd). Gebruik sticker_range_start/end voor snelle bereik-selectie.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleListInventory(input: unknown) {

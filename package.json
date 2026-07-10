@@ -15,7 +15,7 @@
     "clean": "pnpm -r --parallel --if-present clean && rimraf node_modules"
   },
   "devDependencies": {
-    "rimraf": "^6.0.1",
-    "typescript": "^5.8.3"
+    "rimraf": "^6.1.3",
+    "typescript": "^6.0.3"
   }
 }

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
 
@@ -24,7 +23,7 @@ export const lookupTinMarkDefinition = {
   name: "lookup_tin_mark",
   description:
     "Zoek een tinmerk op in Nederlandse databases (TinVereniging + Zilver.nl) en haal context over het NL tinmerken-systeem op (engel/rozenkroontje merken, stad/jaar/maker-indicators). Gebruik na visuele inspectie van macro-foto. Returnt candidates + extra zoek-URLs.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleLookupTinMark(input: unknown) {

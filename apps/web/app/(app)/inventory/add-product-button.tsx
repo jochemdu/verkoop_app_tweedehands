@@ -154,7 +154,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
         </label>
 
         <label className="block space-y-1 text-xs">
-          <span className="font-medium">Foto's (optioneel)</span>
+          <span className="font-medium">Foto&apos;s (optioneel)</span>
           <input
             type="file"
             accept="image/*"

@@ -129,7 +129,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
                 Eén product per foto (auto-sticker)
               </option>
               <option value="single">
-                Alle foto's → één product
+                Alle foto&apos;s → één product
               </option>
             </select>
           </label>
@@ -177,7 +177,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
         <div className="space-y-3 rounded-lg border p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">
-              {queue.length} foto's in wachtrij
+              {queue.length} foto&apos;s in wachtrij
             </p>
             <div className="flex gap-2">
               <button

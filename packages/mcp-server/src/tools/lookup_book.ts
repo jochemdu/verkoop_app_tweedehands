@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
 
@@ -15,7 +14,7 @@ export const lookupBookDefinition = {
   name: "lookup_book",
   description:
     "Zoek een boek op via Google Books API met ISBN (geschikt voor barcode-scan op boekenkast, Feat 19). Returnt titel, auteurs, uitgever, jaar, taal, cover-image, pagina's. Gratis (1000/dag).",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleLookupBook(input: unknown) {

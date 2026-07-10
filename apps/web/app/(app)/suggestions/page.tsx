@@ -86,7 +86,7 @@ export default async function SuggestionsPage() {
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Items die nu beter verkopen door het seizoen. Check je huis op
-              deze thema's.
+              deze thema&apos;s.
             </p>
           </div>
           <ul className="grid gap-3 sm:grid-cols-2">
@@ -138,7 +138,7 @@ export default async function SuggestionsPage() {
         </h2>
         <p className="text-xs text-muted-foreground">
           Deze categorieën zitten nog niet in het systeem, maar staan waarschijnlijk
-          in je huis. Zeggen: "ga deze doen" — indexeer een batch + voeg nieuwe
+          in je huis. Zeggen: &quot;ga deze doen&quot; — indexeer een batch + voeg nieuwe
           category_slug enum waarde toe via een migration.
         </p>
         <ul className="grid gap-2 sm:grid-cols-2">

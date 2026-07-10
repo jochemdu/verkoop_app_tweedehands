@@ -28,6 +28,9 @@ jobs:
       - name: Typecheck all workspaces
         run: pnpm -r --parallel --if-present typecheck
 
+      - name: Lint web
+        run: pnpm -F web lint
+
       - name: Run unit tests
         run: pnpm -F @verkoopassistent/shared test
 

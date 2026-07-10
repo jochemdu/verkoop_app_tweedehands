@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
 
@@ -21,7 +20,7 @@ export const lookupSilverHallmarkDefinition = {
   name: "lookup_silver_hallmark",
   description:
     "Zoek een zilverkeurmerk op in Nederlandse databases (Zilver.nl) en haal context over het NL zilvermerken-systeem op (gehaltemerken, kantoormerken, leeuw-keurmerk). Bedoeld voor gebruik nadat je een macro-foto van het merk hebt bekeken en de tekst hebt gelezen. Returnt candidates + extra zoek-URLs voor handmatige verificatie.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleLookupSilverHallmark(input: unknown) {

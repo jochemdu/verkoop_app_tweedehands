@@ -99,7 +99,7 @@ export default async function ProductDetailPage({
         </section>
       ) : (
         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Geen foto's.
+          Geen foto&apos;s.
         </div>
       )}
 
