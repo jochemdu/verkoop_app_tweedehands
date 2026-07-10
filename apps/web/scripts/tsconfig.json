@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    // Next compileert met de automatic runtime; "preserve" in de app-tsconfig
+    // laat tsx/esbuild terugvallen op classic (React.createElement) en dan
+    // crasht react-pdf op "React is not defined". Alleen voor scripts.
+    "jsx": "react-jsx"
+  }
+}

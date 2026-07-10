@@ -179,7 +179,7 @@ export default async function InventoryPage({
         </div>
       ) : (
         <>
-          <VirtualTable rows={products} />
+          <VirtualTable rows={products} enableActions={!showDeleted} />
 
           <nav className="flex items-center justify-between text-xs text-muted-foreground">
             <span>

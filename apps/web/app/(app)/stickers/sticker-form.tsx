@@ -6,13 +6,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
   stickerSheetGenerateSchema,
+  STICKER_PRESETS,
   type StickerSheetGenerateInput,
+  type StickerPreset,
 } from "@verkoopassistent/shared";
 
 type GenerateResult = {
   pdfUrl: string;
   expiresInSeconds: number;
   sheet: { id: string; start_number: number; end_number: number };
+};
+
+export const PRESET_LABELS: Record<StickerPreset, string> = {
+  compact_21x15: "Compact — 21×15 mm, 160 per vel",
+  medium_38x21: "Middel — 38×21 mm, 65 per vel (QR leesbaar)",
+  large_63x38: "Groot — 63×38 mm, 21 per vel (QR + groot nummer)",
 };
 
 export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
@@ -24,7 +32,12 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
     formState: { errors, isSubmitting },
   } = useForm<StickerSheetGenerateInput>({
     resolver: zodResolver(stickerSheetGenerateSchema),
-    defaultValues: { startNumber: suggestedStart, count: 160 },
+    defaultValues: {
+      startNumber: suggestedStart,
+      count: 160,
+      preset: "compact_21x15",
+      withQr: false,
+    },
   });
 
   async function onSubmit(data: StickerSheetGenerateInput) {
@@ -80,6 +93,32 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
         </label>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Formaat</span>
+          <select
+            className="w-full rounded-md border px-3 py-2 text-sm shadow-sm"
+            {...register("preset")}
+          >
+            {STICKER_PRESETS.map((p) => (
+              <option key={p} value={p}>
+                {PRESET_LABELS[p]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-end gap-2 pb-2 text-sm">
+          <input type="checkbox" className="size-4" {...register("withQr")} />
+          <span>
+            <span className="font-medium">QR-code op elke sticker</span>
+            <span className="block text-xs text-muted-foreground">
+              Scan opent de productpagina. Op compact-formaat is de QR klein
+              (9 mm) — kies Middel of Groot voor vlot scannen.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <div className="flex items-center gap-3">
         <button
           type="submit"
@@ -104,7 +143,7 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
         <div className="rounded-md border bg-muted p-4 text-xs">
           <p className="font-medium">
             Tip: open de PDF, print met <em>Werkelijk formaat</em> (geen
-            schaling) op stickerpapier A4.
+            schaling) op stickerpapier A4, en knip langs de stippellijnen.
           </p>
         </div>
       )}

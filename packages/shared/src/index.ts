@@ -31,6 +31,9 @@ export {
   productUpdateSchema,
   photoInsertSchema,
   stickerSheetGenerateSchema,
+  stickerSelectionPrintSchema,
+  stickerPresetSchema,
+  STICKER_PRESETS,
   type LoginInput,
   type ProductIndexInput,
   type ProductIndexData,
@@ -38,6 +41,9 @@ export {
   type PhotoInsertInput,
   type StickerSheetGenerateInput,
   type StickerSheetGenerateData,
+  type StickerSelectionPrintInput,
+  type StickerSelectionPrintData,
+  type StickerPreset,
 } from "./schemas";
 
 export {

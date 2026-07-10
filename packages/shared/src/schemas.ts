@@ -66,6 +66,17 @@ export const photoInsertSchema = z.object({
 });
 export type PhotoInsertInput = z.infer<typeof photoInsertSchema>;
 
+// Sticker label-formaten. De layout-maten (mm, grid) leven in de web-app
+// (lib/pdf/sticker-sheet.tsx); hier alleen de keys zodat API + forms +
+// (later) mobile dezelfde enum delen.
+export const STICKER_PRESETS = [
+  "compact_21x15",
+  "medium_38x21",
+  "large_63x38",
+] as const;
+export const stickerPresetSchema = z.enum(STICKER_PRESETS);
+export type StickerPreset = z.infer<typeof stickerPresetSchema>;
+
 // Sticker sheet generator input.
 // We gebruiken z.input/z.output apart want de default op `count` betekent
 // dat de gebruiker hem weg kan laten (input = optional) maar na parse is
@@ -73,6 +84,18 @@ export type PhotoInsertInput = z.infer<typeof photoInsertSchema>;
 export const stickerSheetGenerateSchema = z.object({
   startNumber: z.number().int().min(1).max(9999),
   count: z.number().int().min(1).max(160).default(160),
+  preset: stickerPresetSchema.default("compact_21x15"),
+  withQr: z.boolean().default(false),
 });
 export type StickerSheetGenerateInput = z.input<typeof stickerSheetGenerateSchema>;
 export type StickerSheetGenerateData = z.output<typeof stickerSheetGenerateSchema>;
+
+// Selectie-print: stickers voor specifieke (bestaande) producten herprinten.
+// Geen teller-bump en geen range-registratie — dit is een reprint.
+export const stickerSelectionPrintSchema = z.object({
+  stickerIds: z.array(stickerIdSchema).min(1).max(160),
+  preset: stickerPresetSchema.default("medium_38x21"),
+  withQr: z.boolean().default(true),
+});
+export type StickerSelectionPrintInput = z.input<typeof stickerSelectionPrintSchema>;
+export type StickerSelectionPrintData = z.output<typeof stickerSelectionPrintSchema>;

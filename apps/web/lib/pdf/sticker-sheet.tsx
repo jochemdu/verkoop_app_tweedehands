@@ -1,65 +1,84 @@
-import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
+import type { StickerPreset } from "@verkoopassistent/shared";
 
-// Layout-constanten volgen PLAN.md sectie 10 exact.
+// A4 in mm.
 const PAGE_WIDTH_MM = 210;
 const PAGE_HEIGHT_MM = 297;
-const QUARTER_WIDTH_MM = PAGE_WIDTH_MM / 2;       // 105
-const QUARTER_HEIGHT_MM = PAGE_HEIGHT_MM / 2;     // 148.5
 
-const GRID_COLS = 5;
-const GRID_ROWS = 8;
-const STICKER_WIDTH_MM = 21;
-const STICKER_HEIGHT_MM = 15;
-const STICKERS_PER_QUARTER = GRID_COLS * GRID_ROWS; // 40
-const STICKERS_PER_SHEET = STICKERS_PER_QUARTER * 4; // 160
+// Layout per preset. Alles is een knip-zelf-grid met stippellijnen, gecentreerd
+// op A4. `qrSizeMm: 0` betekent: QR past niet op dit formaat.
+export type PresetLayout = {
+  label: string;
+  widthMm: number;
+  heightMm: number;
+  cols: number;
+  rows: number;
+  fontSize: number;
+  qrSizeMm: number;
+  perSheet: number;
+};
 
-const HEADER_HEIGHT_MM = 4;
+export const PRESET_LAYOUTS: Record<StickerPreset, PresetLayout> = {
+  // Origineel formaat (PLAN.md sectie 10): 10×16 = 160 per vel.
+  compact_21x15: {
+    label: "Compact 21×15 mm (160/vel)",
+    widthMm: 21,
+    heightMm: 15,
+    cols: 10,
+    rows: 16,
+    fontSize: 11,
+    qrSizeMm: 9,
+    perSheet: 160,
+  },
+  medium_38x21: {
+    label: "Middel 38×21 mm (65/vel)",
+    widthMm: 38,
+    heightMm: 21,
+    cols: 5,
+    rows: 13,
+    fontSize: 13,
+    qrSizeMm: 16,
+    perSheet: 65,
+  },
+  large_63x38: {
+    label: "Groot 63×38 mm (21/vel)",
+    widthMm: 63,
+    heightMm: 38,
+    cols: 3,
+    rows: 7,
+    fontSize: 20,
+    qrSizeMm: 30,
+    perSheet: 21,
+  },
+};
 
-// 4-cijferig zero-padded, bijv. 0042.
-function pad(n: number) {
-  return String(n).padStart(4, "0");
-}
+export type StickerLabel = {
+  id: string; // "0042"
+  qrDataUrl?: string; // PNG data-URL; alleen gezet als withQr aan staat
+};
 
 const styles = StyleSheet.create({
   page: {
     backgroundColor: "#ffffff",
     fontFamily: "Courier-Bold",
   },
-  quartersWrap: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: `${PAGE_WIDTH_MM}mm`,
-    height: `${PAGE_HEIGHT_MM}mm`,
-  },
-  quarter: {
-    width: `${QUARTER_WIDTH_MM}mm`,
-    height: `${QUARTER_HEIGHT_MM}mm`,
-    display: "flex",
-    flexDirection: "column",
-  },
-  quarterHeader: {
-    height: `${HEADER_HEIGHT_MM}mm`,
+  header: {
     fontSize: 6,
     color: "#999999",
     textAlign: "center",
-    paddingTop: "1mm",
     fontFamily: "Helvetica",
   },
   grid: {
     display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
-    width: `${STICKER_WIDTH_MM * GRID_COLS}mm`,
-    height: `${STICKER_HEIGHT_MM * GRID_ROWS}mm`,
   },
-  sticker: {
-    width: `${STICKER_WIDTH_MM}mm`,
-    height: `${STICKER_HEIGHT_MM}mm`,
+  cell: {
     display: "flex",
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    // Dashed cut-lines tussen stickers — rechts+onder kant.
+    // Stippellijn-kniplijnen rechts + onder.
     borderRightWidth: 0.25,
     borderRightStyle: "dashed",
     borderRightColor: "#cccccc",
@@ -67,71 +86,90 @@ const styles = StyleSheet.create({
     borderBottomStyle: "dashed",
     borderBottomColor: "#cccccc",
   },
-  stickerText: {
-    fontSize: 11,
+  idText: {
     color: "#000000",
     letterSpacing: 0.5,
   },
 });
 
 export type StickerSheetProps = {
-  startNumber: number;   // bijv. 1
-  count?: number;        // default 160
+  labels: StickerLabel[];
+  preset: StickerPreset;
 };
 
-function Quarter({ from, to }: { from: number; to: number }) {
-  const numbers: number[] = [];
-  for (let n = from; n <= to; n++) numbers.push(n);
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+function StickerCell({ label, layout }: { label: StickerLabel; layout: PresetLayout }) {
+  const withQr = Boolean(label.qrDataUrl) && layout.qrSizeMm > 0;
+  // Bij QR op compact-formaat schaalt het nummer iets terug voor de ruimte.
+  const fontSize = withQr && layout.widthMm <= 21 ? 8 : layout.fontSize;
   return (
-    <View style={styles.quarter}>
-      <Text style={styles.quarterHeader}>
-        {pad(from)}–{pad(to)}
-      </Text>
-      <View style={styles.grid}>
-        {numbers.map((n) => (
-          <View key={n} style={styles.sticker}>
-            <Text style={styles.stickerText}>{pad(n)}</Text>
-          </View>
-        ))}
-      </View>
+    <View
+      style={[
+        styles.cell,
+        {
+          width: `${layout.widthMm}mm`,
+          height: `${layout.heightMm}mm`,
+          gap: "1mm",
+          flexDirection: layout.widthMm > layout.heightMm * 1.4 ? "row" : "column",
+        },
+      ]}
+    >
+      {withQr && (
+        <Image
+          src={label.qrDataUrl!}
+          style={{ width: `${layout.qrSizeMm}mm`, height: `${layout.qrSizeMm}mm` }}
+        />
+      )}
+      <Text style={[styles.idText, { fontSize }]}>{label.id}</Text>
     </View>
   );
 }
 
-export function StickerSheet({
-  startNumber,
-  count = STICKERS_PER_SHEET,
-}: StickerSheetProps) {
-  const sheets: Array<{ start: number; end: number }> = [];
-  for (let offset = 0; offset < count; offset += STICKERS_PER_SHEET) {
-    sheets.push({
-      start: startNumber + offset,
-      end: Math.min(startNumber + offset + STICKERS_PER_SHEET - 1, startNumber + count - 1),
-    });
-  }
+export function StickerSheet({ labels, preset }: StickerSheetProps) {
+  const layout = PRESET_LAYOUTS[preset];
+  const pages = chunk(labels, layout.perSheet);
+  // +1mm speling: bij exact 210mm (compact: 10×21) duwt pt-afronding de
+  // laatste kolom anders naar de volgende regel.
+  const gridWidth = layout.widthMm * layout.cols + 1;
+  const gridHeight = layout.heightMm * layout.rows;
+  const marginX = Math.max(0, (PAGE_WIDTH_MM - gridWidth) / 2);
+  // Boven het grid: 4mm headerregel; rest centreert.
+  const marginY = Math.max(4, (PAGE_HEIGHT_MM - gridHeight - 4) / 2);
+  const first = labels[0]?.id ?? "";
+  const last = labels[labels.length - 1]?.id ?? "";
 
   return (
-    <Document title={`Stickervel ${pad(startNumber)}`}>
-      {sheets.map((sheet) => {
-        // Per A4-vel: 4 kwartieren van 40 elk.
-        const quarters: Array<{ from: number; to: number }> = [];
-        for (let q = 0; q < 4; q++) {
-          const from = sheet.start + q * STICKERS_PER_QUARTER;
-          const to = Math.min(from + STICKERS_PER_QUARTER - 1, sheet.end);
-          if (from <= sheet.end) quarters.push({ from, to });
-        }
-        return (
-          <Page key={sheet.start} size="A4" style={styles.page}>
-            <View style={styles.quartersWrap}>
-              {quarters.map((q) => (
-                <Quarter key={q.from} from={q.from} to={q.to} />
+    <Document title={`Stickervel ${first}–${last}`}>
+      {pages.map((pageLabels, pageIdx) => (
+        <Page key={pageIdx} size="A4" style={styles.page}>
+          <View style={{ paddingTop: `${marginY - 4}mm` }}>
+            <Text style={[styles.header, { height: "4mm", paddingTop: "1mm" }]}>
+              {pageLabels[0]?.id}–{pageLabels[pageLabels.length - 1]?.id} ·{" "}
+              {layout.label}
+            </Text>
+            <View
+              style={[
+                styles.grid,
+                {
+                  width: `${gridWidth}mm`,
+                  marginLeft: `${marginX}mm`,
+                },
+              ]}
+            >
+              {pageLabels.map((label) => (
+                <StickerCell key={label.id} label={label} layout={layout} />
               ))}
             </View>
-          </Page>
-        );
-      })}
+          </View>
+        </Page>
+      ))}
     </Document>
   );
 }
 
-export const STICKERS_PER_A4 = STICKERS_PER_SHEET;
+export const STICKERS_PER_A4 = PRESET_LAYOUTS.compact_21x15.perSheet;
