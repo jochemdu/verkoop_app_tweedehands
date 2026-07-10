@@ -36,7 +36,7 @@ we hem niet in plain-text SQL hoeven te zetten.
 1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/integrations/vault/overview>
 2. Klik *New secret* → name: `service_role_key` → value: <plak service role key>
 3. Save.
-4. Apply migration: `supabase/migrations/0003_price_watcher_cron.sql`  
+4. Apply migration: `supabase/migrations/20260416180000_price_watcher_cron.sql`  
    — kopieer en run in <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/sql/new>
 
 Verifieer:
@@ -127,9 +127,7 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 ├── SETUP.md                     # dit bestand
 ├── pnpm-workspace.yaml
 ├── supabase/
-│   ├── migrations/
-│   │   ├── 0001_initial_schema.sql        # Fase 1
-│   │   └── 0003_price_watcher_cron.sql    # Fase 7 (na Vault secret)
+│   ├── migrations/                # gespiegeld aan remote history — zie migrations/README.md
 │   └── functions/              # Edge Functions (gedeployed via MCP)
 │       ├── lookup-ean/
 │       ├── fetch-tweakers-prices/

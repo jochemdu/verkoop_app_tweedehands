@@ -55,10 +55,10 @@ export async function handleListInventory(input: unknown) {
 
   const { data, error } = await supabase.rpc("list_inventory_with_counts", {
     p_user_id: ownerId,
-    p_status: status ?? null,
-    p_category: category ?? null,
-    p_sticker_from: sticker_range_start ?? null,
-    p_sticker_to: sticker_range_end ?? null,
+    p_status: status ?? undefined,
+    p_category: category ?? undefined,
+    p_sticker_from: sticker_range_start ?? undefined,
+    p_sticker_to: sticker_range_end ?? undefined,
     p_limit: limit,
   });
   if (error) return errorContent(error.message);
