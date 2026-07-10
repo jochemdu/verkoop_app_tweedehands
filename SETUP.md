@@ -107,9 +107,15 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 
 ## Volledige workflow (end-to-end)
 
-1. **Print stickers** — web `/stickers` → A4 PDF → plak op producten
+1. **Print stickers** — web `/stickers` → A4 PDF (3 formaten, optioneel QR) → plak op producten
 2. **Indexeer** — mobile `Indexeren` tab (foto + sticker-ID) OF web `/upload` (bulk drag-drop)
-3. **Analyseer** — Claude Desktop → `list_inventory` + `get_product_photos` + `lookup_ean` + `update_product`
+3. **Analyseer (in-app)** — productpagina → "✨ Analyseer met AI", of selecteer
+   meerdere producten in `/inventory` → "Analyseer (N)". Vereist
+   `ANTHROPIC_API_KEY` in `apps/web/.env.local` (en op Vercel). Het model
+   herkent het product, schrijft een NL advertentietekst, schat de prijs en
+   zet een concept-advertentie klaar in `/listings`.
+   *Alternatief:* Claude Desktop → `list_inventory` + `get_product_photos` +
+   `lookup_ean` + `update_product` (MCP, voor bundels/prijsonderzoek)
 4. **Bundel** — Claude → `suggest_bundle` met reasoning
 5. **Prijsonderzoek** — Claude → `fetch_tweakers_prices`
 6. **Listing draft** — Claude → `create_listing` (status=pending_review)

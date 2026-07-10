@@ -4,6 +4,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
+import { AnalyzeButton } from "./analyze-button";
 
 export default async function ProductDetailPage({
   params,
@@ -67,7 +68,10 @@ export default async function ProductDetailPage({
             {product.status}
           </p>
         </div>
-        <DeleteButton productId={product.id} />
+        <div className="flex items-center gap-2">
+          <AnalyzeButton productId={product.id} />
+          <DeleteButton productId={product.id} />
+        </div>
       </div>
 
       {signedPhotos.length > 0 ? (

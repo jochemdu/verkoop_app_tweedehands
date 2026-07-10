@@ -119,6 +119,7 @@ export function VirtualTable({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [printOpen, setPrintOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -152,6 +153,31 @@ export function VirtualTable({
 
   function toggleAll() {
     setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+  }
+
+  async function bulkAnalyze() {
+    const ids = [...selected];
+    setAnalyzing(true);
+    let ok = 0;
+    let failed = 0;
+    try {
+      // Sequentieel: elke analyse is een zware vision-call; parallel zou
+      // rate limits raken en de progress-toast betekenisloos maken.
+      for (const [i, id] of ids.entries()) {
+        toast.loading(`AI-analyse ${i + 1}/${ids.length}…`, { id: "bulk-analyze" });
+        const res = await fetch(`/api/products/${id}/analyze`, { method: "POST" });
+        if (res.ok) ok++;
+        else failed++;
+      }
+      toast.dismiss("bulk-analyze");
+      if (failed === 0) toast.success(`${ok} producten geanalyseerd`);
+      else toast.warning(`${ok} gelukt, ${failed} mislukt (zie productpagina's)`);
+      setSelected(new Set());
+      router.refresh();
+    } finally {
+      toast.dismiss("bulk-analyze");
+      setAnalyzing(false);
+    }
   }
 
   async function bulkDelete() {
@@ -288,6 +314,14 @@ export function VirtualTable({
             }
           >
             Print stickers ({selectedStickerIds.length})
+          </button>
+          <button
+            type="button"
+            onClick={bulkAnalyze}
+            disabled={analyzing}
+            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+          >
+            {analyzing ? "AI bezig…" : `✨ Analyseer (${selected.size})`}
           </button>
           <button
             type="button"
