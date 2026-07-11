@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BlindSpotSection } from "./blind-spot-section";
+import { RoomAuditSection } from "./room-audit-section";
 import { CATEGORY_SLUGS } from "@verkoopassistent/shared";
 import {
   getSeasonalPromptsForDate,
@@ -86,6 +87,8 @@ export default async function SuggestionsPage() {
           Gebaseerd op je inventaris + het huidige seizoen.
         </p>
       </div>
+
+      <RoomAuditSection userId={user!.id} />
 
       <BlindSpotSection
         userId={user!.id}

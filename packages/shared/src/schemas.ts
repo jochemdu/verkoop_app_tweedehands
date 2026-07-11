@@ -35,6 +35,8 @@ export type ProductIndexData = z.output<typeof productIndexSchema>;
 // Product update (Fase B — verkoop). specs is bewust niet opgenomen — die
 // komt via een ander pad (Claude MCP bundel update of categorie-spec form).
 export const productUpdateSchema = z.object({
+  // Sticker achteraf koppelen (bijv. aan een stub uit de kamer-scan).
+  sticker_id: stickerIdSchema.optional(),
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(5000).optional(),
   condition: z.enum(PRODUCT_CONDITIONS).optional(),
