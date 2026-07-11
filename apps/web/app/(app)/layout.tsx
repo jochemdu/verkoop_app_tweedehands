@@ -10,6 +10,7 @@ const NAV = [
   { href: "/taxatie", label: "Taxatie" },
   { href: "/upload", label: "Bulk upload" },
   { href: "/stickers", label: "Stickers" },
+  { href: "/settings", label: "Instellingen" },
 ];
 
 export default async function AppLayout({

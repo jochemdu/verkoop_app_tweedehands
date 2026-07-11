@@ -38,7 +38,11 @@ const nextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // Turbopack (default sinds Next 16) volgt tsconfig-resolutie en heeft de
+  // webpack extensionAlias-hack niet nodig; lege config bevestigt de keuze.
+  turbopack: {},
   webpack: (config) => {
+    // Alleen gebruikt bij een expliciete `next build --webpack` fallback.
     config.resolve.extensionAlias = {
       ...config.resolve.extensionAlias,
       ".js": [".ts", ".tsx", ".js", ".jsx"],

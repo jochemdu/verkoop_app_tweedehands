@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sanitizeForLLM, isSafeInboxPath } from "./security.js";
+import { sanitizeForLLM, isSafeInboxPath } from "./security";
 
 describe("sanitizeForLLM", () => {
   it("passes clean text through unchanged", () => {
@@ -35,37 +35,51 @@ describe("sanitizeForLLM", () => {
   });
 });
 
+const UID = "0b26bb59-06e4-4dc2-b4c9-e6d4b9f1a111";
+const OTHER = "9c17aa48-15f3-4cb1-a3b8-d5c3a8e0b222";
+
 describe("isSafeInboxPath", () => {
-  it("accepteert geldige inbox paden", () => {
-    expect(isSafeInboxPath("inbox/foto.jpg")).toBe(true);
-    expect(isSafeInboxPath("inbox/2026-01-15T10-30-00_0_snap.jpeg")).toBe(true);
-    expect(isSafeInboxPath("inbox/image.png")).toBe(true);
-    expect(isSafeInboxPath("inbox/item_2.webp")).toBe(true);
+  it("accepteert geldige per-user inbox paden", () => {
+    expect(isSafeInboxPath(`${UID}/inbox/foto.jpg`)).toBe(true);
+    expect(isSafeInboxPath(`${UID}/inbox/2026-01-15T10-30-00_0_snap.jpeg`)).toBe(true);
+    expect(isSafeInboxPath(`${UID}/inbox/image.png`)).toBe(true);
+    expect(isSafeInboxPath(`${UID}/inbox/item_2.webp`)).toBe(true);
+  });
+
+  it("verifieert de user-prefix als userId is meegegeven", () => {
+    expect(isSafeInboxPath(`${UID}/inbox/foto.jpg`, UID)).toBe(true);
+    expect(isSafeInboxPath(`${UID}/inbox/foto.jpg`, UID.toUpperCase())).toBe(true);
+    expect(isSafeInboxPath(`${OTHER}/inbox/foto.jpg`, UID)).toBe(false);
+  });
+
+  it("weigert legacy paden zonder user-prefix", () => {
+    expect(isSafeInboxPath("inbox/foto.jpg")).toBe(false);
   });
 
   it("weigert path-traversal", () => {
     expect(isSafeInboxPath("../secret.jpg")).toBe(false);
-    expect(isSafeInboxPath("inbox/../secret.jpg")).toBe(false);
-    expect(isSafeInboxPath("inbox/../../other-user/foto.jpg")).toBe(false);
+    expect(isSafeInboxPath(`${UID}/inbox/../secret.jpg`)).toBe(false);
+    expect(isSafeInboxPath(`${UID}/inbox/../../other-user/foto.jpg`)).toBe(false);
   });
 
   it("weigert paden buiten inbox/", () => {
-    expect(isSafeInboxPath("other/foto.jpg")).toBe(false);
-    expect(isSafeInboxPath("/inbox/foto.jpg")).toBe(false);
+    expect(isSafeInboxPath(`${UID}/other/foto.jpg`)).toBe(false);
+    expect(isSafeInboxPath(`/${UID}/inbox/foto.jpg`)).toBe(false);
     expect(isSafeInboxPath("foto.jpg")).toBe(false);
+    expect(isSafeInboxPath("niet-een-uuid/inbox/foto.jpg")).toBe(false);
   });
 
   it("weigert dubbele slashes", () => {
-    expect(isSafeInboxPath("inbox//foto.jpg")).toBe(false);
+    expect(isSafeInboxPath(`${UID}/inbox//foto.jpg`)).toBe(false);
   });
 
   it("weigert onbekende extensies", () => {
-    expect(isSafeInboxPath("inbox/foto.exe")).toBe(false);
-    expect(isSafeInboxPath("inbox/foto.txt")).toBe(false);
+    expect(isSafeInboxPath(`${UID}/inbox/foto.exe`)).toBe(false);
+    expect(isSafeInboxPath(`${UID}/inbox/foto.txt`)).toBe(false);
   });
 
   it("weigert te lange paden", () => {
-    expect(isSafeInboxPath("inbox/" + "a".repeat(300) + ".jpg")).toBe(false);
+    expect(isSafeInboxPath(`${UID}/inbox/` + "a".repeat(300) + ".jpg")).toBe(false);
   });
 
   it("weigert niet-strings", () => {

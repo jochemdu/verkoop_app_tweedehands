@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
     );
   }
   const { photo_paths, ...productData } = parsed.data;
+  if (!photo_paths.every((p) => isSafeInboxPath(p, user.id))) {
+    return NextResponse.json(
+      { error: "Storage pad hoort niet bij deze gebruiker" },
+      { status: 403 },
+    );
+  }
 
   const { data: product, error: productErr } = await supabase
     .from("products")
@@ -39,6 +45,7 @@ export async function POST(req: NextRequest) {
       working_title: productData.working_title ?? null,
       indexing_notes: productData.indexing_notes ?? null,
       ean: productData.ean ?? null,
+      user_id: user.id,
     })
     .select()
     .single();
@@ -63,6 +70,7 @@ export async function POST(req: NextRequest) {
       storage_path: path,
       order_index: idx,
       photo_type: "general" as const,
+      user_id: user.id,
     }));
     const { error: photosErr } = await supabase.from("photos").insert(photoRows);
     if (photosErr) {

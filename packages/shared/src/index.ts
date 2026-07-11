@@ -21,7 +21,7 @@ export {
   type BuybackServiceSlug,
   type CategorySlug,
   type BundleType,
-} from "./enums.js";
+} from "./enums";
 
 export {
   stickerIdSchema,
@@ -31,6 +31,9 @@ export {
   productUpdateSchema,
   photoInsertSchema,
   stickerSheetGenerateSchema,
+  stickerSelectionPrintSchema,
+  stickerPresetSchema,
+  STICKER_PRESETS,
   type LoginInput,
   type ProductIndexInput,
   type ProductIndexData,
@@ -38,13 +41,34 @@ export {
   type PhotoInsertInput,
   type StickerSheetGenerateInput,
   type StickerSheetGenerateData,
-} from "./schemas.js";
+  type StickerSelectionPrintInput,
+  type StickerSelectionPrintData,
+  type StickerPreset,
+} from "./schemas";
 
 export {
   sanitizeForLLM,
   isSafeInboxPath,
   sanitizeAll,
-} from "./security.js";
+} from "./security";
 
-export type { Database, Json } from "./database.types.js";
-export { Constants } from "./database.types.js";
+export {
+  productIdentifierColumn,
+  resolveProductId,
+  resolveProductIds,
+  softDeleteProducts,
+  restoreProducts,
+  hardDeleteProducts,
+  signedPhotoUrls,
+  type Db,
+} from "./repo";
+
+export {
+  lookupEan,
+  lookupBook,
+  type EanLookupResult,
+  type BookLookupResult,
+} from "./lookups";
+
+export type { Database, Json } from "./database.types";
+export { Constants } from "./database.types";

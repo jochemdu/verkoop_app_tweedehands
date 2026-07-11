@@ -16,19 +16,19 @@ export type Database = {
         Row: {
           key: string
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           value: Json
         }
         Insert: {
           key: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           value: Json
         }
         Update: {
           key?: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           value?: Json
         }
         Relationships: []
@@ -53,8 +53,20 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          { foreignKeyName: "bundle_items_bundle_id_fkey"; columns: ["bundle_id"]; isOneToOne: false; referencedRelation: "bundles"; referencedColumns: ["id"] },
-          { foreignKeyName: "bundle_items_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "bundle_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bundles: {
@@ -146,8 +158,20 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: [
-          { foreignKeyName: "buyback_quotes_buyback_service_id_fkey"; columns: ["buyback_service_id"]; isOneToOne: false; referencedRelation: "buyback_services"; referencedColumns: ["id"] },
-          { foreignKeyName: "buyback_quotes_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "buyback_quotes_buyback_service_id_fkey"
+            columns: ["buyback_service_id"]
+            isOneToOne: false
+            referencedRelation: "buyback_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyback_quotes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
       buyback_services: {
@@ -190,32 +214,50 @@ export type Database = {
         Row: {
           id: string
           name: string
-          parent_slug: Database["public"]["Enums"]["category_slug"] | null
-          preferred_buyback_services: Database["public"]["Enums"]["buyback_service_slug"][] | null
-          preferred_platforms: Database["public"]["Enums"]["platform_slug"][] | null
-          slug: Database["public"]["Enums"]["category_slug"]
+          parent_slug: string | null
+          preferred_buyback_services:
+            | Database["public"]["Enums"]["buyback_service_slug"][]
+            | null
+          preferred_platforms:
+            | Database["public"]["Enums"]["platform_slug"][]
+            | null
+          slug: string
           spec_schema: Json | null
         }
         Insert: {
           id?: string
           name: string
-          parent_slug?: Database["public"]["Enums"]["category_slug"] | null
-          preferred_buyback_services?: Database["public"]["Enums"]["buyback_service_slug"][] | null
-          preferred_platforms?: Database["public"]["Enums"]["platform_slug"][] | null
-          slug: Database["public"]["Enums"]["category_slug"]
+          parent_slug?: string | null
+          preferred_buyback_services?:
+            | Database["public"]["Enums"]["buyback_service_slug"][]
+            | null
+          preferred_platforms?:
+            | Database["public"]["Enums"]["platform_slug"][]
+            | null
+          slug: string
           spec_schema?: Json | null
         }
         Update: {
           id?: string
           name?: string
-          parent_slug?: Database["public"]["Enums"]["category_slug"] | null
-          preferred_buyback_services?: Database["public"]["Enums"]["buyback_service_slug"][] | null
-          preferred_platforms?: Database["public"]["Enums"]["platform_slug"][] | null
-          slug?: Database["public"]["Enums"]["category_slug"]
+          parent_slug?: string | null
+          preferred_buyback_services?:
+            | Database["public"]["Enums"]["buyback_service_slug"][]
+            | null
+          preferred_platforms?:
+            | Database["public"]["Enums"]["platform_slug"][]
+            | null
+          slug?: string
           spec_schema?: Json | null
         }
         Relationships: [
-          { foreignKeyName: "categories_parent_slug_fkey"; columns: ["parent_slug"]; isOneToOne: false; referencedRelation: "categories"; referencedColumns: ["slug"] }
+          {
+            foreignKeyName: "categories_parent_slug_fkey"
+            columns: ["parent_slug"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
         ]
       }
       claude_analyses: {
@@ -253,6 +295,163 @@ export type Database = {
           user_prompt?: string | null
         }
         Relationships: []
+      }
+      containers: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string
+          last_visited_at: string | null
+          location_text: string | null
+          qr_code: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label: string
+          last_visited_at?: string | null
+          location_text?: string | null
+          qr_code?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string
+          last_visited_at?: string | null
+          location_text?: string | null
+          qr_code?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ean_cache: {
+        Row: {
+          brand: string | null
+          cached_at: string | null
+          category: string | null
+          ean: string
+          expires_at: string | null
+          image_url: string | null
+          product_name: string | null
+          raw_response: Json | null
+          source: string | null
+        }
+        Insert: {
+          brand?: string | null
+          cached_at?: string | null
+          category?: string | null
+          ean: string
+          expires_at?: string | null
+          image_url?: string | null
+          product_name?: string | null
+          raw_response?: Json | null
+          source?: string | null
+        }
+        Update: {
+          brand?: string | null
+          cached_at?: string | null
+          category?: string | null
+          ean?: string
+          expires_at?: string | null
+          image_url?: string | null
+          product_name?: string | null
+          raw_response?: Json | null
+          source?: string | null
+        }
+        Relationships: []
+      }
+      house_scans: {
+        Row: {
+          container_id: string | null
+          created_at: string | null
+          detected_objects: Json | null
+          frame_count: number | null
+          id: string
+          processed_at: string | null
+          user_id: string
+          video_storage_path: string
+        }
+        Insert: {
+          container_id?: string | null
+          created_at?: string | null
+          detected_objects?: Json | null
+          frame_count?: number | null
+          id?: string
+          processed_at?: string | null
+          user_id: string
+          video_storage_path: string
+        }
+        Update: {
+          container_id?: string | null
+          created_at?: string | null
+          detected_objects?: Json | null
+          frame_count?: number | null
+          id?: string
+          processed_at?: string | null
+          user_id?: string
+          video_storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "house_scans_container_id_fkey"
+            columns: ["container_id"]
+            isOneToOne: false
+            referencedRelation: "containers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_candidates: {
+        Row: {
+          asset_id: string
+          confidence: number | null
+          created_at: string | null
+          detected_object: string | null
+          dismissed: boolean | null
+          id: string
+          imported: boolean | null
+          matches_product_id: string | null
+          taken_at: string | null
+          thumbnail_uri: string | null
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          confidence?: number | null
+          created_at?: string | null
+          detected_object?: string | null
+          dismissed?: boolean | null
+          id?: string
+          imported?: boolean | null
+          matches_product_id?: string | null
+          taken_at?: string | null
+          thumbnail_uri?: string | null
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          confidence?: number | null
+          created_at?: string | null
+          detected_object?: string | null
+          dismissed?: boolean | null
+          id?: string
+          imported?: boolean | null
+          matches_product_id?: string | null
+          taken_at?: string | null
+          thumbnail_uri?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_candidates_matches_product_id_fkey"
+            columns: ["matches_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listings: {
         Row: {
@@ -331,20 +530,64 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          { foreignKeyName: "listings_platform_id_fkey"; columns: ["platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] },
-          { foreignKeyName: "listings_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "listings_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      market_trends: {
+        Row: {
+          category: string
+          expires_at: string | null
+          fetched_at: string | null
+          id: string
+          platform: Database["public"]["Enums"]["platform_slug"]
+          sample_size: number | null
+          trend_data: Json
+        }
+        Insert: {
+          category: string
+          expires_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          platform: Database["public"]["Enums"]["platform_slug"]
+          sample_size?: number | null
+          trend_data: Json
+        }
+        Update: {
+          category?: string
+          expires_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          platform?: Database["public"]["Enums"]["platform_slug"]
+          sample_size?: number | null
+          trend_data?: Json
+        }
+        Relationships: []
       }
       photos: {
         Row: {
           capture_mode: string | null
           created_at: string | null
+          cropped_from_photo_id: string | null
           deleted_at: string | null
           detected_sticker: string | null
           height: number | null
           id: string
           ocr_confidence: number | null
           order_index: number | null
+          phash: number | null
           photo_type: Database["public"]["Enums"]["photo_type"] | null
           product_id: string
           size_bytes: number | null
@@ -357,12 +600,14 @@ export type Database = {
         Insert: {
           capture_mode?: string | null
           created_at?: string | null
+          cropped_from_photo_id?: string | null
           deleted_at?: string | null
           detected_sticker?: string | null
           height?: number | null
           id?: string
           ocr_confidence?: number | null
           order_index?: number | null
+          phash?: number | null
           photo_type?: Database["public"]["Enums"]["photo_type"] | null
           product_id: string
           size_bytes?: number | null
@@ -375,12 +620,14 @@ export type Database = {
         Update: {
           capture_mode?: string | null
           created_at?: string | null
+          cropped_from_photo_id?: string | null
           deleted_at?: string | null
           detected_sticker?: string | null
           height?: number | null
           id?: string
           ocr_confidence?: number | null
           order_index?: number | null
+          phash?: number | null
           photo_type?: Database["public"]["Enums"]["photo_type"] | null
           product_id?: string
           size_bytes?: number | null
@@ -391,7 +638,20 @@ export type Database = {
           width?: number | null
         }
         Relationships: [
-          { foreignKeyName: "photos_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "photos_cropped_from_photo_id_fkey"
+            columns: ["cropped_from_photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photos_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
       platforms: {
@@ -480,14 +740,26 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          { foreignKeyName: "price_history_platform_id_fkey"; columns: ["platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] },
-          { foreignKeyName: "price_history_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "price_history_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
       price_watches: {
         Row: {
           alert_on_below: number | null
-          category_slug: Database["public"]["Enums"]["category_slug"] | null
+          category_slug: string | null
           check_interval_hours: number | null
           created_at: string | null
           current_lowest: number | null
@@ -502,7 +774,7 @@ export type Database = {
         }
         Insert: {
           alert_on_below?: number | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           check_interval_hours?: number | null
           created_at?: string | null
           current_lowest?: number | null
@@ -517,7 +789,7 @@ export type Database = {
         }
         Update: {
           alert_on_below?: number | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           check_interval_hours?: number | null
           created_at?: string | null
           current_lowest?: number | null
@@ -531,15 +803,22 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          { foreignKeyName: "price_watches_platform_id_fkey"; columns: ["platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "price_watches_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
         Row: {
           analyzed_at: string | null
           barcode_type: string | null
-          category_slug: Database["public"]["Enums"]["category_slug"] | null
+          category_slug: string | null
           condition: Database["public"]["Enums"]["product_condition"] | null
+          container_id: string | null
           created_at: string | null
           defects: string[] | null
           deleted_at: string | null
@@ -561,11 +840,14 @@ export type Database = {
           sold_at: string | null
           sold_platform_id: string | null
           sold_price: number | null
+          source_photo_id: string | null
           specs: Json | null
           status: Database["public"]["Enums"]["product_status"] | null
           sticker_confidence: number | null
           sticker_id: string | null
-          sticker_input_method: Database["public"]["Enums"]["sticker_input_method"] | null
+          sticker_input_method:
+            | Database["public"]["Enums"]["sticker_input_method"]
+            | null
           title: string | null
           updated_at: string | null
           user_id: string | null
@@ -574,8 +856,9 @@ export type Database = {
         Insert: {
           analyzed_at?: string | null
           barcode_type?: string | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           condition?: Database["public"]["Enums"]["product_condition"] | null
+          container_id?: string | null
           created_at?: string | null
           defects?: string[] | null
           deleted_at?: string | null
@@ -597,11 +880,14 @@ export type Database = {
           sold_at?: string | null
           sold_platform_id?: string | null
           sold_price?: number | null
+          source_photo_id?: string | null
           specs?: Json | null
           status?: Database["public"]["Enums"]["product_status"] | null
           sticker_confidence?: number | null
           sticker_id?: string | null
-          sticker_input_method?: Database["public"]["Enums"]["sticker_input_method"] | null
+          sticker_input_method?:
+            | Database["public"]["Enums"]["sticker_input_method"]
+            | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -610,8 +896,9 @@ export type Database = {
         Update: {
           analyzed_at?: string | null
           barcode_type?: string | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           condition?: Database["public"]["Enums"]["product_condition"] | null
+          container_id?: string | null
           created_at?: string | null
           defects?: string[] | null
           deleted_at?: string | null
@@ -633,20 +920,79 @@ export type Database = {
           sold_at?: string | null
           sold_platform_id?: string | null
           sold_price?: number | null
+          source_photo_id?: string | null
           specs?: Json | null
           status?: Database["public"]["Enums"]["product_status"] | null
           sticker_confidence?: number | null
           sticker_id?: string | null
-          sticker_input_method?: Database["public"]["Enums"]["sticker_input_method"] | null
+          sticker_input_method?:
+            | Database["public"]["Enums"]["sticker_input_method"]
+            | null
           title?: string | null
           updated_at?: string | null
           user_id?: string | null
           working_title?: string | null
         }
         Relationships: [
-          { foreignKeyName: "products_category_slug_fkey"; columns: ["category_slug"]; isOneToOne: false; referencedRelation: "categories"; referencedColumns: ["slug"] },
-          { foreignKeyName: "products_sold_platform_id_fkey"; columns: ["sold_platform_id"]; isOneToOne: false; referencedRelation: "platforms"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "products_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "products_container_id_fkey"
+            columns: ["container_id"]
+            isOneToOne: false
+            referencedRelation: "containers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_sold_platform_id_fkey"
+            columns: ["sold_platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_source_photo_id_fkey"
+            columns: ["source_photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          display_language: string
+          display_name: string | null
+          household: Json
+          id: string
+          listing_language: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_language?: string
+          display_name?: string | null
+          household?: Json
+          id: string
+          listing_language?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_language?: string
+          display_name?: string | null
+          household?: Json
+          id?: string
+          listing_language?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       sticker_sheets: {
         Row: {
@@ -716,86 +1062,354 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          { foreignKeyName: "taxatie_exports_bundle_id_fkey"; columns: ["bundle_id"]; isOneToOne: false; referencedRelation: "bundles"; referencedColumns: ["id"] },
-          { foreignKeyName: "taxatie_exports_product_id_fkey"; columns: ["product_id"]; isOneToOne: false; referencedRelation: "products"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "taxatie_exports_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxatie_exports_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
       dashboard_stats: {
         Row: {
-          user_id: string | null
-          total_products: number | null
-          indexed_count: number | null
-          ready_count: number | null
-          listed_count: number | null
-          sold_count: number | null
-          pending_count: number | null
           approved_count: number | null
           archived_count: number | null
-          total_est_value: number | null
+          indexed_count: number | null
+          listed_count: number | null
+          pending_count: number | null
+          ready_count: number | null
           refreshed_at: string | null
+          sold_count: number | null
+          total_est_value: number | null
+          total_products: number | null
+          user_id: string | null
         }
         Relationships: []
       }
     }
     Functions: {
+      find_similar_photos: {
+        Args: {
+          p_exclude_photo_id?: string
+          p_max_distance?: number
+          p_phash: number
+          p_user_id: string
+        }
+        Returns: {
+          distance: number
+          photo_id: string
+          product_id: string
+          storage_path: string
+        }[]
+      }
+      hamming_distance_bigint: {
+        Args: { a: number; b: number }
+        Returns: number
+      }
+      list_inventory_with_counts: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_status?: string
+          p_sticker_from?: string
+          p_sticker_to?: string
+          p_user_id: string
+        }
+        Returns: {
+          category_slug: string
+          id: string
+          indexed_at: string
+          photo_count: number
+          status: string
+          sticker_id: string
+          title: string
+          working_title: string
+        }[]
+      }
+      refresh_dashboard_stats: { Args: never; Returns: undefined }
       reserve_next_sticker: {
         Args: { p_count: number; p_user_id: string }
         Returns: string[]
       }
-      list_inventory_with_counts: {
-        Args: {
-          p_user_id: string
-          p_status?: string | null
-          p_category?: string | null
-          p_sticker_from?: string | null
-          p_sticker_to?: string | null
-          p_limit?: number
-        }
-        Returns: {
-          id: string
-          sticker_id: string | null
-          working_title: string | null
-          title: string | null
-          category_slug: string | null
-          status: string | null
-          indexed_at: string | null
-          photo_count: number
-        }[]
-      }
-      refresh_dashboard_stats: {
-        Args: Record<string, never>
-        Returns: undefined
-      }
     }
     Enums: {
-      bundle_type: "ram_kit" | "console_bundle" | "card_lot" | "card_set" | "hardware_bundle" | "custom"
-      buyback_service_slug: "levelseven" | "nedgame" | "flashkaartshop" | "rarecards" | "catchcollect" | "itad_broker" | "other"
-      category_slug: "ram_dimm" | "ram_sodimm" | "cpu" | "gpu" | "console" | "console_game" | "smartphone" | "laptop" | "pokemon_card" | "antique_tin" | "antique_silver" | "antique_other" | "electronics_other" | "unknown" | "other" | "clothing"
-      listing_status: "draft" | "pending_review" | "approved" | "publishing" | "published" | "sold" | "expired" | "error"
-      photo_type: "general" | "front" | "back" | "mark" | "detail" | "damage" | "serial" | "label" | "holo" | "barcode" | "sticker"
-      platform_slug: "marktplaats" | "tweakers" | "cardmarket" | "ebay" | "catawiki" | "2dehands" | "facebook"
-      product_condition: "mint" | "near_mint" | "excellent" | "very_good" | "good" | "fair" | "poor"
-      product_status: "indexed" | "analyzing" | "ready_to_list" | "pending_review" | "approved" | "listed" | "sold" | "archived"
-      sticker_input_method: "ocr_inline" | "ocr_separate" | "manual" | "manual_increment"
+      bundle_type:
+        | "ram_kit"
+        | "console_bundle"
+        | "card_lot"
+        | "card_set"
+        | "hardware_bundle"
+        | "custom"
+      buyback_service_slug:
+        | "levelseven"
+        | "nedgame"
+        | "flashkaartshop"
+        | "rarecards"
+        | "catchcollect"
+        | "itad_broker"
+        | "other"
+      listing_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "publishing"
+        | "published"
+        | "sold"
+        | "expired"
+        | "error"
+      photo_type:
+        | "general"
+        | "front"
+        | "back"
+        | "mark"
+        | "detail"
+        | "damage"
+        | "serial"
+        | "label"
+        | "holo"
+        | "barcode"
+        | "sticker"
+      platform_slug:
+        | "marktplaats"
+        | "tweakers"
+        | "cardmarket"
+        | "ebay"
+        | "catawiki"
+        | "2dehands"
+        | "facebook"
+      product_condition:
+        | "mint"
+        | "near_mint"
+        | "excellent"
+        | "very_good"
+        | "good"
+        | "fair"
+        | "poor"
+      product_status:
+        | "indexed"
+        | "analyzing"
+        | "ready_to_list"
+        | "pending_review"
+        | "approved"
+        | "listed"
+        | "sold"
+        | "archived"
+      sticker_input_method:
+        | "ocr_inline"
+        | "ocr_separate"
+        | "manual"
+        | "manual_increment"
     }
-    CompositeTypes: { [_ in never]: never }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
     Enums: {
-      bundle_type: ["ram_kit", "console_bundle", "card_lot", "card_set", "hardware_bundle", "custom"],
-      buyback_service_slug: ["levelseven", "nedgame", "flashkaartshop", "rarecards", "catchcollect", "itad_broker", "other"],
-      category_slug: ["ram_dimm", "ram_sodimm", "cpu", "gpu", "console", "console_game", "smartphone", "laptop", "pokemon_card", "antique_tin", "antique_silver", "antique_other", "electronics_other", "unknown", "other", "clothing"],
-      listing_status: ["draft", "pending_review", "approved", "publishing", "published", "sold", "expired", "error"],
-      photo_type: ["general", "front", "back", "mark", "detail", "damage", "serial", "label", "holo", "barcode", "sticker"],
-      platform_slug: ["marktplaats", "tweakers", "cardmarket", "ebay", "catawiki", "2dehands", "facebook"],
-      product_condition: ["mint", "near_mint", "excellent", "very_good", "good", "fair", "poor"],
-      product_status: ["indexed", "analyzing", "ready_to_list", "pending_review", "approved", "listed", "sold", "archived"],
-      sticker_input_method: ["ocr_inline", "ocr_separate", "manual", "manual_increment"],
+      bundle_type: [
+        "ram_kit",
+        "console_bundle",
+        "card_lot",
+        "card_set",
+        "hardware_bundle",
+        "custom",
+      ],
+      buyback_service_slug: [
+        "levelseven",
+        "nedgame",
+        "flashkaartshop",
+        "rarecards",
+        "catchcollect",
+        "itad_broker",
+        "other",
+      ],
+      listing_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "publishing",
+        "published",
+        "sold",
+        "expired",
+        "error",
+      ],
+      photo_type: [
+        "general",
+        "front",
+        "back",
+        "mark",
+        "detail",
+        "damage",
+        "serial",
+        "label",
+        "holo",
+        "barcode",
+        "sticker",
+      ],
+      platform_slug: [
+        "marktplaats",
+        "tweakers",
+        "cardmarket",
+        "ebay",
+        "catawiki",
+        "2dehands",
+        "facebook",
+      ],
+      product_condition: [
+        "mint",
+        "near_mint",
+        "excellent",
+        "very_good",
+        "good",
+        "fair",
+        "poor",
+      ],
+      product_status: [
+        "indexed",
+        "analyzing",
+        "ready_to_list",
+        "pending_review",
+        "approved",
+        "listed",
+        "sold",
+        "archived",
+      ],
+      sticker_input_method: [
+        "ocr_inline",
+        "ocr_separate",
+        "manual",
+        "manual_increment",
+      ],
     },
   },
 } as const

@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { CATEGORY_SLUGS, sanitizeForLLM } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
+import { getOwnerId } from "../lib/owner.js";
 
 const schema = z.object({
   working_title: z
@@ -31,7 +31,7 @@ export const createProductStubDefinition = {
   name: "create_product_stub",
   description:
     "Maak een placeholder product aan zonder sticker_id of foto's (Feat 20 Room Audit). Status=indexed, working_title bevat beschrijving. De gebruiker kan later fysiek een sticker plakken en via de web-app foto's toevoegen. Gebruik één stub per item dat je in een kamer-foto spot maar niet in de inventaris staat.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleCreateProductStub(input: unknown) {
@@ -68,6 +68,7 @@ export async function handleCreateProductStub(input: unknown) {
     .filter(Boolean)
     .join("\n");
 
+  const ownerId = await getOwnerId();
   const { data: product, error } = await supabase
     .from("products")
     .insert({
@@ -76,6 +77,7 @@ export async function handleCreateProductStub(input: unknown) {
       indexing_notes: notesCombined,
       status: "indexed",
       sticker_input_method: null,
+      user_id: ownerId,
     })
     .select()
     .single();

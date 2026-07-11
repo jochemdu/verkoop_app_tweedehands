@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
     );
   }
   const { photo_paths, mode, workingTitle } = parsed.data;
+  if (!photo_paths.every((p) => isSafeInboxPath(p, user.id))) {
+    return NextResponse.json(
+      { error: "Storage pad hoort niet bij deze gebruiker" },
+      { status: 403 },
+    );
+  }
 
   // Mode: single — alle foto's naar één product.
   if (mode === "single") {
@@ -39,6 +45,7 @@ export async function POST(req: NextRequest) {
         sticker_id: parsed.data.startSticker ?? null,
         sticker_input_method: parsed.data.startSticker ? "manual" : null,
         working_title: workingTitle ?? null,
+        user_id: user.id,
       })
       .select()
       .single();
@@ -54,6 +61,7 @@ export async function POST(req: NextRequest) {
       storage_path: path,
       order_index: idx,
       photo_type: "general" as const,
+      user_id: user.id,
     }));
     await supabase.from("photos").insert(photoRows);
     return NextResponse.json({ created: 1, products: [product] });
@@ -97,6 +105,7 @@ export async function POST(req: NextRequest) {
         sticker_id: sticker,
         sticker_input_method: sticker ? "manual_increment" : null,
         working_title: workingTitle ?? null,
+        user_id: user.id,
       })
       .select()
       .single();
@@ -109,6 +118,7 @@ export async function POST(req: NextRequest) {
       storage_path: path,
       order_index: 0,
       photo_type: "general",
+      user_id: user.id,
     });
     if (photoErr) {
       // Rollback product rij als photo insert faalt — voorkomt dangling product.

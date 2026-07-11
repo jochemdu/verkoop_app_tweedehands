@@ -21,6 +21,17 @@ Env-waarden staan al in `apps/web/.env.local` en `apps/mobile/.env` (beide gitig
    - `verkoopassistent://auth/callback`
    - `exp://**` (voor Expo Go tijdens development)
 
+### 1b. Multi-user / vrienden uitnodigen (fase 21)
+
+De app is multi-tenant: elke gebruiker ziet alleen z'n eigen producten,
+foto's, stickers en advertenties (RLS + per-user storage-mappen). Iedereen
+die inlogt via magic link krijgt automatisch een account + profiel.
+
+- **Open aanmelding** (default): stuur je vrienden gewoon de URL.
+- **Alleen op uitnodiging**: Dashboard → Authentication → Sign In / Up →
+  zet *Allow new users to sign up* uit, en nodig mensen uit via
+  Authentication → Users → *Invite user*.
+
 ### 2. Service role key (voor MCP server + price-watcher)
 
 1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/settings/api>
@@ -36,7 +47,7 @@ we hem niet in plain-text SQL hoeven te zetten.
 1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/integrations/vault/overview>
 2. Klik *New secret* → name: `service_role_key` → value: <plak service role key>
 3. Save.
-4. Apply migration: `supabase/migrations/0003_price_watcher_cron.sql`  
+4. Apply migration: `supabase/migrations/20260416180000_price_watcher_cron.sql`  
    — kopieer en run in <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/sql/new>
 
 Verifieer:
@@ -59,6 +70,8 @@ pnpm dev:mobile           # → scan QR code met Expo Go app
 # MCP server (lokaal testen):
 pnpm -F @verkoopassistent/mcp-server start
 ```
+
+> Volledige Android build- en distributiegids: zie [ANDROID.md](ANDROID.md).
 
 ## Mobile EAS Development Build (Fase 3b — camera + ML Kit)
 
@@ -107,9 +120,15 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 
 ## Volledige workflow (end-to-end)
 
-1. **Print stickers** — web `/stickers` → A4 PDF → plak op producten
+1. **Print stickers** — web `/stickers` → A4 PDF (3 formaten, optioneel QR) → plak op producten
 2. **Indexeer** — mobile `Indexeren` tab (foto + sticker-ID) OF web `/upload` (bulk drag-drop)
-3. **Analyseer** — Claude Desktop → `list_inventory` + `get_product_photos` + `lookup_ean` + `update_product`
+3. **Analyseer (in-app)** — productpagina → "✨ Analyseer met AI", of selecteer
+   meerdere producten in `/inventory` → "Analyseer (N)". Vereist
+   `ANTHROPIC_API_KEY` in `apps/web/.env.local` (en op Vercel). Het model
+   herkent het product, schrijft een NL advertentietekst, schat de prijs en
+   zet een concept-advertentie klaar in `/listings`.
+   *Alternatief:* Claude Desktop → `list_inventory` + `get_product_photos` +
+   `lookup_ean` + `update_product` (MCP, voor bundels/prijsonderzoek)
 4. **Bundel** — Claude → `suggest_bundle` met reasoning
 5. **Prijsonderzoek** — Claude → `fetch_tweakers_prices`
 6. **Listing draft** — Claude → `create_listing` (status=pending_review)
@@ -127,9 +146,7 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 ├── SETUP.md                     # dit bestand
 ├── pnpm-workspace.yaml
 ├── supabase/
-│   ├── migrations/
-│   │   ├── 0001_initial_schema.sql        # Fase 1
-│   │   └── 0003_price_watcher_cron.sql    # Fase 7 (na Vault secret)
+│   ├── migrations/                # gespiegeld aan remote history — zie migrations/README.md
 │   └── functions/              # Edge Functions (gedeployed via MCP)
 │       ├── lookup-ean/
 │       ├── fetch-tweakers-prices/

@@ -1,16 +1,18 @@
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
-import { MMKV } from "react-native-mmkv";
+import { createMMKV } from "react-native-mmkv";
 import Constants from "expo-constants";
 import type { Database } from "@verkoopassistent/shared";
 
 // MMKV is snellere & sync storage dan AsyncStorage — ideaal voor auth tokens.
-const storage = new MMKV({ id: "verkoopassistent-auth" });
+const storage = createMMKV({ id: "verkoopassistent-auth" });
 
 const mmkvStorageAdapter = {
   getItem: (key: string) => storage.getString(key) ?? null,
   setItem: (key: string, value: string) => storage.set(key, value),
-  removeItem: (key: string) => storage.delete(key),
+  removeItem: (key: string) => {
+    storage.remove(key);
+  },
 };
 
 declare const process: { env: Record<string, string | undefined> };

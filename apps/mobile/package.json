@@ -11,35 +11,47 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo/metro-runtime": "^57.0.3",
     "@react-native-ml-kit/text-recognition": "^2.0.0",
-    "@supabase/supabase-js": "^2.103.3",
-    "@tanstack/react-query": "^5.75.1",
+    "@supabase/supabase-js": "^2.110.2",
+    "@tanstack/react-query": "^5.101.2",
     "@verkoopassistent/shared": "workspace:*",
-    "expo": "~53.0.9",
-    "expo-camera": "^55.0.15",
-    "expo-constants": "~17.1.5",
-    "expo-file-system": "^55.0.16",
-    "expo-image-picker": "^55.0.18",
-    "expo-linking": "~7.1.5",
-    "expo-router": "~5.0.7",
-    "expo-speech-recognition": "^3.1.2",
-    "expo-status-bar": "~2.2.3",
-    "expo-system-ui": "~5.0.7",
-    "expo-web-browser": "~14.1.6",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-native": "0.79.2",
-    "react-native-gesture-handler": "~2.24.0",
-    "react-native-mmkv": "^3.2.0",
-    "react-native-reanimated": "~3.17.4",
-    "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.10.0",
-    "react-native-url-polyfill": "^2.0.0",
-    "zustand": "^5.0.4"
+    "expo": "~57.0.4",
+    "expo-camera": "^57.0.1",
+    "expo-constants": "~57.0.3",
+    "expo-file-system": "^57.0.0",
+    "expo-image-picker": "^57.0.2",
+    "expo-linking": "~57.0.2",
+    "expo-router": "~57.0.4",
+    "expo-speech-recognition": "^56.0.1",
+    "expo-status-bar": "~57.0.0",
+    "expo-system-ui": "~57.0.0",
+    "expo-web-browser": "~57.0.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-mmkv": "^4.3.2",
+    "react-native-nitro-modules": "^0.36.1",
+    "react-native-reanimated": "~4.5.0",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-screens": "~4.25.2",
+    "react-native-url-polyfill": "^3.0.0",
+    "react-native-worklets": "0.10.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@babel/core": "^7.27.1",
-    "@types/react": "~19.0.10",
-    "typescript": "~5.8.3"
+    "@types/react": "~19.2.17",
+    "typescript": "~6.0.3"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "@react-native-ml-kit/text-recognition"
+        ]
+      }
+    }
   }
 }

@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { PLATFORM_SLUGS } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase";
 import { resolveProductId } from "../lib/resolve";
 import { jsonContent, errorContent } from "../lib/format";
+import { getOwnerId } from "../lib/owner.js";
 
 const schema = z.object({
   product: z.string().min(1).describe("UUID of 4-cijferig sticker-ID."),
@@ -26,7 +26,7 @@ export const createListingDefinition = {
   name: "create_listing",
   description:
     "Maak een concept-advertentie aan voor een product op een platform. Status is 'pending_review' — de gebruiker moet hem nog goedkeuren in de web-app voordat hij gepubliceerd wordt.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleCreateListing(input: unknown) {
@@ -66,6 +66,7 @@ export async function handleCreateListing(input: unknown) {
     return errorContent(`Platform '${platform}' niet gevonden.`);
   }
 
+  const ownerId = await getOwnerId();
   const { data: listing, error: listingErr } = await supabase
     .from("listings")
     .insert({
@@ -78,6 +79,7 @@ export async function handleCreateListing(input: unknown) {
       generated_description: description,
       final_title: title,
       final_description: description,
+      user_id: ownerId,
     })
     .select()
     .single();

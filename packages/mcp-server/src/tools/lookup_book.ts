@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { getSupabase } from "../lib/supabase.js";
+import { lookupBook } from "@verkoopassistent/shared";
 import { jsonContent, errorContent } from "../lib/format.js";
 
 const schema = z.object({
@@ -15,7 +14,7 @@ export const lookupBookDefinition = {
   name: "lookup_book",
   description:
     "Zoek een boek op via Google Books API met ISBN (geschikt voor barcode-scan op boekenkast, Feat 19). Returnt titel, auteurs, uitgever, jaar, taal, cover-image, pagina's. Gratis (1000/dag).",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleLookupBook(input: unknown) {
@@ -25,10 +24,12 @@ export async function handleLookupBook(input: unknown) {
       `Ongeldige invoer: ${parsed.error.issues.map((i) => i.message).join("; ")}`,
     );
   }
-  const supabase = getSupabase();
-  const { data, error } = await supabase.functions.invoke("lookup-book", {
-    body: parsed.data,
-  });
-  if (error) return errorContent(`Edge Function fout: ${error.message}`);
-  return jsonContent(data, `Boek lookup voor ISBN ${parsed.data.isbn}:`);
+  try {
+    // Directe lookup via de gedeelde implementatie — geen Edge Function
+    // dependency meer voor deze tool.
+    const result = await lookupBook(parsed.data.isbn);
+    return jsonContent(result, `Boek lookup voor ISBN ${parsed.data.isbn}:`);
+  } catch (err) {
+    return errorContent(err instanceof Error ? err.message : "Lookup mislukt");
+  }
 }

@@ -13,16 +13,15 @@
     "inspector": "npx @modelcontextprotocol/inspector tsx src/index.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.13.2",
-    "@supabase/supabase-js": "^2.103.3",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@supabase/supabase-js": "^2.110.2",
     "@verkoopassistent/shared": "workspace:*",
     "dotenv": "^17.4.2",
-    "zod": "^3.25.76",
-    "zod-to-json-schema": "^3.25.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^22.15.3",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3"
   }
 }

@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { getSupabase } from "../lib/supabase.js";
+import { lookupEan } from "@verkoopassistent/shared";
 import { jsonContent, errorContent } from "../lib/format.js";
 
 const schema = z.object({
@@ -14,7 +13,7 @@ export const lookupEanDefinition = {
   name: "lookup_ean",
   description:
     "Zoek een EAN/UPC barcode op in de Open*Facts publieke databases (Food, Beauty, Products). Werkt goed voor consumentenproducten; voor hardware/games/cards komt meestal geen match.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleLookupEan(input: unknown) {
@@ -24,10 +23,12 @@ export async function handleLookupEan(input: unknown) {
       `Ongeldige invoer: ${parsed.error.issues.map((i) => i.message).join("; ")}`,
     );
   }
-  const supabase = getSupabase();
-  const { data, error } = await supabase.functions.invoke("lookup-ean", {
-    body: { ean: parsed.data.ean },
-  });
-  if (error) return errorContent(`Edge Function fout: ${error.message}`);
-  return jsonContent(data, `EAN lookup voor ${parsed.data.ean}:`);
+  try {
+    // Directe lookup via de gedeelde implementatie — geen Edge Function
+    // dependency meer voor deze tool.
+    const result = await lookupEan(parsed.data.ean);
+    return jsonContent(result, `EAN lookup voor ${parsed.data.ean}:`);
+  } catch (err) {
+    return errorContent(err instanceof Error ? err.message : "Lookup mislukt");
+  }
 }

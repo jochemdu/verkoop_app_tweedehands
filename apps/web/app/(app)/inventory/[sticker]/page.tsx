@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { productIdentifierColumn } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
+import { AnalyzeButton } from "./analyze-button";
 
 export default async function ProductDetailPage({
   params,
@@ -14,11 +16,10 @@ export default async function ProductDetailPage({
   const supabase = await createClient();
 
   // Accepteer zowel UUID als 4-cijferig sticker_id in de URL.
-  const column = /^\d{4}$/.test(sticker) ? "sticker_id" : "id";
   const { data: product } = await supabase
     .from("products")
     .select("*")
-    .eq(column, sticker)
+    .eq(productIdentifierColumn(sticker), sticker)
     .maybeSingle();
 
   if (!product) notFound();
@@ -67,7 +68,10 @@ export default async function ProductDetailPage({
             {product.status}
           </p>
         </div>
-        <DeleteButton productId={product.id} />
+        <div className="flex items-center gap-2">
+          <AnalyzeButton productId={product.id} />
+          <DeleteButton productId={product.id} />
+        </div>
       </div>
 
       {signedPhotos.length > 0 ? (
@@ -99,7 +103,7 @@ export default async function ProductDetailPage({
         </section>
       ) : (
         <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Geen foto's.
+          Geen foto&apos;s.
         </div>
       )}
 

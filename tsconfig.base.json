@@ -13,10 +13,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
-      "@verkoopassistent/shared": ["packages/shared/src/index.ts"],
-      "@verkoopassistent/shared/*": ["packages/shared/src/*"]
+      "@verkoopassistent/shared": ["./packages/shared/src/index.ts"],
+      "@verkoopassistent/shared/*": ["./packages/shared/src/*"]
     }
   }
 }

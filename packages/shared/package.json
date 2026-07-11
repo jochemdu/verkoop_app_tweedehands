@@ -18,11 +18,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "zod": "^3.25.76"
+    "@supabase/supabase-js": "^2.110.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@vitest/ui": "^4.1.4",
-    "typescript": "^5.8.3",
-    "vitest": "^4.1.4"
+    "@vitest/ui": "^4.1.10",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   }
 }

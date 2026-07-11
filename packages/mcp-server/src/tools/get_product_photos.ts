@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getSupabase } from "../lib/supabase";
 import { resolveProductId } from "../lib/resolve";
 import { errorContent, jsonContent } from "../lib/format";
@@ -23,7 +22,7 @@ export const getProductPhotosDefinition = {
   name: "get_product_photos",
   description:
     "Haal de foto's van één product op als signed URLs (default 1 uur geldig). Claude Desktop kan deze URLs zien als ze in de conversatie verschijnen — deel ze met de gebruiker zodat jullie samen de foto's kunnen analyseren.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleGetProductPhotos(input: unknown) {

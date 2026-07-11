@@ -1,45 +1,19 @@
-import { getSupabase } from "./supabase";
+import {
+  resolveProductId as sharedResolveProductId,
+  resolveProductIds as sharedResolveProductIds,
+} from "@verkoopassistent/shared";
+import { getSupabase } from "./supabase.js";
 
-// Accepteert zowel een UUID als een 4-cijferig sticker-ID en returnt de UUID.
-// Gooit een error als het product niet bestaat.
+// Dunne wrappers om de gedeelde repo-laag: zelfde semantiek als voorheen,
+// maar de logica leeft nu in packages/shared/src/repo.ts (één implementatie
+// voor web + MCP).
+
 export async function resolveProductId(identifier: string): Promise<string> {
-  const supabase = getSupabase();
-  if (/^\d{4}$/.test(identifier)) {
-    const { data, error } = await supabase
-      .from("products")
-      .select("id")
-      .eq("sticker_id", identifier)
-      .maybeSingle();
-    if (error) throw new Error(`DB fout: ${error.message}`);
-    if (!data)
-      throw new Error(
-        `Geen product met sticker-ID ${identifier}. Controleer de sticker of gebruik list_inventory.`,
-      );
-    return data.id;
-  }
-  // Treat als UUID en valideer dat het bestaat.
-  const { data, error } = await supabase
-    .from("products")
-    .select("id")
-    .eq("id", identifier)
-    .maybeSingle();
-  if (error) throw new Error(`DB fout: ${error.message}`);
-  if (!data) throw new Error(`Geen product met id ${identifier}.`);
-  return data.id;
+  return sharedResolveProductId(getSupabase(), identifier);
 }
 
-// Batch-versie voor suggest_bundle etc.
 export async function resolveProductIds(
   identifiers: string[],
 ): Promise<{ resolved: string[]; missing: string[] }> {
-  const resolved: string[] = [];
-  const missing: string[] = [];
-  for (const ident of identifiers) {
-    try {
-      resolved.push(await resolveProductId(ident));
-    } catch {
-      missing.push(ident);
-    }
-  }
-  return { resolved, missing };
+  return sharedResolveProductIds(getSupabase(), identifiers);
 }

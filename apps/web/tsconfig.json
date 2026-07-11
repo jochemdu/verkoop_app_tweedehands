@@ -10,7 +10,6 @@
     "moduleResolution": "Bundler",
     "jsx": "preserve",
     "plugins": [{ "name": "next" }],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "@verkoopassistent/shared": ["../../packages/shared/src/index.ts"],

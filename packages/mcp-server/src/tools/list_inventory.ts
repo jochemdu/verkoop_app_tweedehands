@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   PRODUCT_STATUSES,
   CATEGORY_SLUGS,
@@ -8,6 +7,7 @@ import {
 } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
+import { getOwnerId } from "../lib/owner.js";
 
 const schema = z.object({
   status: z.enum(PRODUCT_STATUSES).optional(),
@@ -25,7 +25,7 @@ export const listInventoryDefinition = {
   name: "list_inventory",
   description:
     "Lijst producten uit de inventaris met filters. Returnt een samenvatting per product (sticker_id, werktitel, titel, categorie, status, foto-aantal, laatst geïndexeerd). Gebruik sticker_range_start/end voor snelle bereik-selectie.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleListInventory(input: unknown) {
@@ -41,24 +41,19 @@ export async function handleListInventory(input: unknown) {
   // Fase 14: N+1 fix via RPC. OWNER_USER_ID env of fallback: lees uit
   // eerste app_settings rij (single-user opstelling).
   const supabase = getSupabase();
-  const ownerId =
-    process.env.OWNER_USER_ID ??
-    (
-      await supabase.from("app_settings").select("user_id").limit(1).maybeSingle()
-    ).data?.user_id ??
-    null;
-  if (!ownerId) {
-    return errorContent(
-      "Geen OWNER_USER_ID bekend. Zet OWNER_USER_ID env var in claude_desktop_config.json.",
-    );
+  let ownerId: string;
+  try {
+    ownerId = await getOwnerId();
+  } catch (err) {
+    return errorContent(err instanceof Error ? err.message : "owner onbekend");
   }
 
   const { data, error } = await supabase.rpc("list_inventory_with_counts", {
     p_user_id: ownerId,
-    p_status: status ?? null,
-    p_category: category ?? null,
-    p_sticker_from: sticker_range_start ?? null,
-    p_sticker_to: sticker_range_end ?? null,
+    p_status: status ?? undefined,
+    p_category: category ?? undefined,
+    p_sticker_from: sticker_range_start ?? undefined,
+    p_sticker_to: sticker_range_end ?? undefined,
     p_limit: limit,
   });
   if (error) return errorContent(error.message);

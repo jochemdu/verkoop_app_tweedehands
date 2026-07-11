@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { sanitizeForLLM } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
@@ -18,7 +17,7 @@ export const inventorySummaryDefinition = {
   name: "get_inventory_summary",
   description:
     "Geef een compacte samenvatting van de inventaris: totalen per categorie/status + notable items met korte beschrijving. Gebruik voor Feat 20 (Claude Room Audit): na deze summary kan de gebruiker een foto van zijn kamer delen en vraag jij welke items er nog ontbreken in de inventaris.",
-  inputSchema: zodToJsonSchema(schema, { target: "openApi3" }),
+  inputSchema: z.toJSONSchema(schema),
 };
 
 export async function handleInventorySummary(input: unknown) {
