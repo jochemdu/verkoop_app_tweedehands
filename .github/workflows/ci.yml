@@ -13,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Geen 'version:' hier — pnpm/action-setup leest packageManager uit
+      # package.json; beide specificeren is sinds v4.x een harde fout.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -39,9 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Geen 'version:' hier — pnpm/action-setup leest packageManager uit
+      # package.json; beide specificeren is sinds v4.x een harde fout.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -63,9 +63,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+      # Geen 'version:' hier — pnpm/action-setup leest packageManager uit
+      # package.json; beide specificeren is sinds v4.x een harde fout.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
