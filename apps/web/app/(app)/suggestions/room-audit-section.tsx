@@ -80,11 +80,12 @@ export function RoomAuditSection({ userId }: { userId: string }) {
       );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Room audit mislukt");
-    } finally {
-      // Kamerfoto's zijn alleen input voor de scan — geen productfoto's.
+      // De API-route ruimt de kamerfoto's op; dit vangt alleen het geval
+      // dat de upload of het request zelf strandde vóór de route draaide.
       if (uploadedPaths.length > 0) {
-        void supabase.storage.from("product-photos").remove(uploadedPaths);
+        await supabase.storage.from("product-photos").remove(uploadedPaths);
       }
+    } finally {
       toast.dismiss(t);
       setBusy(false);
     }

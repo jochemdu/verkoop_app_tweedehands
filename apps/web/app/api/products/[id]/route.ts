@@ -31,9 +31,15 @@ export async function PATCH(
     );
   }
 
+  // Sticker achteraf koppelen telt als handmatige invoer; de
+  // UNIQUE(user_id, sticker_id) constraint vangt dubbele nummers.
+  const update = parsed.data.sticker_id
+    ? { ...parsed.data, sticker_input_method: "manual" as const }
+    : parsed.data;
+
   const { data: product, error } = await supabase
     .from("products")
-    .update(parsed.data)
+    .update(update)
     .eq(productIdentifierColumn(id), id)
     .is("deleted_at", null)
     .select()

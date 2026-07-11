@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
 import { AnalyzeButton } from "./analyze-button";
+import { AddPhotosButton } from "./add-photos-button";
 
 export default async function ProductDetailPage({
   params,
@@ -14,6 +15,9 @@ export default async function ProductDetailPage({
 }) {
   const { sticker } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Accepteer zowel UUID als 4-cijferig sticker_id in de URL.
   const { data: product } = await supabase
@@ -69,6 +73,7 @@ export default async function ProductDetailPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <AddPhotosButton productId={product.id} userId={user!.id} />
           <AnalyzeButton productId={product.id} />
           <DeleteButton productId={product.id} />
         </div>

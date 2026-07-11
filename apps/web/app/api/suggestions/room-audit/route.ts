@@ -46,36 +46,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Ongeldig storage pad" }, { status: 400 });
   }
 
-  // Signed URLs die het model kan ophalen. 15 min is ruim voldoende.
-  const { data: signed, error: signErr } = await supabase.storage
-    .from("product-photos")
-    .createSignedUrls(photo_paths, 900);
-  if (signErr) {
-    return NextResponse.json({ error: signErr.message }, { status: 500 });
-  }
-  const photoUrls = (signed ?? [])
-    .map((s) => s.signedUrl)
-    .filter((u): u is string => Boolean(u));
-  if (photoUrls.length === 0) {
-    return NextResponse.json(
-      { error: "Geen kamerfoto's gevonden in storage." },
-      { status: 400 },
-    );
-  }
-
-  // Inventaris (voor de dubbel-check) + actuele categorielijst (fase 22).
-  const [{ data: products }, { data: categories }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("title, working_title")
-      .is("deleted_at", null),
-    supabase.from("categories").select("slug"),
-  ]);
-  const inventoryTitles = (products ?? [])
-    .map((p) => p.title ?? p.working_title)
-    .filter((t): t is string => Boolean(t));
-
+  // Kamerfoto's zijn tijdelijke scan-input — na afloop (ook bij fouten)
+  // altijd uit storage verwijderen, zodat er niets privés blijft hangen.
   try {
+    // Signed URLs die het model kan ophalen. 15 min is ruim voldoende.
+    const { data: signed, error: signErr } = await supabase.storage
+      .from("product-photos")
+      .createSignedUrls(photo_paths, 900);
+    if (signErr) {
+      return NextResponse.json({ error: signErr.message }, { status: 500 });
+    }
+    const photoUrls = (signed ?? [])
+      .map((s) => s.signedUrl)
+      .filter((u): u is string => Boolean(u));
+    if (photoUrls.length === 0) {
+      return NextResponse.json(
+        { error: "Geen kamerfoto's gevonden in storage." },
+        { status: 400 },
+      );
+    }
+
+    // Inventaris (voor de dubbel-check) + actuele categorielijst (fase 22).
+    const [{ data: products }, { data: categories }] = await Promise.all([
+      supabase
+        .from("products")
+        .select("title, working_title")
+        .is("deleted_at", null),
+      supabase.from("categories").select("slug"),
+    ]);
+    const inventoryTitles = (products ?? [])
+      .map((p) => p.title ?? p.working_title)
+      .filter((t): t is string => Boolean(t));
+
     const { audit, model, usage } = await runRoomAudit({
       photoUrls,
       roomName: room_name ?? null,
@@ -98,5 +100,7 @@ export async function POST(req: NextRequest) {
       { error: err instanceof Error ? err.message : "Room audit mislukt" },
       { status: 502 },
     );
+  } finally {
+    await supabase.storage.from("product-photos").remove(photo_paths);
   }
 }

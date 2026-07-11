@@ -12,6 +12,7 @@ import {
 
 type Product = {
   id: string;
+  sticker_id: string | null;
   title: string | null;
   description: string | null;
   condition: ProductCondition | null;
@@ -23,6 +24,7 @@ export function EditProductForm({ product }: { product: Product }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
+    sticker_id: "",
     title: product.title ?? "",
     description: product.description ?? "",
     condition: product.condition ?? "",
@@ -34,6 +36,7 @@ export function EditProductForm({ product }: { product: Product }) {
     e.preventDefault();
     setSaving(true);
     const payload: Record<string, unknown> = {};
+    if (form.sticker_id) payload.sticker_id = form.sticker_id;
     if (form.title) payload.title = form.title;
     if (form.description) payload.description = form.description;
     if (form.condition) payload.condition = form.condition;
@@ -62,6 +65,25 @@ export function EditProductForm({ product }: { product: Product }) {
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         Productgegevens
       </h2>
+
+      {product.sticker_id === null && (
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium">Sticker koppelen</span>
+          <input
+            value={form.sticker_id}
+            onChange={(e) => setForm({ ...form, sticker_id: e.target.value })}
+            placeholder="4 cijfers, bijv. 0042"
+            inputMode="numeric"
+            pattern="\d{4}"
+            maxLength={4}
+            className="w-40 rounded-md border px-2 py-1.5 font-mono text-sm"
+          />
+          <span className="block text-xs text-muted-foreground">
+            Dit product heeft nog geen sticker (bijv. een stub uit de
+            kamer-scan). Plak fysiek een sticker en vul het nummer hier in.
+          </span>
+        </label>
+      )}
 
       <label className="block space-y-1 text-sm">
         <span className="font-medium">Definitieve titel</span>
