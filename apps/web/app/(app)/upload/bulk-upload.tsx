@@ -44,6 +44,13 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
     if (queue.length === 0) return;
     setBusy(true);
     const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setBusy(false);
+      return;
+    }
     const uploadedPaths: string[] = [];
 
     // Upload alle files naar storage, update status per file.
@@ -51,7 +58,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
       setQueue((q) => q.map((f, j) => (j === i ? { ...f, status: "uploading" } : f)));
       try {
         const resized = await resizeImage(queue[i]!.file);
-        const path = `inbox/${filenameFor(i, queue[i]!.file.name)}`;
+        const path = `${user.id}/inbox/${filenameFor(i, queue[i]!.file.name)}`;
         const { error } = await supabase.storage
           .from("product-photos")
           .upload(path, resized, { contentType: "image/jpeg" });

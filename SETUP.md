@@ -21,6 +21,17 @@ Env-waarden staan al in `apps/web/.env.local` en `apps/mobile/.env` (beide gitig
    - `verkoopassistent://auth/callback`
    - `exp://**` (voor Expo Go tijdens development)
 
+### 1b. Multi-user / vrienden uitnodigen (fase 21)
+
+De app is multi-tenant: elke gebruiker ziet alleen z'n eigen producten,
+foto's, stickers en advertenties (RLS + per-user storage-mappen). Iedereen
+die inlogt via magic link krijgt automatisch een account + profiel.
+
+- **Open aanmelding** (default): stuur je vrienden gewoon de URL.
+- **Alleen op uitnodiging**: Dashboard → Authentication → Sign In / Up →
+  zet *Allow new users to sign up* uit, en nodig mensen uit via
+  Authentication → Users → *Invite user*.
+
 ### 2. Service role key (voor MCP server + price-watcher)
 
 1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/settings/api>

@@ -16,6 +16,7 @@ op het project, zodat `supabase migration list` lokaal en remote 1:1 matcht.
 | `20260417061300_clothing_category_phase15.sql` | 15 | |
 | `20260417155628_power_features_phase16.sql` | 16 | containers / house_scans / market_trends / import_candidates / phash — DB-only, app-code volgt nog |
 | `20260710210354_storage_buckets.sql` | — | idempotente bucket-creatie |
+| `20260711015716_multi_tenant_phase21.sql` | 21 | multi-tenant: per-user stickers/app_settings, profiles, DEFAULT auth.uid(), storage-isolatie |
 
 ## Sync-status herstellen
 

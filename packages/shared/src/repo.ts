@@ -69,6 +69,8 @@ export async function restoreProducts(db: Db, productIds: string[]) {
 
 // Hard delete incl. storage-cleanup van de productfoto's.
 // CASCADE in de DB ruimt photos/listings/bundle_items rijen op.
+// Storage éérst: de DELETE-policy voor legacy paden (zonder user-prefix)
+// leunt op de photos-rij die na de row-delete weg zou zijn.
 export async function hardDeleteProducts(db: Db, productIds: string[]) {
   const { data: photos } = await db
     .from("photos")
@@ -76,11 +78,11 @@ export async function hardDeleteProducts(db: Db, productIds: string[]) {
     .in("product_id", productIds);
   const paths = (photos ?? []).map((p) => p.storage_path);
 
-  const { error } = await db.from("products").delete().in("id", productIds);
-  if (error) throw new Error(error.message);
   if (paths.length > 0) {
     await db.storage.from("product-photos").remove(paths);
   }
+  const { error } = await db.from("products").delete().in("id", productIds);
+  if (error) throw new Error(error.message);
   return { hard_deleted: productIds.length, removed_photos: paths.length };
 }
 

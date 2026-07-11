@@ -31,19 +31,28 @@ export function sanitizeForLLM(input: string | null | undefined): string {
   return s.trim();
 }
 
+const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
 /**
- * Valideert dat een storage path binnen de toegestane prefix ligt en geen
- * path-traversal tekens bevat. Gebruikt in bulk + single product insert
- * om storage path injection te voorkomen.
+ * Valideert dat een storage path binnen de toegestane per-user prefix ligt
+ * en geen path-traversal tekens bevat. Sinds de multi-tenant hardening is
+ * het pad-formaat `{user_id}/inbox/<filename>`; de storage RLS policies
+ * staan alleen de eigen map toe. Geef `userId` mee om ook te verifiëren
+ * dat de prefix bij de aanroeper hoort.
  */
-export function isSafeInboxPath(path: string): boolean {
+export function isSafeInboxPath(path: string, userId?: string): boolean {
   if (typeof path !== "string") return false;
   if (path.length > 256) return false;
   if (path.includes("..")) return false;
   if (path.includes("//")) return false;
   if (path.startsWith("/")) return false;
-  // Alleen inbox/<filename> waar filename veilige karakters heeft.
-  return /^inbox\/[a-zA-Z0-9._:-]+\.(jpe?g|png|webp|heic|heif)$/i.test(path);
+  const m = new RegExp(
+    `^(${UUID_RE})\\/inbox\\/[a-zA-Z0-9._:-]+\\.(jpe?g|png|webp|heic|heif)$`,
+    "i",
+  ).exec(path);
+  if (!m) return false;
+  if (userId && m[1]!.toLowerCase() !== userId.toLowerCase()) return false;
+  return true;
 }
 
 export function sanitizeAll<T extends Record<string, unknown>>(

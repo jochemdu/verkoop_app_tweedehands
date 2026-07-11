@@ -282,13 +282,17 @@ export default function CaptureScreen() {
 
     setSaving(true);
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Niet ingelogd");
       const paths: string[] = [];
       for (let i = 0; i < photos.length; i++) {
         const photo = photos[i]!;
         const response = await fetch(photo.uri);
         const blob = await response.blob();
         const ts = new Date().toISOString().replace(/[:.]/g, "-");
-        const path = `inbox/${ts}_${i}_${photo.source}.jpg`;
+        const path = `${user.id}/inbox/${ts}_${i}_${photo.source}.jpg`;
         const { error } = await supabase.storage
           .from("product-photos")
           .upload(path, blob, { contentType: "image/jpeg" });

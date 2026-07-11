@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       unique,
       preset,
       withQr,
-      `selectie-${unique[0]}-${unique.length}x-${timestamp}.pdf`,
+      `${user.id}/selectie-${unique[0]}-${unique.length}x-${timestamp}.pdf`,
     );
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 500 });
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
     ids,
     preset,
     withQr,
-    `${pad(startNumber)}-${pad(endNumber)}-${timestamp}.pdf`,
+    `${user.id}/${pad(startNumber)}-${pad(endNumber)}-${timestamp}.pdf`,
   );
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 });

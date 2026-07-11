@@ -16,19 +16,19 @@ export type Database = {
         Row: {
           key: string
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           value: Json
         }
         Insert: {
           key: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           value: Json
         }
         Update: {
           key?: string
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           value?: Json
         }
         Relationships: []
@@ -963,6 +963,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          display_language: string
+          display_name: string | null
+          household: Json
+          id: string
+          listing_language: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_language?: string
+          display_name?: string | null
+          household?: Json
+          id: string
+          listing_language?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_language?: string
+          display_name?: string | null
+          household?: Json
+          id?: string
+          listing_language?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       sticker_sheets: {
         Row: {

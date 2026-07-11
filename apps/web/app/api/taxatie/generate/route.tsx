@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     />,
   );
 
-  const filename = `taxatie_${generatedAt.toISOString().replace(/[:.]/g, "-")}.pdf`;
+  const filename = `${user.id}/taxatie_${generatedAt.toISOString().replace(/[:.]/g, "-")}.pdf`;
   const { error: uploadErr } = await supabase.storage
     .from("taxatie-pdfs")
     .upload(filename, buffer, {
@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
       pdf_storage_path: filename,
       recipient_name: recipient_name ?? null,
       recipient_email: recipient_email || null,
+      user_id: user.id,
     })
     .select()
     .single();

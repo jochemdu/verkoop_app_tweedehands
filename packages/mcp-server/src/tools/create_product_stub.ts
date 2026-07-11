@@ -2,6 +2,7 @@ import { z } from "zod";
 import { CATEGORY_SLUGS, sanitizeForLLM } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase.js";
 import { jsonContent, errorContent } from "../lib/format.js";
+import { getOwnerId } from "../lib/owner.js";
 
 const schema = z.object({
   working_title: z
@@ -67,6 +68,7 @@ export async function handleCreateProductStub(input: unknown) {
     .filter(Boolean)
     .join("\n");
 
+  const ownerId = await getOwnerId();
   const { data: product, error } = await supabase
     .from("products")
     .insert({
@@ -75,6 +77,7 @@ export async function handleCreateProductStub(input: unknown) {
       indexing_notes: notesCombined,
       status: "indexed",
       sticker_input_method: null,
+      user_id: ownerId,
     })
     .select()
     .single();
