@@ -15,9 +15,13 @@ Env-waarden staan al in `apps/web/.env.local` en `apps/mobile/.env` (beide gitig
 ### 1. Auth redirect URLs (voor magic link login)
 
 1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/auth/url-configuration>
-2. Onder **Site URL**: `http://localhost:3000`
+2. Onder **Site URL**: `http://localhost:3000` (of je productie-URL zodra live)
 3. Onder **Redirect URLs** (klik *Add URL* per stuk):
    - `http://localhost:3000/auth/callback`
+   - `https://verkoopassistent.vercel.app/auth/callback` (productie)
+   - `https://*-jochem-duins-projects.vercel.app/auth/callback` (Vercel
+     preview-deploys — de magic link gebruikt de request-origin, maar
+     Supabase staat alleen origins uit deze allowlist toe)
    - `verkoopassistent://auth/callback`
    - `exp://**` (voor Expo Go tijdens development)
 
