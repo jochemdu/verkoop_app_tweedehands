@@ -61,6 +61,23 @@ export async function POST(
   const { data: categoryRows } = await supabase.from("categories").select("slug");
   const categorySlugs = (categoryRows ?? []).map((c) => c.slug);
 
+  // Advertentietaal: body-override > profiel-instelling > nl.
+  let bodyLanguage: string | undefined;
+  try {
+    const body = (await req.json()) as { language?: string } | null;
+    if (body?.language && /^[a-z]{2}$/.test(body.language)) {
+      bodyLanguage = body.language;
+    }
+  } catch {
+    // Geen/lege body is prima — knoppen posten zonder payload.
+  }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("listing_language")
+    .eq("id", user.id)
+    .maybeSingle();
+  const listingLanguage = bodyLanguage ?? profile?.listing_language ?? "nl";
+
   try {
     const { analysis, model, usage } = await analyzeProductPhotos({
       workingTitle: product.working_title,
@@ -69,6 +86,7 @@ export async function POST(
       stickerId: product.sticker_id,
       photoUrls,
       categorySlugs,
+      listingLanguage,
     });
 
     // 1. Product bijwerken met analyse-resultaat.
@@ -144,6 +162,7 @@ export async function POST(
       listing_id: listingId,
       analysis,
       model,
+      listing_language: listingLanguage,
     });
   } catch (err) {
     // Status terugzetten zodat het product niet in 'analyzing' blijft hangen.

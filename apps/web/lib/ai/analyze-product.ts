@@ -10,6 +10,15 @@ import { PRODUCT_CONDITIONS, sanitizeForLLM } from "@verkoopassistent/shared";
 
 export const DEFAULT_MODEL = "claude-opus-4-8";
 
+// Advertentietaal: de gebruiker kiest waarin titel/verkooptekst geschreven
+// worden (profiel-instelling, met per-aanroep override).
+export const LISTING_LANGUAGES: Record<string, string> = {
+  nl: "Nederlands",
+  en: "Engels",
+  de: "Duits",
+  fr: "Frans",
+};
+
 // Categorieën zijn data (fase 22): de aanroeper geeft de actuele sluglijst
 // mee zodat het model alleen bestaande categorieën kan kiezen.
 export function buildAnalysisSchema(categorySlugs: readonly string[]) {
@@ -27,12 +36,12 @@ export function buildAnalysisSchema(categorySlugs: readonly string[]) {
   title: z
     .string()
     .describe(
-      "Korte NL advertentietitel (max 60 tekens), zoals kopers zoeken. Merk + model + kernspec.",
+      "Korte advertentietitel (max 60 tekens) in de gevraagde advertentietaal, zoals kopers zoeken. Merk + model + kernspec.",
     ),
   description: z
     .string()
     .describe(
-      "Aantrekkelijke NL verkooptekst voor Marktplaats: 2-4 korte alinea's. Eerlijk over staat/gebreken, noem specs, eindig met ophaal/verzend-zin. Geen emoji-spam.",
+      "Aantrekkelijke verkooptekst in de gevraagde advertentietaal: 2-4 korte alinea's. Eerlijk over staat/gebreken, noem specs, eindig met ophaal/verzend-zin. Geen emoji-spam.",
     ),
   category_slug: z
     .enum(slugs)
@@ -73,14 +82,15 @@ export function buildAnalysisSchema(categorySlugs: readonly string[]) {
 
 export type ProductAnalysis = z.infer<ReturnType<typeof buildAnalysisSchema>>;
 
-const SYSTEM_PROMPT = `Je bent een Nederlandse tweedehands-verkoopexpert. Je analyseert productfoto's voor een persoonlijke inventaris-app en levert een advertentie-klare analyse.
+const SYSTEM_PROMPT = `Je bent een tweedehands-verkoopexpert voor de Nederlandse/Belgische markt. Je analyseert productfoto's voor een persoonlijke inventaris-app en levert een advertentie-klare analyse.
 
 Richtlijnen:
 - Identificeer het product zo precies mogelijk (merk, model, variant) op basis van wat zichtbaar is. Gok niet: als je het niet zeker weet, zeg dat via confidence en beschrijf wat je wél ziet.
 - Prijzen zijn realistische NL tweedehands-marktprijzen (Marktplaats/Tweakers V&A niveau), niet nieuwprijzen.
 - De beschrijving is direct bruikbaar als advertentie: vlot, eerlijk, concreet. Vermeld zichtbare gebreken expliciet — dat voorkomt gedoe achteraf.
 - Let op stickers met een 4-cijferig nummer: dat is een interne inventarissticker, negeer die voor de identificatie en noem hem niet in de advertentie.
-- Notities van de eigenaar kunnen context geven (bijv. "werkt niet") — weeg die mee in conditie en prijs.`;
+- Notities van de eigenaar kunnen context geven (bijv. "werkt niet") — weeg die mee in conditie en prijs.
+- Schrijf title en description in de advertentietaal die in het bericht wordt gevraagd; alle andere velden (specs-keys, defects) in het Nederlands.`;
 
 export type AnalyzeInput = {
   workingTitle: string | null;
@@ -89,6 +99,8 @@ export type AnalyzeInput = {
   stickerId: string | null;
   photoUrls: string[];
   categorySlugs: readonly string[];
+  // ISO-taalcode voor titel/verkooptekst (nl/en/de/fr). Default nl.
+  listingLanguage?: string;
 };
 
 export async function analyzeProductPhotos(
@@ -106,7 +118,9 @@ export async function analyzeProductPhotos(
 
   const client = new Anthropic();
 
+  const language = LISTING_LANGUAGES[input.listingLanguage ?? "nl"] ?? "Nederlands";
   const contextLines = [
+    `Advertentietaal voor titel en beschrijving: ${language}.`,
     input.workingTitle && `Werktitel van eigenaar: ${sanitizeForLLM(input.workingTitle)}`,
     input.indexingNotes && `Notities van eigenaar: ${sanitizeForLLM(input.indexingNotes)}`,
     input.ean && `Gescande EAN/barcode: ${input.ean}`,
