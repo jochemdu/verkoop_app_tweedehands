@@ -120,6 +120,8 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 
 ## Volledige workflow (end-to-end)
 
+0. **Kamer-scan (optioneel)** — web `/suggestions` → upload kamerfoto's → AI
+   benoemt verkoopbare items + checkt wat al geïndexeerd is → maak stubs
 1. **Print stickers** — web `/stickers` → A4 PDF (3 formaten, optioneel QR) → plak op producten
 2. **Indexeer** — mobile `Indexeren` tab (foto + sticker-ID) OF web `/upload` (bulk drag-drop)
 3. **Analyseer (in-app)** — productpagina → "✨ Analyseer met AI", of selecteer
