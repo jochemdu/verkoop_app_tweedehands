@@ -38,7 +38,7 @@ export function LoginForm() {
 
   if (sent) {
     return (
-      <div className="rounded-md border border-dashed p-4 text-sm">
+      <div className="rounded-lg border border-dashed border-accent bg-accent-soft p-4 text-sm">
         Check je inbox voor de magic link. Je kunt dit venster sluiten.
       </div>
     );
@@ -52,7 +52,7 @@ export function LoginForm() {
           type="email"
           autoComplete="email"
           autoFocus
-          className="w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="input"
           placeholder="jij@voorbeeld.nl"
           {...register("email")}
         />
@@ -63,7 +63,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+        className="btn btn-accent w-full"
       >
         {isSubmitting ? "Versturen…" : "Stuur magic link"}
       </button>

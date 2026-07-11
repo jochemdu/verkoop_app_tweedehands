@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { BlindSpotAudit } from "@/lib/ai/blind-spots";
+import { MapPin, Sparkles, Square } from "lucide-react";
 
 type Household = {
   kids: boolean;
@@ -117,8 +118,8 @@ export function BlindSpotSection({
 
   return (
     <>
-      <section className="space-y-3 rounded-lg border p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="card space-y-3 p-5">
+        <h2 className="section-title">
           Huishoudprofiel
         </h2>
         <p className="text-xs text-muted-foreground">
@@ -146,7 +147,7 @@ export function BlindSpotSection({
           <input
             value={household.hobbies}
             onChange={(e) => setHousehold({ ...household, hobbies: e.target.value })}
-            className="w-full rounded-md border px-3 py-2 text-sm"
+            className="input"
           />
         </label>
         <div className="flex gap-2">
@@ -154,7 +155,7 @@ export function BlindSpotSection({
             type="button"
             onClick={saveHousehold}
             disabled={saving}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+            className="btn btn-outline"
           >
             {saving ? "Opslaan…" : "Profiel opslaan"}
           </button>
@@ -162,21 +163,21 @@ export function BlindSpotSection({
             type="button"
             onClick={runAudit}
             disabled={auditing}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+            className="btn btn-accent"
           >
-            {auditing ? "AI bezig…" : "✨ AI blinde-vlekken-audit"}
+            {auditing ? "AI bezig…" : (<><Sparkles className="size-4" aria-hidden />AI blinde-vlekken-audit</>)}
           </button>
         </div>
 
         {activePacks.length > 0 && (
-          <div className="rounded-md border bg-muted/40 p-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="rounded-lg border border-border bg-muted/40 p-3">
+            <p className="section-title mb-2">
               Checklist op basis van je profiel
             </p>
             <ul className="grid gap-1 text-sm sm:grid-cols-2">
               {activePacks.map((p, i) => (
                 <li key={i} className="flex gap-2">
-                  <span>☐</span>
+                  <Square className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                   <span>
                     {p.item}
                     <span className="text-xs text-muted-foreground"> · {p.flag}</span>
@@ -189,14 +190,14 @@ export function BlindSpotSection({
       </section>
 
       {audit && (
-        <section className="space-y-3 rounded-lg border p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <section className="card space-y-3 p-5">
+          <h2 className="section-title">
             AI-audit: waarschijnlijk nog in huis
           </h2>
           <p className="text-sm italic text-muted-foreground">{audit.general_tip}</p>
           <ul className="grid gap-3 sm:grid-cols-2">
             {audit.suggestions.map((s, i) => (
-              <li key={i} className="space-y-1 rounded-md border p-3">
+              <li key={i} className="space-y-1 rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium">{s.title}</p>
                   <span className="whitespace-nowrap text-xs text-muted-foreground">
@@ -208,10 +209,10 @@ export function BlindSpotSection({
                   <span className="font-medium">Zoek naar:</span> {s.examples.join(", ")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  📍 {s.where_to_look} ·{" "}
+                  <MapPin className="inline size-3" aria-hidden /> {s.where_to_look} ·{" "}
                   <Link
                     href={`/inventory?category=${s.category_slug}`}
-                    className="underline"
+                    className="font-medium text-accent hover:underline"
                   >
                     {s.category_slug}
                   </Link>

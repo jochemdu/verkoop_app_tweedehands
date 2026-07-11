@@ -1,34 +1,208 @@
 @import "tailwindcss";
 
+/* Fase 27 — design-systeem "Warm Atelier op A-skelet" (keuze gebruiker:
+   layout/typografie van richting A, kleuren van richting C).
+   Warm steen-beige + terracotta; exaggerated minimalism, afgezwakt voor
+   een data-dichte app. Fonts: Outfit (koppen) + Work Sans (body) +
+   Fira Code (sticker-ID's, prijzen) — geladen via next/font in
+   app/layout.tsx. */
+
 @theme {
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(240 10% 4%);
-  --color-primary: hsl(240 6% 10%);
-  --color-primary-foreground: hsl(0 0% 98%);
-  --color-muted: hsl(240 5% 96%);
-  --color-muted-foreground: hsl(240 4% 46%);
-  --color-border: hsl(240 6% 90%);
-  --color-destructive: hsl(0 72% 51%);
-  --color-destructive-foreground: hsl(0 0% 98%);
-  --radius-lg: 0.5rem;
-  --radius-md: 0.375rem;
-  --radius-sm: 0.25rem;
+  --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-outfit), var(--font-work-sans), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-fira-code), ui-monospace, "SF Mono", monospace;
+
+  --color-background: #faf9f7;
+  --color-foreground: #292524;
+  --color-card: #ffffff;
+  --color-card-foreground: #292524;
+  --color-primary: #292524;
+  --color-primary-foreground: #faf9f7;
+  --color-accent: #c2410c;
+  --color-accent-foreground: #ffffff;
+  --color-accent-soft: #fdf0e7;
+  --color-muted: #f2efeb;
+  --color-muted-foreground: #78716c;
+  --color-border: #e7e2dc;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #fef2f2;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef8ec;
+  --color-ring: #c2410c;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --shadow-xs: 0 1px 2px 0 rgb(41 37 36 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(41 37 36 / 0.07), 0 1px 2px -1px rgb(41 37 36 / 0.07);
 }
 
 @media (prefers-color-scheme: dark) {
   @theme {
-    --color-background: hsl(240 10% 4%);
-    --color-foreground: hsl(0 0% 98%);
-    --color-primary: hsl(0 0% 98%);
-    --color-primary-foreground: hsl(240 6% 10%);
-    --color-muted: hsl(240 4% 16%);
-    --color-muted-foreground: hsl(240 5% 65%);
-    --color-border: hsl(240 4% 16%);
+    --color-background: #171412;
+    --color-foreground: #edeae6;
+    --color-card: #201c19;
+    --color-card-foreground: #edeae6;
+    --color-primary: #edeae6;
+    --color-primary-foreground: #292524;
+    --color-accent: #fb923c;
+    --color-accent-foreground: #2a1204;
+    --color-accent-soft: #33200e;
+    --color-muted: #282320;
+    --color-muted-foreground: #a8a29e;
+    --color-border: #35302b;
+    --color-destructive: #f87171;
+    --color-destructive-foreground: #1b0a0a;
+    --color-warning: #fbbf24;
+    --color-warning-soft: #271c05;
+    --color-ring: #fb923c;
+
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
   }
 }
 
-body {
-  background-color: var(--color-background);
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Gedeelde bouwstenen — houdt de ~20 schermen visueel op één lijn. */
+
+@utility card {
+  background-color: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+}
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@utility btn-accent {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+@utility btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+}
+
+@utility btn-outline {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-card);
   color: var(--color-foreground);
-  -webkit-font-smoothing: antialiased;
+  &:hover:not(:disabled) {
+    background-color: var(--color-muted);
+  }
+}
+
+@utility btn-ghost {
+  color: var(--color-muted-foreground);
+  &:hover:not(:disabled) {
+    background-color: var(--color-muted);
+    color: var(--color-foreground);
+  }
+}
+
+@utility btn-danger {
+  background-color: var(--color-destructive);
+  color: var(--color-destructive-foreground);
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+@utility input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-card);
+  color: var(--color-foreground);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  &::placeholder {
+    color: var(--color-muted-foreground);
+    opacity: 0.7;
+  }
+}
+
+@utility badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+@utility section-title {
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted-foreground);
 }

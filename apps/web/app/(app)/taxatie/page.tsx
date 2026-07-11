@@ -21,7 +21,7 @@ export default async function TaxatiePage() {
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Taxatiedossier</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Taxatiedossier</h1>
         <p className="text-sm text-muted-foreground">
           Selecteer antieke items → genereer PDF dossier voor de taxateur
           met foto&apos;s, specs, herkomst en waardering.
@@ -32,10 +32,10 @@ export default async function TaxatiePage() {
 
       {exportsRaw && exportsRaw.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="section-title mb-3">
             Eerder gegenereerd
           </h2>
-          <ul className="divide-y rounded-lg border">
+          <ul className="card divide-y divide-border">
             {exportsRaw.map((e) => (
               <li key={e.id} className="flex items-center justify-between p-3 text-sm">
                 <span>

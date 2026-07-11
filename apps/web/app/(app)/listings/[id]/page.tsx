@@ -36,7 +36,7 @@ export default async function ListingDetailPage({
         >
           ← Advertenties
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold">
+        <h1 className="mt-1 text-3xl font-bold tracking-tight">
           {listing.final_title ?? listing.generated_title ?? "(geen titel)"}
         </h1>
         <p className="text-sm text-muted-foreground">

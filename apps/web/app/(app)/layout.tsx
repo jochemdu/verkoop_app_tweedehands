@@ -1,17 +1,8 @@
 import Link from "next/link";
+import { Tag } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/logout-button";
-
-const NAV = [
-  { href: "/", label: "Dashboard" },
-  { href: "/inventory", label: "Inventaris" },
-  { href: "/listings", label: "Advertenties" },
-  { href: "/suggestions", label: "Suggesties" },
-  { href: "/taxatie", label: "Taxatie" },
-  { href: "/upload", label: "Bulk upload" },
-  { href: "/stickers", label: "Stickers" },
-  { href: "/settings", label: "Instellingen" },
-];
+import { NavLinks } from "@/components/nav-links";
 
 export default async function AppLayout({
   children,
@@ -25,32 +16,28 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen">
-      <header className="border-b">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between p-4">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="font-semibold">
-              VerkoopAssistent
+      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
+        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-5">
+            <Link href="/" className="flex shrink-0 items-center gap-2">
+              <span className="flex size-7 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                <Tag className="size-4" aria-hidden />
+              </span>
+              <span className="font-heading text-[15px] font-semibold tracking-tight">
+                VerkoopAssistent
+              </span>
             </Link>
-            <ul className="flex gap-4 text-sm text-muted-foreground">
-              {NAV.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="hover:text-foreground"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <NavLinks />
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground">{user?.email}</span>
+          <div className="flex shrink-0 items-center gap-3 text-sm">
+            <span className="hidden text-xs text-muted-foreground xl:inline">
+              {user?.email}
+            </span>
             <LogoutButton />
           </div>
         </nav>
       </header>
-      <div className="mx-auto max-w-6xl p-6">{children}</div>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</div>
     </div>
   );
 }

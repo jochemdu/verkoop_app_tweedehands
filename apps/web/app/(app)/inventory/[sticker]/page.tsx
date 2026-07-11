@@ -64,7 +64,7 @@ export default async function ProductDetailPage({
           >
             ← Inventaris
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold">
+          <h1 className="mt-1 text-3xl font-bold tracking-tight">
             {product.title ?? product.working_title ?? "(naamloos)"}
           </h1>
           <p className="font-mono text-sm text-muted-foreground">
@@ -88,7 +88,7 @@ export default async function ProductDetailPage({
                 href={photo.url}
                 target="_blank"
                 rel="noreferrer"
-                className="relative aspect-square overflow-hidden rounded-md border bg-muted"
+                className="relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
               >
                 <Image
                   src={photo.url}
@@ -107,7 +107,7 @@ export default async function ProductDetailPage({
           )}
         </section>
       ) : (
-        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Geen foto&apos;s.
         </div>
       )}

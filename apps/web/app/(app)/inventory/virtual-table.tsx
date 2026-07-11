@@ -7,6 +7,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { toast } from "sonner";
 import { STICKER_PRESETS, type StickerPreset } from "@verkoopassistent/shared";
 import { PRESET_LABELS } from "../stickers/sticker-form";
+import { Sparkles } from "lucide-react";
 
 type Row = {
   id: string;
@@ -54,7 +55,7 @@ function PrintDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md space-y-4 rounded-lg border bg-background p-6 shadow-lg">
+      <div className="card w-full max-w-md space-y-4 p-6 shadow-sm">
         <h2 className="text-lg font-semibold">
           Stickers printen ({stickerIds.length})
         </h2>
@@ -67,7 +68,7 @@ function PrintDialog({
           <select
             value={preset}
             onChange={(e) => setPreset(e.target.value as StickerPreset)}
-            className="w-full rounded-md border px-3 py-2 text-sm"
+            className="input"
           >
             {STICKER_PRESETS.map((p) => (
               <option key={p} value={p}>
@@ -89,7 +90,7 @@ function PrintDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border px-3 py-1.5 text-sm"
+            className="btn btn-outline"
           >
             Annuleren
           </button>
@@ -97,7 +98,7 @@ function PrintDialog({
             type="button"
             onClick={printSelection}
             disabled={busy}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+            className="btn btn-accent"
           >
             {busy ? "Genereren…" : "Genereer PDF"}
           </button>
@@ -105,6 +106,24 @@ function PrintDialog({
       </div>
     </div>
   );
+}
+
+// Statuskleur-mapping op design-tokens (fase 27).
+function statusBadgeClass(status: string | null): string {
+  switch (status) {
+    case "sold":
+      return "bg-accent text-accent-foreground";
+    case "listed":
+      return "bg-accent-soft text-accent";
+    case "analyzing":
+    case "pending_review":
+      return "bg-warning-soft text-warning";
+    case "ready_to_list":
+    case "approved":
+      return "bg-muted text-foreground";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
 }
 
 export function VirtualTable({
@@ -215,7 +234,7 @@ export function VirtualTable({
     <div className="space-y-2">
       <div
         ref={parentRef}
-        className="max-h-[70vh] overflow-auto rounded-lg border"
+        className="card max-h-[70vh] overflow-auto"
       >
         <div
           className={`sticky top-0 z-10 grid ${GRID_COLS} gap-3 border-b bg-muted/80 px-3 py-2 text-xs uppercase text-muted-foreground backdrop-blur`}
@@ -276,7 +295,7 @@ export function VirtualTable({
                 </span>
                 <span className="text-xs text-muted-foreground">{row.category_slug}</span>
                 <span>
-                  <span className="inline-flex rounded-full border px-2 py-0.5 text-xs">
+                  <span className={`badge ${statusBadgeClass(row.status)}`}>
                     {row.status}
                   </span>
                 </span>
@@ -288,7 +307,7 @@ export function VirtualTable({
                 <span className="text-right">
                   <Link
                     href={`/inventory/${row.sticker_id ?? row.id}`}
-                    className="text-xs underline"
+                    className="text-xs font-medium text-accent hover:underline"
                   >
                     Bekijk
                   </Link>
@@ -300,13 +319,13 @@ export function VirtualTable({
       </div>
 
       {enableActions && selected.size > 0 && (
-        <div className="sticky bottom-4 z-20 flex items-center gap-3 rounded-lg border bg-background/95 px-4 py-3 shadow-lg backdrop-blur">
+        <div className="card sticky bottom-4 z-20 flex items-center gap-3 bg-card/95 px-4 py-3 shadow-sm backdrop-blur">
           <span className="text-sm font-medium">{selected.size} geselecteerd</span>
           <button
             type="button"
             onClick={() => setPrintOpen(true)}
             disabled={selectedStickerIds.length === 0}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+            className="btn btn-accent"
             title={
               selectedStickerIds.length === 0
                 ? "Geen van de geselecteerde producten heeft een sticker-ID"
@@ -319,15 +338,15 @@ export function VirtualTable({
             type="button"
             onClick={bulkAnalyze}
             disabled={analyzing}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+            className="btn btn-outline"
           >
-            {analyzing ? "AI bezig…" : `✨ Analyseer (${selected.size})`}
+            {analyzing ? "AI bezig…" : (<><Sparkles className="size-4" aria-hidden />Analyseer ({selected.size})</>)}
           </button>
           <button
             type="button"
             onClick={bulkDelete}
             disabled={deleting}
-            className="rounded-md border border-destructive px-3 py-1.5 text-sm text-destructive disabled:opacity-50"
+            className="btn border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-destructive-foreground"
           >
             {deleting ? "Verwijderen…" : "Verwijderen"}
           </button>
@@ -340,7 +359,7 @@ export function VirtualTable({
           <button
             type="button"
             onClick={() => setSelected(new Set())}
-            className="ml-auto text-xs underline"
+            className="btn btn-ghost ml-auto text-xs"
           >
             Selectie wissen
           </button>
