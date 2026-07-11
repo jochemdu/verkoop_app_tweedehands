@@ -45,7 +45,9 @@ export async function POST(req: NextRequest) {
   // plaats van altijd naar productie. Supabase valideert emailRedirectTo
   // tegen de Redirect URLs-allowlist (zie SETUP.md); een origin die daar
   // niet in staat valt terug op de geconfigureerde Site URL.
-  const origin = req.headers.get("origin") ?? env.NEXT_PUBLIC_SITE_URL;
+  // replace(): een SITE_URL met trailing slash gaf "…app//auth/callback"
+  // (zichtbaar in de auth-logs) — normaliseer defensief.
+  const origin = (req.headers.get("origin") ?? env.NEXT_PUBLIC_SITE_URL).replace(/\/+$/, "");
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
