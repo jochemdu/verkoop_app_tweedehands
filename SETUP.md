@@ -71,6 +71,8 @@ pnpm dev:mobile           # → scan QR code met Expo Go app
 pnpm -F @verkoopassistent/mcp-server start
 ```
 
+> Volledige Android build- en distributiegids: zie [ANDROID.md](ANDROID.md).
+
 ## Mobile EAS Development Build (Fase 3b — camera + ML Kit)
 
 De mobile `Indexeren`-tab gebruikt `expo-camera` + `@react-native-ml-kit/text-recognition`. Die native modules werken **niet in Expo Go** — je hebt een EAS Development Build nodig.
