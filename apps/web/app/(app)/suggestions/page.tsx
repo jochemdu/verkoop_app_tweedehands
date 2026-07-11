@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { BlindSpotSection } from "./blind-spot-section";
 import { CATEGORY_SLUGS } from "@verkoopassistent/shared";
 import {
   getSeasonalPromptsForDate,
@@ -45,6 +46,14 @@ const MISSING_CATEGORIES = [
 
 export default async function SuggestionsPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("household")
+    .eq("id", user!.id)
+    .maybeSingle();
 
   // Count per category_slug.
   const { data: rows } = await supabase
@@ -77,6 +86,13 @@ export default async function SuggestionsPage() {
           Gebaseerd op je inventaris + het huidige seizoen.
         </p>
       </div>
+
+      <BlindSpotSection
+        userId={user!.id}
+        initialHousehold={
+          (profile?.household as Record<string, never> | null) ?? null
+        }
+      />
 
       {/* Seasonal */}
       {seasonal.length > 0 && (
