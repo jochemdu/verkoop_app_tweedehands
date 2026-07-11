@@ -52,3 +52,6 @@ pnpm-debug.log*
 # Claude — lokale sessie-config negeren, gedeelde skills committen
 .claude/*
 !.claude/skills/
+__pycache__/
+*.pyc
+.coverage
