@@ -15,11 +15,49 @@ Env-waarden staan al in `apps/web/.env.local` en `apps/mobile/.env` (beide gitig
 ### 1. Auth redirect URLs (voor magic link login)
 
 1. Ga naar <https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/auth/url-configuration>
-2. Onder **Site URL**: `http://localhost:3000`
+2. Onder **Site URL**: `http://localhost:3000` (of je productie-URL zodra live)
 3. Onder **Redirect URLs** (klik *Add URL* per stuk):
    - `http://localhost:3000/auth/callback`
+   - `https://verkoopassistent.vercel.app/auth/callback` (productie)
+   - `https://*-jochem-duins-projects.vercel.app/auth/callback` (Vercel
+     preview-deploys — de magic link gebruikt de request-origin, maar
+     Supabase staat alleen origins uit deze allowlist toe)
    - `verkoopassistent://auth/callback`
    - `exp://**` (voor Expo Go tijdens development)
+
+### 1a. E-mail via Resend (custom SMTP) + inlogcode
+
+Supabase's ingebouwde maildienst is zwaar gelimiteerd (~2 mails/uur, alleen
+voor development). Met een Resend-account:
+
+1. **Resend**: verifieer je domein (Resend → Domains → *Add Domain*, zet de
+   DNS-records). Zonder eigen domein kun je alleen naar je eigen
+   Resend-accountadres mailen.
+2. **Supabase** → [Project Settings → Auth → SMTP Settings](https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/settings/auth)
+   → *Enable Custom SMTP*:
+   - **Host:** `smtp.resend.com`
+   - **Port:** `465`
+   - **Username:** `resend` (letterlijk)
+   - **Password:** je Resend API key (`re_…`)
+   - **Sender email:** `login@<jouw-geverifieerde-domein>` 
+   - **Sender name:** `VerkoopAssistent`
+3. **Rate limit ophogen**: [Auth → Rate Limits](https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/auth/rate-limits)
+   → *Emails sent per hour* naar bijv. `100` (kan pas ná custom SMTP).
+4. **Inlogcode in de mail** (voor de "Log in met code"-optie op /login):
+   [Auth → Emails → Magic Link-template](https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/auth/templates)
+   vervangen door:
+
+   ```html
+   <h2>Inloggen bij VerkoopAssistent</h2>
+   <p><a href="{{ .ConfirmationURL }}">Klik hier om in te loggen</a></p>
+   <p>Of vul deze code in op de inlogpagina:</p>
+   <p style="font-size:28px;letter-spacing:6px;font-weight:bold">{{ .Token }}</p>
+   <p>Link en code verlopen na 1 uur. Niet aangevraagd? Negeer deze mail.</p>
+   ```
+
+   De code-optie is handig bij Hotmail/Outlook: hun link-scanner (SafeLinks)
+   kan de magic link vooraf openen waardoor die al verbruikt is — de code
+   heeft daar geen last van.
 
 ### 1b. Multi-user / vrienden uitnodigen (fase 21)
 

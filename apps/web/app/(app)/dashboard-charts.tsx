@@ -20,23 +20,24 @@ type StatusCount = { label: string; value: number };
 type WeeklyPoint = { week: string; count: number };
 
 // Categorie-palet dat onderscheid geeft zonder dat kleurenblinden het in de
-// war raakt. Niet pure-R/pure-G combinaties en voldoende luminance-verschil.
+// war raakt. Warm gestemd (fase 27) met terracotta voorop, voldoende
+// luminance-verschil en geen pure-R/pure-G combinaties.
 const PALETTE = [
-  "#3b82f6",
-  "#f59e0b",
-  "#10b981",
-  "#ec4899",
-  "#8b5cf6",
-  "#06b6d4",
-  "#ef4444",
-  "#84cc16",
-  "#f97316",
-  "#6366f1",
-  "#14b8a6",
-  "#d946ef",
-  "#64748b",
+  "#c2410c",
+  "#0f766e",
+  "#b45309",
+  "#4338ca",
+  "#be185d",
+  "#4d7c0f",
+  "#0369a1",
+  "#a21caf",
   "#78716c",
-  "#0ea5e9",
+  "#92400e",
+  "#1d4ed8",
+  "#15803d",
+  "#9f1239",
+  "#57534e",
+  "#7c3aed",
 ];
 
 export function DashboardCharts({
@@ -89,7 +90,7 @@ export function DashboardCharts({
               <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-15} />
               <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
               <Tooltip />
-              <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="#c2410c" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -108,7 +109,7 @@ export function DashboardCharts({
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#10b981"
+                stroke="#0f766e"
                 strokeWidth={2}
                 dot={{ r: 3 }}
               />
@@ -130,10 +131,8 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`rounded-lg border p-5 ${wide ? "md:col-span-2" : ""}`}>
-      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
+    <div className={`card p-5 ${wide ? "md:col-span-2" : ""}`}>
+      <h3 className="section-title mb-3">{title}</h3>
       {children}
     </div>
   );

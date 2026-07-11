@@ -61,8 +61,8 @@ export function EditProductForm({ product }: { product: Product }) {
   }
 
   return (
-    <form onSubmit={save} className="space-y-4 rounded-lg border p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+    <form onSubmit={save} className="card space-y-4 p-5">
+      <h2 className="section-title">
         Productgegevens
       </h2>
 
@@ -76,7 +76,7 @@ export function EditProductForm({ product }: { product: Product }) {
             inputMode="numeric"
             pattern="\d{4}"
             maxLength={4}
-            className="w-40 rounded-md border px-2 py-1.5 font-mono text-sm"
+            className="input w-40 font-mono"
           />
           <span className="block text-xs text-muted-foreground">
             Dit product heeft nog geen sticker (bijv. een stub uit de
@@ -90,7 +90,7 @@ export function EditProductForm({ product }: { product: Product }) {
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          className="w-full rounded-md border px-2 py-1.5 text-sm"
+          className="input"
         />
       </label>
 
@@ -100,7 +100,7 @@ export function EditProductForm({ product }: { product: Product }) {
           rows={4}
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="w-full rounded-md border px-2 py-1.5 text-sm"
+          className="input"
         />
       </label>
 
@@ -112,7 +112,7 @@ export function EditProductForm({ product }: { product: Product }) {
             onChange={(e) =>
               setForm({ ...form, condition: e.target.value as ProductCondition })
             }
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           >
             <option value="">—</option>
             {PRODUCT_CONDITIONS.map((c) => (
@@ -129,7 +129,7 @@ export function EditProductForm({ product }: { product: Product }) {
             onChange={(e) =>
               setForm({ ...form, status: e.target.value as ProductStatus })
             }
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           >
             {PRODUCT_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -147,7 +147,7 @@ export function EditProductForm({ product }: { product: Product }) {
             onChange={(e) =>
               setForm({ ...form, recommended_price: e.target.value })
             }
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           />
         </label>
       </div>
@@ -156,7 +156,7 @@ export function EditProductForm({ product }: { product: Product }) {
         <button
           type="submit"
           disabled={saving}
-          className="rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+          className="btn btn-accent"
         >
           {saving ? "Opslaan…" : "Opslaan"}
         </button>

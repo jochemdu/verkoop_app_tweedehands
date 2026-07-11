@@ -1,4 +1,12 @@
 import Link from "next/link";
+import {
+  ArrowRight,
+  Banknote,
+  FileText,
+  Tags,
+  UploadCloud,
+  type LucideIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCharts } from "./dashboard-charts";
 
@@ -104,23 +112,28 @@ export default async function Dashboard() {
 
   return (
     <main className="space-y-8">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Stat label="Totaal" value={totalProducts ?? 0} />
         <Stat label="Indexed" value={indexedCount ?? 0} hint="klaar voor analyse" />
         <Stat label="Ready" value={readyCount ?? 0} hint="klaar voor listing" />
         <Stat label="Listed" value={listedCount ?? 0} hint="actieve ads" />
-        <Stat label="Sold" value={soldCount ?? 0} />
+        <Stat label="Sold" value={soldCount ?? 0} accent />
       </section>
 
-      <section className="rounded-lg border p-5">
-        <p className="text-sm text-muted-foreground">
-          Geschatte inventaris-waarde (sold of recommended_price)
-        </p>
-        <p className="mt-1 text-3xl font-semibold">
-          € {totalEstValue.toFixed(2).replace(".", ",")}
-        </p>
+      <section className="card flex items-center justify-between gap-4 p-5">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Geschatte inventaris-waarde (sold of recommended_price)
+          </p>
+          <p className="mt-1 font-heading text-4xl font-bold tracking-tight text-accent">
+            € {totalEstValue.toFixed(2).replace(".", ",")}
+          </p>
+        </div>
+        <span className="hidden rounded-full bg-accent-soft p-3 text-accent sm:flex">
+          <Banknote className="size-6" aria-hidden />
+        </span>
       </section>
 
       <DashboardCharts
@@ -129,27 +142,35 @@ export default async function Dashboard() {
         weekly={weeklyData}
       />
 
-      <section className="rounded-lg border p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Recent geïndexeerd
-        </h2>
+      <section className="card p-5">
+        <h2 className="section-title mb-3">Recent geïndexeerd</h2>
         {!recent || recent.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Nog niks geïndexeerd. Begin via{" "}
-            <Link className="underline" href="/upload">bulk upload</Link>.
+            <Link className="font-medium text-accent underline" href="/upload">
+              bulk upload
+            </Link>
+            .
           </p>
         ) : (
-          <ul className="divide-y text-sm">
+          <ul className="divide-y divide-border text-sm">
             {recent.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 py-2">
-                <span className="w-16 font-mono text-xs">{p.sticker_id ?? "—"}</span>
-                <span className="flex-1">{p.working_title ?? "(geen titel)"}</span>
-                <span className="text-xs text-muted-foreground">{p.category_slug}</span>
+              <li key={p.id} className="flex items-center gap-3 py-2.5">
+                <span className="w-16 font-mono text-xs text-muted-foreground">
+                  {p.sticker_id ?? "—"}
+                </span>
+                <span className="flex-1 truncate">
+                  {p.working_title ?? "(geen titel)"}
+                </span>
+                <span className="badge hidden bg-muted text-muted-foreground sm:inline-flex">
+                  {p.category_slug}
+                </span>
                 <Link
                   href={`/inventory/${p.sticker_id ?? p.id}`}
-                  className="text-xs underline"
+                  className="flex items-center gap-1 text-xs font-medium text-accent hover:underline"
                 >
                   Bekijk
+                  <ArrowRight className="size-3" aria-hidden />
                 </Link>
               </li>
             ))}
@@ -158,32 +179,84 @@ export default async function Dashboard() {
       </section>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Action href="/upload" title="Bulk upload" body="Sleep foto's → auto sticker-ID." />
-        <Action href="/stickers" title="Print stickers" body="A4 stickervel genereren." />
-        <Action href="/taxatie" title="Taxatie dossier" body="PDF voor antiek-taxateur." />
+        <Action
+          href="/upload"
+          title="Bulk upload"
+          body="Sleep foto's → auto sticker-ID."
+          icon={UploadCloud}
+        />
+        <Action
+          href="/stickers"
+          title="Print stickers"
+          body="A4 stickervel genereren."
+          icon={Tags}
+        />
+        <Action
+          href="/taxatie"
+          title="Taxatie dossier"
+          body="PDF voor antiek-taxateur."
+          icon={FileText}
+        />
       </section>
     </main>
   );
 }
 
-function Stat({ label, value, hint }: { label: string; value: number; hint?: string }) {
+function Stat({
+  label,
+  value,
+  hint,
+  accent,
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  accent?: boolean;
+}) {
   return (
-    <div className="rounded-lg border p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
-      {hint && <p className="mt-1 text-[10px] text-muted-foreground">{hint}</p>}
+    <div className="card p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-heading text-3xl font-bold tracking-tight ${accent ? "text-accent" : ""}`}
+      >
+        {value}
+      </p>
+      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }
 
-function Action({ href, title, body }: { href: string; title: string; body: string }) {
+function Action({
+  href,
+  title,
+  body,
+  icon: Icon,
+}: {
+  href: string;
+  title: string;
+  body: string;
+  icon: LucideIcon;
+}) {
   return (
     <Link
       href={href}
-      className="rounded-lg border p-5 transition hover:bg-muted"
+      className="card group flex items-start gap-3 p-5 transition-colors hover:border-accent"
     >
-      <p className="font-medium">{title}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+      <span className="rounded-md bg-accent-soft p-2 text-accent">
+        <Icon className="size-5" aria-hidden />
+      </span>
+      <span>
+        <span className="flex items-center gap-1 font-medium">
+          {title}
+          <ArrowRight
+            className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100"
+            aria-hidden
+          />
+        </span>
+        <span className="mt-1 block text-sm text-muted-foreground">{body}</span>
+      </span>
     </Link>
   );
 }

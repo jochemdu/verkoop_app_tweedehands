@@ -69,27 +69,27 @@ export function TaxatieForm({ products }: { products: Product[] }) {
   return (
     <div className="space-y-6">
       {products.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Geen antieke items gevonden. Categoriseer producten als{" "}
           <code>antique_tin</code>, <code>antique_silver</code> of{" "}
           <code>antique_other</code> om ze hier te zien.
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-4 rounded-lg border p-5">
+        <form onSubmit={submit} className="card space-y-4 p-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h2 className="section-title">
               Selectie
             </h2>
             <button
               type="button"
               onClick={toggleAll}
-              className="text-xs underline"
+              className="text-xs font-medium text-accent hover:underline"
             >
               {selected.size === products.length ? "Niks" : "Alles"} selecteren
             </button>
           </div>
 
-          <ul className="max-h-64 space-y-1 overflow-y-auto rounded-md border p-2 text-sm">
+          <ul className="card max-h-64 space-y-1 overflow-y-auto p-2 text-sm">
             {products.map((p) => (
               <li key={p.id}>
                 <label className="flex cursor-pointer items-center gap-2 rounded p-1 hover:bg-muted">
@@ -119,7 +119,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 placeholder="Naam taxateur"
-                className="w-full rounded-md border px-2 py-1.5 text-sm"
+                className="input"
               />
             </label>
             <label className="space-y-1 text-sm">
@@ -129,7 +129,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
                 value={recipientEmail}
                 onChange={(e) => setRecipientEmail(e.target.value)}
                 placeholder="taxateur@voorbeeld.nl"
-                className="w-full rounded-md border px-2 py-1.5 text-sm"
+                className="input"
               />
             </label>
           </div>
@@ -141,7 +141,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="Context voor de taxateur: wanneer verworven, bron, wensen…"
-              className="w-full rounded-md border px-2 py-1.5 text-sm"
+              className="input"
             />
           </label>
 
@@ -149,7 +149,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
             <button
               type="submit"
               disabled={generating || selected.size === 0}
-              className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+              className="btn btn-accent"
             >
               {generating
                 ? "Genereren…"
@@ -160,7 +160,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
                 href={resultUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm underline"
+                className="text-sm font-medium text-accent hover:underline"
               >
                 Open PDF (geldig 1 uur)
               </a>

@@ -43,14 +43,14 @@ export function SettingsForm({
   }
 
   return (
-    <div className="space-y-4 rounded-lg border p-6">
+    <div className="card space-y-4 p-6">
       <label className="block space-y-1 text-sm">
         <span className="font-medium">Weergavenaam</span>
         <input
           value={form.display_name}
           onChange={(e) => setForm({ ...form, display_name: e.target.value })}
           placeholder="Bijv. Jochem"
-          className="w-full rounded-md border px-3 py-2 text-sm shadow-sm"
+          className="input"
         />
       </label>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -59,7 +59,7 @@ export function SettingsForm({
           <select
             value={form.display_language}
             onChange={(e) => setForm({ ...form, display_language: e.target.value })}
-            className="w-full rounded-md border px-3 py-2 text-sm shadow-sm"
+            className="input"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
@@ -77,7 +77,7 @@ export function SettingsForm({
           <select
             value={form.listing_language}
             onChange={(e) => setForm({ ...form, listing_language: e.target.value })}
-            className="w-full rounded-md border px-3 py-2 text-sm shadow-sm"
+            className="input"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
@@ -94,7 +94,7 @@ export function SettingsForm({
         type="button"
         onClick={save}
         disabled={busy}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        className="btn btn-accent"
       >
         {busy ? "Opslaan…" : "Opslaan"}
       </button>

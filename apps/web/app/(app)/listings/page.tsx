@@ -42,7 +42,7 @@ export default async function ListingsPage({
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Advertenties</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Advertenties</h1>
         <p className="text-sm text-muted-foreground">
           Concepten van Claude via MCP verschijnen hier. Review, bewerk en
           markeer als gepubliceerd na handmatig plaatsen op het platform.
@@ -52,8 +52,10 @@ export default async function ListingsPage({
       <div className="flex flex-wrap gap-2">
         <Link
           href="/listings"
-          className={`rounded-full border px-3 py-1 text-xs ${
-            !params.status ? "bg-primary text-primary-foreground" : ""
+          className={`badge border ${
+            !params.status
+              ? "border-accent bg-accent text-accent-foreground"
+              : "border-border bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
           Alle ({counts?.length ?? 0})
@@ -62,8 +64,10 @@ export default async function ListingsPage({
           <Link
             key={s}
             href={`/listings?status=${s}`}
-            className={`rounded-full border px-3 py-1 text-xs ${
-              params.status === s ? "bg-primary text-primary-foreground" : ""
+            className={`badge border ${
+              params.status === s
+                ? "border-accent bg-accent text-accent-foreground"
+                : "border-border bg-card text-muted-foreground hover:bg-muted"
             }`}
           >
             {s} ({statusCounts[s] ?? 0})
@@ -72,12 +76,12 @@ export default async function ListingsPage({
       </div>
 
       {!listings || listings.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
           Geen advertenties in deze filter. Laat Claude Desktop er eentje
           aanmaken met de <code>create_listing</code> MCP tool.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="border-b text-left text-xs uppercase text-muted-foreground">
@@ -90,7 +94,7 @@ export default async function ListingsPage({
                 <th className="p-3" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border">
               {listings.map((l) => {
                 const product = Array.isArray(l.products) ? l.products[0] : l.products;
                 const platform = Array.isArray(l.platforms) ? l.platforms[0] : l.platforms;
@@ -111,7 +115,7 @@ export default async function ListingsPage({
                       €{Number(l.price).toFixed(2)}
                     </td>
                     <td className="p-3">
-                      <span className="inline-flex rounded-full border px-2 py-0.5 text-xs">
+                      <span className="badge bg-muted text-muted-foreground">
                         {l.status}
                       </span>
                     </td>
@@ -123,7 +127,7 @@ export default async function ListingsPage({
                         : "—"}
                     </td>
                     <td className="p-3 text-right">
-                      <Link href={`/listings/${l.id}`} className="text-xs underline">
+                      <Link href={`/listings/${l.id}`} className="text-xs font-medium text-accent hover:underline">
                         Review
                       </Link>
                     </td>

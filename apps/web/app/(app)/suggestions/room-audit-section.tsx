@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { resizeImage } from "@/lib/image";
 import type { RoomAudit } from "@/lib/ai/room-audit";
+import { Camera, MapPin, Sparkles } from "lucide-react";
 
 const MAX_PHOTOS = 4;
 
@@ -132,9 +133,9 @@ export function RoomAuditSection({ userId }: { userId: string }) {
   }
 
   return (
-    <section className="space-y-3 rounded-lg border p-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        📷 Kamer-scan
+    <section className="card space-y-3 p-5">
+      <h2 className="section-title">
+        <Camera className="inline size-4" aria-hidden /> Kamer-scan
       </h2>
       <p className="text-xs text-muted-foreground">
         Maak een foto van een kamer, zolder of schuur — de AI benoemt alle
@@ -150,7 +151,7 @@ export function RoomAuditSection({ userId }: { userId: string }) {
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
             placeholder="bijv. zolder, garage…"
-            className="block w-44 rounded-md border px-3 py-1.5 text-sm"
+            className="input w-44"
           />
         </label>
         <input
@@ -164,7 +165,7 @@ export function RoomAuditSection({ userId }: { userId: string }) {
         <button
           type="button"
           onClick={() => fileInput.current?.click()}
-          className="rounded-md border px-3 py-1.5 text-sm"
+          className="btn btn-outline"
         >
           {files.length > 0
             ? `${files.length} foto('s) gekozen`
@@ -174,15 +175,15 @@ export function RoomAuditSection({ userId }: { userId: string }) {
           type="button"
           onClick={runScan}
           disabled={busy || files.length === 0}
-          className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+          className="btn btn-accent"
         >
-          {busy ? "AI scant…" : "✨ Scan kamer"}
+          {busy ? "AI scant…" : (<><Sparkles className="size-4" aria-hidden />Scan kamer</>)}
         </button>
       </div>
 
       {audit && (
         <div className="space-y-3">
-          <div className="rounded-md border bg-muted/40 p-3 text-sm">
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
             <p className="font-medium">{audit.room_guess}</p>
             <p className="mt-1 text-xs text-muted-foreground">{audit.summary}</p>
           </div>
@@ -191,7 +192,7 @@ export function RoomAuditSection({ userId }: { userId: string }) {
             {audit.items.map((item, i) => (
               <li
                 key={i}
-                className={`rounded-md border p-3 ${item.probably_indexed ? "opacity-70" : ""}`}
+                className={`rounded-lg border border-border p-3 ${item.probably_indexed ? "opacity-70" : ""}`}
               >
                 <label className="flex items-start gap-2">
                   <input
@@ -208,10 +209,10 @@ export function RoomAuditSection({ userId }: { userId: string }) {
                       </span>
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                      📍 {item.location_hint} · {item.category_slug} ·{" "}
+                      <MapPin className="inline size-3" aria-hidden /> {item.location_hint} · {item.category_slug} ·{" "}
                       {CONFIDENCE_LABEL[item.confidence] ?? item.confidence}
                       {item.probably_indexed && (
-                        <span className="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+                        <span className="badge ml-1 bg-accent-soft text-accent">
                           al geïndexeerd?
                         </span>
                       )}
@@ -227,14 +228,14 @@ export function RoomAuditSection({ userId }: { userId: string }) {
               type="button"
               onClick={createStubs}
               disabled={creating || selected.size === 0}
-              className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+              className="btn btn-accent"
             >
               {creating
                 ? "Aanmaken…"
                 : `Maak ${selected.size} stub-product(en)`}
             </button>
             {createdCount > 0 && (
-              <Link href="/inventory" className="text-sm underline">
+              <Link href="/inventory" className="text-sm font-medium text-accent hover:underline">
                 Bekijk {createdCount} nieuwe stub(s) in inventaris →
               </Link>
             )}

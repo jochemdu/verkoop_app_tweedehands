@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { CheckCircle2 } from "lucide-react";
 import type { ListingStatus } from "@verkoopassistent/shared";
 
 type Listing = {
@@ -109,8 +110,8 @@ export function ListingActions({
   return (
     <div className="space-y-6">
       {/* Edit form */}
-      <form onSubmit={saveEdit} className="space-y-4 rounded-lg border p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <form onSubmit={saveEdit} className="card space-y-4 p-5">
+        <h2 className="section-title">
           Advertentie-tekst
         </h2>
 
@@ -119,7 +120,7 @@ export function ListingActions({
           <input
             value={form.final_title}
             onChange={(e) => setForm({ ...form, final_title: e.target.value })}
-            className="w-full rounded-md border px-3 py-2 text-sm"
+            className="input"
             disabled={isPublished}
           />
         </label>
@@ -132,7 +133,7 @@ export function ListingActions({
             onChange={(e) =>
               setForm({ ...form, final_description: e.target.value })
             }
-            className="w-full rounded-md border px-3 py-2 text-sm font-mono"
+            className="input font-mono"
             disabled={isPublished}
           />
         </label>
@@ -147,7 +148,7 @@ export function ListingActions({
               onChange={(e) =>
                 setForm({ ...form, price: Number(e.target.value) })
               }
-              className="w-full rounded-md border px-3 py-2 text-sm"
+              className="input"
               disabled={isPublished}
             />
           </label>
@@ -160,7 +161,7 @@ export function ListingActions({
               onChange={(e) =>
                 setForm({ ...form, shipping_price: Number(e.target.value) })
               }
-              className="w-full rounded-md border px-3 py-2 text-sm"
+              className="input"
               disabled={isPublished}
             />
           </label>
@@ -170,14 +171,14 @@ export function ListingActions({
           <button
             type="submit"
             disabled={saving || isPublished}
-            className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+            className="btn btn-outline"
           >
             Wijzigingen opslaan
           </button>
           <button
             type="button"
             onClick={copyToClipboard}
-            className="rounded-md border px-3 py-1.5 text-sm"
+            className="btn btn-outline"
           >
             Kopieer tekst
           </button>
@@ -186,8 +187,8 @@ export function ListingActions({
 
       {/* Status flow */}
       {!isPublished && (
-        <div className="rounded-lg border p-5 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="card p-5 space-y-4">
+          <h2 className="section-title">
             Workflow
           </h2>
 
@@ -199,7 +200,7 @@ export function ListingActions({
               <button
                 onClick={approve}
                 disabled={saving}
-                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+                className="btn btn-accent"
               >
                 {saving ? "Bezig…" : "Goedkeuren"}
               </button>
@@ -222,13 +223,13 @@ export function ListingActions({
                   value={listingUrl}
                   onChange={(e) => setListingUrl(e.target.value)}
                   placeholder="https://www.marktplaats.nl/a/..."
-                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  className="input"
                 />
               </label>
               <button
                 onClick={markPublished}
                 disabled={publishing}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+                className="btn btn-accent"
               >
                 {publishing ? "Bezig…" : "Markeer gepubliceerd"}
               </button>
@@ -238,15 +239,16 @@ export function ListingActions({
       )}
 
       {isPublished && listing.listing_url && (
-        <div className="rounded-lg border border-green-300 bg-green-50 p-5 text-sm dark:bg-green-950">
-          <p className="font-medium text-green-900 dark:text-green-100">
-            ✓ Gepubliceerd
+        <div className="rounded-xl border border-accent bg-accent-soft p-5 text-sm">
+          <p className="flex items-center gap-1.5 font-medium text-accent">
+            <CheckCircle2 className="size-4" aria-hidden />
+            Gepubliceerd
           </p>
           <a
             href={listing.listing_url}
             target="_blank"
             rel="noreferrer"
-            className="mt-1 block break-all text-xs underline"
+            className="mt-1 block break-all text-xs text-accent underline"
           >
             {listing.listing_url}
           </a>

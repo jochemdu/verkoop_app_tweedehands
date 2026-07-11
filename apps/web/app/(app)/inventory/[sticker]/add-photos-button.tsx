@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { resizeImage, filenameFor } from "@/lib/image";
+import { Camera } from "lucide-react";
 
 export function AddPhotosButton({
   productId,
@@ -68,9 +69,9 @@ export function AddPhotosButton({
         type="button"
         onClick={() => fileInput.current?.click()}
         disabled={busy}
-        className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
+        className="btn btn-outline"
       >
-        {busy ? "Uploaden…" : "📷 Foto's toevoegen"}
+        {busy ? "Uploaden…" : (<><Camera className="size-4" aria-hidden />Foto&apos;s toevoegen</>)}
       </button>
     </>
   );

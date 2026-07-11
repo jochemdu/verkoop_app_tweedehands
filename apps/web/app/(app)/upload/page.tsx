@@ -14,7 +14,7 @@ export default async function UploadPage() {
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Bulk foto upload</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Bulk foto upload</h1>
         <p className="text-sm text-muted-foreground">
           Sleep meerdere foto&apos;s hierin. Elke foto wordt een apart product
           met een oplopende sticker-ID.

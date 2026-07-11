@@ -82,7 +82,7 @@ export default async function SuggestionsPage() {
   return (
     <main className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Verkoop-suggesties</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Verkoop-suggesties</h1>
         <p className="text-sm text-muted-foreground">
           Gebaseerd op je inventaris + het huidige seizoen.
         </p>
@@ -99,9 +99,9 @@ export default async function SuggestionsPage() {
 
       {/* Seasonal */}
       {seasonal.length > 0 && (
-        <section className="rounded-lg border p-5 space-y-4">
+        <section className="card p-5 space-y-4">
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <h2 className="section-title">
               Seizoen — {monthLabel}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -128,18 +128,18 @@ export default async function SuggestionsPage() {
 
       {/* Blind spots in enum (indexeer meer in bestaande categorieën) */}
       {blindSpotsInEnum.length > 0 && (
-        <section className="rounded-lg border border-amber-300 bg-amber-50 p-5 space-y-3 dark:bg-amber-950/30">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200">
+        <section className="rounded-xl border border-warning bg-warning-soft p-5 space-y-3">
+          <h2 className="section-title text-warning">
             Blinde vlekken in bestaande categorieën
           </h2>
-          <p className="text-xs text-amber-800 dark:text-amber-300">
+          <p className="text-xs text-warning">
             Deze categorieën hebben nog 0 items maar je hebt ze waarschijnlijk wel.
           </p>
           <ul className="grid gap-2 sm:grid-cols-2">
             {blindSpotsInEnum.map((slug) => {
               const info = CATEGORY_BASELINE[slug]!;
               return (
-                <li key={slug} className="rounded-md border border-amber-200 bg-white p-3 dark:bg-zinc-900 dark:border-amber-800/40">
+                <li key={slug} className="rounded-lg border border-border bg-card p-3">
                   <p className="text-sm font-medium font-mono">{slug}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Baseline: ≥{info.minimum} · {info.examples}
@@ -152,8 +152,8 @@ export default async function SuggestionsPage() {
       )}
 
       {/* Categorieën die niet in de enum zitten — suggesties om toe te voegen */}
-      <section className="rounded-lg border p-5 space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="card p-5 space-y-3">
+        <h2 className="section-title">
           Mogelijk overgeslagen categorieën
         </h2>
         <p className="text-xs text-muted-foreground">
@@ -162,7 +162,7 @@ export default async function SuggestionsPage() {
         </p>
         <ul className="grid gap-2 sm:grid-cols-2">
           {MISSING_CATEGORIES.map((cat) => (
-            <li key={cat.slug} className="rounded-md border p-3">
+            <li key={cat.slug} className="rounded-lg border border-border p-3">
               <p className="text-sm font-medium">{cat.name}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Verwacht: ≥{cat.minimum} items · {cat.examples}
@@ -175,13 +175,13 @@ export default async function SuggestionsPage() {
       <div className="flex gap-3">
         <Link
           href="/upload"
-          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+          className="btn btn-accent"
         >
           Start bulk-sessie
         </Link>
         <Link
           href="/inventory"
-          className="rounded-md border px-4 py-2 text-sm"
+          className="btn btn-outline"
         >
           Terug naar inventaris
         </Link>

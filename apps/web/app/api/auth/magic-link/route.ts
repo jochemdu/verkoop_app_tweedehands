@@ -40,10 +40,19 @@ export async function POST(req: NextRequest) {
   );
   if (!emailLimit.allowed) return apiErrors.rateLimited(correlationId);
 
+  // Preview-deploys (Vercel) hebben elk hun eigen origin — gebruik de
+  // request-origin zodat de magic link terugkeert naar dezelfde deploy in
+  // plaats van altijd naar productie. Supabase valideert emailRedirectTo
+  // tegen de Redirect URLs-allowlist (zie SETUP.md); een origin die daar
+  // niet in staat valt terug op de geconfigureerde Site URL.
+  // replace(): een SITE_URL met trailing slash gaf "…app//auth/callback"
+  // (zichtbaar in de auth-logs) — normaliseer defensief.
+  const origin = (req.headers.get("origin") ?? env.NEXT_PUBLIC_SITE_URL).replace(/\/+$/, "");
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
-    options: { emailRedirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/callback` },
+    options: { emailRedirectTo: `${origin}/auth/callback` },
   });
   if (error) {
     // Niet het interne bericht lekken — generiek.

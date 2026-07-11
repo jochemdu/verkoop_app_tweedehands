@@ -19,7 +19,7 @@ export function AddProductButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        className="btn btn-accent"
       >
         + Product toevoegen
       </button>
@@ -94,7 +94,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
     >
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-lg space-y-4 rounded-lg bg-background p-6 shadow-lg"
+        className="card w-full max-w-lg space-y-4 p-6 shadow-sm"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Product toevoegen</h2>
@@ -114,7 +114,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
             <input
               {...register("sticker_id")}
               placeholder="0042"
-              className="w-full rounded-md border px-2 py-1.5 text-sm font-mono"
+              className="input font-mono"
             />
             {errors.sticker_id && (
               <span className="text-destructive">{errors.sticker_id.message}</span>
@@ -124,7 +124,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
             <span className="font-medium">Categorie</span>
             <select
               {...register("category_slug")}
-              className="w-full rounded-md border px-2 py-1.5 text-sm"
+              className="input"
             >
               {CATEGORY_SLUGS.map((c) => (
                 <option key={c} value={c}>
@@ -140,7 +140,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           <input
             {...register("working_title")}
             placeholder="bijv. DDR2 SODIMM Samsung"
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           />
         </label>
 
@@ -149,7 +149,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           <textarea
             {...register("indexing_notes")}
             rows={2}
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           />
         </label>
 
@@ -174,14 +174,14 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
             type="button"
             onClick={onClose}
             disabled={uploading}
-            className="rounded-md border px-3 py-1.5 text-sm"
+            className="btn btn-outline"
           >
             Annuleer
           </button>
           <button
             type="submit"
             disabled={uploading}
-            className="rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+            className="btn btn-accent"
           >
             {uploading ? "Bezig…" : "Opslaan"}
           </button>

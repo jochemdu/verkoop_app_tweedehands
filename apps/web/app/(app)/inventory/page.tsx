@@ -84,7 +84,7 @@ export default async function InventoryPage({
     <main className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Inventaris</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Inventaris</h1>
           <p className="text-sm text-muted-foreground">
             {count ?? 0} producten {showDeleted ? "(verwijderd)" : "totaal"}
           </p>
@@ -92,7 +92,7 @@ export default async function InventoryPage({
         <div className="flex gap-2">
           <Link
             href={showDeleted ? "/inventory" : "/inventory?deleted=1"}
-            className="rounded-md border px-3 py-1.5 text-sm"
+            className="btn btn-outline"
           >
             {showDeleted ? "← Actief" : "Prullenbak"}
           </Link>
@@ -100,14 +100,14 @@ export default async function InventoryPage({
         </div>
       </div>
 
-      <form className="grid grid-cols-1 gap-3 rounded-lg border p-4 sm:grid-cols-5">
+      <form className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-5">
         <label className="space-y-1 text-xs">
           <span className="text-muted-foreground">Zoeken</span>
           <input
             name="q"
             defaultValue={params.q}
             placeholder="titel of notities"
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           />
         </label>
         <label className="space-y-1 text-xs">
@@ -115,7 +115,7 @@ export default async function InventoryPage({
           <select
             name="status"
             defaultValue={params.status ?? ""}
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           >
             <option value="">(alle)</option>
             {PRODUCT_STATUSES.map((s) => (
@@ -130,7 +130,7 @@ export default async function InventoryPage({
           <select
             name="category"
             defaultValue={params.category ?? ""}
-            className="w-full rounded-md border px-2 py-1.5 text-sm"
+            className="input"
           >
             <option value="">(alle)</option>
             {(categories ?? []).map((c) => (
@@ -146,7 +146,7 @@ export default async function InventoryPage({
             name="sticker_from"
             defaultValue={params.sticker_from}
             placeholder="0001"
-            className="w-full rounded-md border px-2 py-1.5 text-sm font-mono"
+            className="input font-mono"
           />
         </label>
         <label className="space-y-1 text-xs">
@@ -155,24 +155,24 @@ export default async function InventoryPage({
             name="sticker_to"
             defaultValue={params.sticker_to}
             placeholder="0160"
-            className="w-full rounded-md border px-2 py-1.5 text-sm font-mono"
+            className="input font-mono"
           />
         </label>
         <div className="col-span-full flex gap-2">
           <button
             type="submit"
-            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+            className="btn btn-accent"
           >
             Filter
           </button>
-          <Link href="/inventory" className="rounded-md border px-3 py-1.5 text-sm">
+          <Link href="/inventory" className="btn btn-outline">
             Reset
           </Link>
         </div>
       </form>
 
       {!products || products.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
           Geen producten gevonden.
         </div>
       ) : (
@@ -185,12 +185,12 @@ export default async function InventoryPage({
             </span>
             <div className="flex gap-2">
               {page > 1 && (
-                <Link href={buildPageUrl(page - 1)} className="rounded-md border px-2 py-1">
+                <Link href={buildPageUrl(page - 1)} className="btn btn-outline px-2 py-1 text-xs">
                   ← Vorige
                 </Link>
               )}
               {page < totalPages && (
-                <Link href={buildPageUrl(page + 1)} className="rounded-md border px-2 py-1">
+                <Link href={buildPageUrl(page + 1)} className="btn btn-outline px-2 py-1 text-xs">
                   Volgende →
                 </Link>
               )}

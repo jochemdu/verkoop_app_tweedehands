@@ -120,8 +120,8 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border p-5">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="card p-5">
+        <h2 className="section-title mb-3">
           Instellingen
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -130,7 +130,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value as Mode)}
-              className="w-full rounded-md border px-2 py-1.5 text-sm"
+              className="input"
             >
               <option value="per_photo">
                 Eén product per foto (auto-sticker)
@@ -148,7 +148,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
               value={startSticker}
               onChange={(e) => setStartSticker(e.target.value)}
               placeholder="0042"
-              className="w-full rounded-md border px-2 py-1.5 text-sm font-mono"
+              className="input font-mono"
             />
           </label>
           <label className="space-y-1 text-xs">
@@ -157,7 +157,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
               value={workingTitle}
               onChange={(e) => setWorkingTitle(e.target.value)}
               placeholder="wordt op alle producten gezet"
-              className="w-full rounded-md border px-2 py-1.5 text-sm"
+              className="input"
             />
           </label>
         </div>
@@ -165,10 +165,10 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
 
       <div
         {...getRootProps()}
-        className={`cursor-pointer rounded-lg border-2 border-dashed p-10 text-center transition ${
+        className={`cursor-pointer rounded-xl border-2 border-dashed p-12 text-center transition-colors ${
           isDragActive
-            ? "border-primary bg-primary/5"
-            : "border-muted-foreground/30 hover:border-primary/50"
+            ? "border-accent bg-accent-soft"
+            : "border-border bg-card hover:border-accent"
         }`}
       >
         <input {...getInputProps()} />
@@ -181,7 +181,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
       </div>
 
       {queue.length > 0 && (
-        <div className="space-y-3 rounded-lg border p-5">
+        <div className="card space-y-3 p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">
               {queue.length} foto&apos;s in wachtrij
@@ -190,14 +190,14 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
               <button
                 onClick={() => setQueue([])}
                 disabled={busy}
-                className="rounded-md border px-3 py-1.5 text-sm"
+                className="btn btn-outline"
               >
                 Wissen
               </button>
               <button
                 onClick={submit}
                 disabled={busy}
-                className="rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+                className="btn btn-accent"
               >
                 {busy ? "Bezig…" : `Upload & maak ${mode === "single" ? "1 product" : "producten"}`}
               </button>
@@ -207,7 +207,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
             {queue.map((q, i) => (
               <li
                 key={i}
-                className="flex items-center justify-between rounded border px-2 py-1"
+                className="flex items-center justify-between rounded-md border border-border px-2 py-1"
               >
                 <span className="truncate">{q.file.name}</span>
                 <StatusBadge status={q.status} error={q.error} />
@@ -234,7 +234,7 @@ function StatusBadge({
       </span>
     );
   }
-  if (status === "uploaded") return <span className="text-green-600">✓</span>;
+  if (status === "uploaded") return <span className="font-medium text-accent">✓</span>;
   if (status === "uploading") return <span>…</span>;
   return <span className="text-muted-foreground">pending</span>;
 }

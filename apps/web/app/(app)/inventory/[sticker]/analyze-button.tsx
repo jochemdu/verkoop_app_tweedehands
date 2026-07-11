@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
 
 export function AnalyzeButton({ productId }: { productId: string }) {
   const router = useRouter();
@@ -41,9 +42,9 @@ export function AnalyzeButton({ productId }: { productId: string }) {
       type="button"
       onClick={analyze}
       disabled={busy}
-      className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+      className="btn btn-accent"
     >
-      {busy ? "Analyseren…" : "✨ Analyseer met AI"}
+      {busy ? "Analyseren…" : (<><Sparkles className="size-4" aria-hidden />Analyseer met AI</>)}
     </button>
   );
 }

@@ -32,14 +32,14 @@ export default async function StickersPage() {
   return (
     <main className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Stickervel genereren</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Stickervel genereren</h1>
         <p className="text-sm text-muted-foreground">
           A4 portrait, 4 kwartieren van 40 stickers (21×15&nbsp;mm) — 160
           stickers per vel.
         </p>
       </div>
 
-      <section className="rounded-lg border p-6">
+      <section className="card p-6">
         <p className="text-sm text-muted-foreground">Laatst gebruikt</p>
         <p className="text-lg font-medium">
           {lastUsed > 0 ? String(lastUsed).padStart(4, "0") : "nog geen"}
@@ -49,15 +49,15 @@ export default async function StickersPage() {
       <StickerForm suggestedStart={suggestedStart} />
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="section-title mb-3">
           Eerder gegenereerd
         </h2>
         {sheets.length === 0 ? (
-          <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             Nog geen vellen. Begin hierboven.
           </div>
         ) : (
-          <ul className="divide-y rounded-md border">
+          <ul className="card divide-y divide-border">
             {sheets.map((s) => (
               <li
                 key={s.id}
