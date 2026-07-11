@@ -49,5 +49,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Claude
-.claude/
+# Claude — lokale sessie-config negeren, gedeelde skills committen
+.claude/*
+!.claude/skills/
