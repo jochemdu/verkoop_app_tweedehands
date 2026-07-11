@@ -4,7 +4,6 @@ import {
   PRODUCT_STATUSES,
   PHOTO_TYPES,
   STICKER_INPUT_METHODS,
-  CATEGORY_SLUGS,
 } from "./enums";
 
 // 4-cijferig zero-padded sticker nummer: 0001 - 9999
@@ -25,7 +24,7 @@ export const productIndexSchema = z.object({
   sticker_id: stickerIdSchema.optional(),
   sticker_input_method: z.enum(STICKER_INPUT_METHODS).optional(),
   sticker_confidence: z.number().min(0).max(1).optional(),
-  category_slug: z.enum(CATEGORY_SLUGS).default("unknown"),
+  category_slug: z.string().regex(/^[a-z0-9_]+$/).default("unknown"),
   working_title: z.string().max(200).optional(),
   indexing_notes: z.string().max(1000).optional(),
   ean: z.string().regex(/^\d{8,14}$/).optional(),

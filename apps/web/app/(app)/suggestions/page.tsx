@@ -30,14 +30,15 @@ const CATEGORY_BASELINE: Record<string, { minimum: number; examples: string }> =
 // Extra categorieën die NIET in de enum zitten maar waarschijnlijk items
 // aanwezig zijn in een gemiddeld huishouden. Feat 12 — blinde vlekken.
 const MISSING_CATEGORIES = [
-  { slug: "book", name: "Boeken", examples: "Boekenkast: paperbacks, non-fictie, kinderboeken. ISBN-scan gaat snel (Feat 19).", minimum: 20 },
-  { slug: "vinyl", name: "LP's / muziek", examples: "Oude platen, CD's — niche markt met fans.", minimum: 10 },
+  { slug: "books", name: "Boeken", examples: "Boekenkast: paperbacks, non-fictie, kinderboeken. ISBN-scan gaat snel (Feat 19).", minimum: 20 },
+  { slug: "vinyl_music", name: "LP's / muziek", examples: "Oude platen, CD's — niche markt met fans.", minimum: 10 },
   { slug: "clothing", name: "Kleding", examples: "Vinted-markt. Merk-kleding in goede staat.", minimum: 30 },
   { slug: "kitchenware", name: "Keukengerei", examples: "Ongebruikte pannen, Tupperware, kleine apparaten, servies.", minimum: 10 },
   { slug: "tools", name: "Gereedschap", examples: "Klussers-restanten, oude boor/zaag/meetgereedschap.", minimum: 5 },
-  { slug: "toys_vintage", name: "Oud speelgoed", examples: "Lego, Playmobil, knuffels uit je jeugd — verzamelaars-markt.", minimum: 10 },
+  { slug: "toys", name: "Speelgoed", examples: "Lego, Playmobil, knuffels uit je jeugd — verzamelaars-markt.", minimum: 10 },
   { slug: "board_games", name: "Gezelschapsspellen", examples: "Spellen die stof vangen op zolder.", minimum: 5 },
-  { slug: "hobby_craft", name: "Hobby-restanten", examples: "Afgebroken hobbies: aquarium, modelbouw, naaien, schilderen.", minimum: 5 },
+  { slug: "handbags", name: "Tassen", examples: "Merktassen, leren tassen — Vinted/Marktplaats-markt.", minimum: 3 },
+  { slug: "shoes", name: "Schoenen", examples: "Weinig gedragen (merk)schoenen, sneakers.", minimum: 5 },
   { slug: "garden", name: "Tuin", examples: "Oude tuinmeubels, gereedschap, potten.", minimum: 5 },
   { slug: "furniture", name: "Meubels", examples: "Meubels die je vervangen hebt maar nog staan.", minimum: 2 },
 ];
@@ -137,9 +138,8 @@ export default async function SuggestionsPage() {
           Mogelijk overgeslagen categorieën
         </h2>
         <p className="text-xs text-muted-foreground">
-          Deze categorieën zitten nog niet in het systeem, maar staan waarschijnlijk
-          in je huis. Zeggen: &quot;ga deze doen&quot; — indexeer een batch + voeg nieuwe
-          category_slug enum waarde toe via een migration.
+          Deze categorieën bestaan in het systeem maar zijn (bijna) leeg, terwijl
+          ze waarschijnlijk wél in je huis staan. Pak er één en indexeer een batch.
         </p>
         <ul className="grid gap-2 sm:grid-cols-2">
           {MISSING_CATEGORIES.map((cat) => (

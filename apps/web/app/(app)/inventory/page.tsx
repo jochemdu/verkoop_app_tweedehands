@@ -1,11 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import {
-  PRODUCT_STATUSES,
-  CATEGORY_SLUGS,
-  type ProductStatus,
-  type CategorySlug,
-} from "@verkoopassistent/shared";
+import { PRODUCT_STATUSES, type ProductStatus } from "@verkoopassistent/shared";
 import { AddProductButton } from "./add-product-button";
 import { VirtualTable } from "./virtual-table";
 
@@ -56,8 +51,8 @@ export default async function InventoryPage({
   if (params.status && PRODUCT_STATUSES.includes(params.status as ProductStatus)) {
     query = query.eq("status", params.status as ProductStatus);
   }
-  if (params.category && CATEGORY_SLUGS.includes(params.category as CategorySlug)) {
-    query = query.eq("category_slug", params.category as CategorySlug);
+  if (params.category && /^[a-z0-9_]+$/.test(params.category)) {
+    query = query.eq("category_slug", params.category);
   }
   if (params.sticker_from) {
     query = query.gte("sticker_id", params.sticker_from.padStart(4, "0"));
@@ -66,7 +61,10 @@ export default async function InventoryPage({
     query = query.lte("sticker_id", params.sticker_to.padStart(4, "0"));
   }
 
-  const { data: products, count } = await query;
+  const [{ data: products, count }, { data: categories }] = await Promise.all([
+    query,
+    supabase.from("categories").select("slug, name").order("name"),
+  ]);
   const totalPages = count ? Math.max(1, Math.ceil(count / PAGE_SIZE)) : 1;
 
   const pageQueryParams = new URLSearchParams();
@@ -135,9 +133,9 @@ export default async function InventoryPage({
             className="w-full rounded-md border px-2 py-1.5 text-sm"
           >
             <option value="">(alle)</option>
-            {CATEGORY_SLUGS.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {(categories ?? []).map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.name}
               </option>
             ))}
           </select>

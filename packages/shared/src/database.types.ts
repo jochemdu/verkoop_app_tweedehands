@@ -214,40 +214,40 @@ export type Database = {
         Row: {
           id: string
           name: string
-          parent_slug: Database["public"]["Enums"]["category_slug"] | null
+          parent_slug: string | null
           preferred_buyback_services:
             | Database["public"]["Enums"]["buyback_service_slug"][]
             | null
           preferred_platforms:
             | Database["public"]["Enums"]["platform_slug"][]
             | null
-          slug: Database["public"]["Enums"]["category_slug"]
+          slug: string
           spec_schema: Json | null
         }
         Insert: {
           id?: string
           name: string
-          parent_slug?: Database["public"]["Enums"]["category_slug"] | null
+          parent_slug?: string | null
           preferred_buyback_services?:
             | Database["public"]["Enums"]["buyback_service_slug"][]
             | null
           preferred_platforms?:
             | Database["public"]["Enums"]["platform_slug"][]
             | null
-          slug: Database["public"]["Enums"]["category_slug"]
+          slug: string
           spec_schema?: Json | null
         }
         Update: {
           id?: string
           name?: string
-          parent_slug?: Database["public"]["Enums"]["category_slug"] | null
+          parent_slug?: string | null
           preferred_buyback_services?:
             | Database["public"]["Enums"]["buyback_service_slug"][]
             | null
           preferred_platforms?:
             | Database["public"]["Enums"]["platform_slug"][]
             | null
-          slug?: Database["public"]["Enums"]["category_slug"]
+          slug?: string
           spec_schema?: Json | null
         }
         Relationships: [
@@ -759,7 +759,7 @@ export type Database = {
       price_watches: {
         Row: {
           alert_on_below: number | null
-          category_slug: Database["public"]["Enums"]["category_slug"] | null
+          category_slug: string | null
           check_interval_hours: number | null
           created_at: string | null
           current_lowest: number | null
@@ -774,7 +774,7 @@ export type Database = {
         }
         Insert: {
           alert_on_below?: number | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           check_interval_hours?: number | null
           created_at?: string | null
           current_lowest?: number | null
@@ -789,7 +789,7 @@ export type Database = {
         }
         Update: {
           alert_on_below?: number | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           check_interval_hours?: number | null
           created_at?: string | null
           current_lowest?: number | null
@@ -816,7 +816,7 @@ export type Database = {
         Row: {
           analyzed_at: string | null
           barcode_type: string | null
-          category_slug: Database["public"]["Enums"]["category_slug"] | null
+          category_slug: string | null
           condition: Database["public"]["Enums"]["product_condition"] | null
           container_id: string | null
           created_at: string | null
@@ -856,7 +856,7 @@ export type Database = {
         Insert: {
           analyzed_at?: string | null
           barcode_type?: string | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           condition?: Database["public"]["Enums"]["product_condition"] | null
           container_id?: string | null
           created_at?: string | null
@@ -896,7 +896,7 @@ export type Database = {
         Update: {
           analyzed_at?: string | null
           barcode_type?: string | null
-          category_slug?: Database["public"]["Enums"]["category_slug"] | null
+          category_slug?: string | null
           condition?: Database["public"]["Enums"]["product_condition"] | null
           container_id?: string | null
           created_at?: string | null
@@ -1158,23 +1158,6 @@ export type Database = {
         | "catchcollect"
         | "itad_broker"
         | "other"
-      category_slug:
-        | "ram_dimm"
-        | "ram_sodimm"
-        | "cpu"
-        | "gpu"
-        | "console"
-        | "console_game"
-        | "smartphone"
-        | "laptop"
-        | "pokemon_card"
-        | "antique_tin"
-        | "antique_silver"
-        | "antique_other"
-        | "electronics_other"
-        | "unknown"
-        | "other"
-        | "clothing"
       listing_status:
         | "draft"
         | "pending_review"
@@ -1369,24 +1352,6 @@ export const Constants = {
         "catchcollect",
         "itad_broker",
         "other",
-      ],
-      category_slug: [
-        "ram_dimm",
-        "ram_sodimm",
-        "cpu",
-        "gpu",
-        "console",
-        "console_game",
-        "smartphone",
-        "laptop",
-        "pokemon_card",
-        "antique_tin",
-        "antique_silver",
-        "antique_other",
-        "electronics_other",
-        "unknown",
-        "other",
-        "clothing",
       ],
       listing_status: [
         "draft",

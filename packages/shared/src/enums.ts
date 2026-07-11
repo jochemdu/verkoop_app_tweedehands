@@ -8,7 +8,17 @@ export const PHOTO_TYPES = Constants.public.Enums.photo_type;
 export const STICKER_INPUT_METHODS = Constants.public.Enums.sticker_input_method;
 export const PLATFORM_SLUGS = Constants.public.Enums.platform_slug;
 export const BUYBACK_SERVICE_SLUGS = Constants.public.Enums.buyback_service_slug;
-export const CATEGORY_SLUGS = Constants.public.Enums.category_slug;
+// Categorieën zijn sinds fase 22 data (categories tabel), geen Postgres enum.
+// Deze statische lijst is de seed-baseline voor dropdowns/offline gebruik;
+// de bron van waarheid is de categories tabel.
+export const CATEGORY_SLUGS = [
+  "ram_dimm", "ram_sodimm", "cpu", "gpu", "console", "console_game",
+  "smartphone", "laptop", "pokemon_card", "antique_tin", "antique_silver",
+  "antique_other", "electronics_other", "clothing", "handbags", "shoes",
+  "accessories", "jewelry", "watches", "books", "toys", "board_games",
+  "vinyl_music", "kitchenware", "tools", "sports", "bicycles", "furniture",
+  "home_decor", "garden", "unknown", "other",
+] as const;
 export const BUNDLE_TYPES = Constants.public.Enums.bundle_type;
 
 // Type aliases — gebruik voor function signatures en props.
@@ -19,5 +29,5 @@ export type PhotoType = Database["public"]["Enums"]["photo_type"];
 export type StickerInputMethod = Database["public"]["Enums"]["sticker_input_method"];
 export type PlatformSlug = Database["public"]["Enums"]["platform_slug"];
 export type BuybackServiceSlug = Database["public"]["Enums"]["buyback_service_slug"];
-export type CategorySlug = Database["public"]["Enums"]["category_slug"];
+export type CategorySlug = string;
 export type BundleType = Database["public"]["Enums"]["bundle_type"];

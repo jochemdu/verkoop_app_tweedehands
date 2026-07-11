@@ -57,6 +57,10 @@ export async function POST(
     .update({ status: "analyzing" })
     .eq("id", product.id);
 
+  // Actuele categorielijst (fase 22: data-driven) voor het analyse-schema.
+  const { data: categoryRows } = await supabase.from("categories").select("slug");
+  const categorySlugs = (categoryRows ?? []).map((c) => c.slug);
+
   try {
     const { analysis, model, usage } = await analyzeProductPhotos({
       workingTitle: product.working_title,
@@ -64,6 +68,7 @@ export async function POST(
       ean: product.ean,
       stickerId: product.sticker_id,
       photoUrls,
+      categorySlugs,
     });
 
     // 1. Product bijwerken met analyse-resultaat.

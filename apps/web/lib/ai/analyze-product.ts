@@ -2,11 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import {
-  CATEGORY_SLUGS,
-  PRODUCT_CONDITIONS,
-  sanitizeForLLM,
-} from "@verkoopassistent/shared";
+import { PRODUCT_CONDITIONS, sanitizeForLLM } from "@verkoopassistent/shared";
 
 // Vision-analyse van productfoto's → gestructureerd resultaat dat direct in
 // de products/listings tabellen past. Draait volledig server-side; de client
@@ -14,7 +10,14 @@ import {
 
 export const DEFAULT_MODEL = "claude-opus-4-8";
 
-export const productAnalysisSchema = z.object({
+// Categorieën zijn data (fase 22): de aanroeper geeft de actuele sluglijst
+// mee zodat het model alleen bestaande categorieën kan kiezen.
+export function buildAnalysisSchema(categorySlugs: readonly string[]) {
+  const slugs = (categorySlugs.length > 0 ? categorySlugs : ["unknown"]) as [
+    string,
+    ...string[],
+  ];
+  return z.object({
   identified: z
     .boolean()
     .describe("Of het product met redelijke zekerheid herkend is."),
@@ -32,8 +35,8 @@ export const productAnalysisSchema = z.object({
       "Aantrekkelijke NL verkooptekst voor Marktplaats: 2-4 korte alinea's. Eerlijk over staat/gebreken, noem specs, eindig met ophaal/verzend-zin. Geen emoji-spam.",
     ),
   category_slug: z
-    .enum(CATEGORY_SLUGS)
-    .describe("Best passende categorie uit de vaste lijst."),
+    .enum(slugs)
+    .describe("Best passende categorie uit de lijst."),
   condition: z
     .enum(PRODUCT_CONDITIONS)
     .describe("Conditie zoals zichtbaar op de foto's."),
@@ -65,9 +68,10 @@ export const productAnalysisSchema = z.object({
   search_keywords: z
     .array(z.string())
     .describe("3-6 zoektermen om vraagprijzen op Marktplaats/Tweakers te checken."),
-});
+  });
+}
 
-export type ProductAnalysis = z.infer<typeof productAnalysisSchema>;
+export type ProductAnalysis = z.infer<ReturnType<typeof buildAnalysisSchema>>;
 
 const SYSTEM_PROMPT = `Je bent een Nederlandse tweedehands-verkoopexpert. Je analyseert productfoto's voor een persoonlijke inventaris-app en levert een advertentie-klare analyse.
 
@@ -84,6 +88,7 @@ export type AnalyzeInput = {
   ean: string | null;
   stickerId: string | null;
   photoUrls: string[];
+  categorySlugs: readonly string[];
 };
 
 export async function analyzeProductPhotos(
@@ -113,7 +118,7 @@ export async function analyzeProductPhotos(
     max_tokens: 16000,
     thinking: { type: "adaptive" },
     system: SYSTEM_PROMPT,
-    output_config: { format: zodOutputFormat(productAnalysisSchema) },
+    output_config: { format: zodOutputFormat(buildAnalysisSchema(input.categorySlugs)) },
     messages: [
       {
         role: "user",
