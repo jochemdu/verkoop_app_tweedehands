@@ -1,11 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { SettingsForm } from "./settings-form";
+import { LinkedAccounts, type Identity } from "./linked-accounts";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const identities: Identity[] = (user?.identities ?? []).map((i) => ({
+    identity_id: i.identity_id ?? i.id,
+    provider: i.provider,
+    email:
+      (i.identity_data?.email as string | undefined) ?? user?.email ?? null,
+  }));
 
   // Profiel bestaat via de signup-trigger; maybeSingle voor accounts van
   // vóór de backfill.
@@ -29,6 +37,7 @@ export default async function SettingsPage() {
           listing_language: profile?.listing_language ?? "nl",
         }}
       />
+      <LinkedAccounts identities={identities} />
     </main>
   );
 }

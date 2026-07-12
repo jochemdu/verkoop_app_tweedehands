@@ -59,6 +59,33 @@ voor development). Met een Resend-account:
    kan de magic link vooraf openen waardoor die al verbruikt is — de code
    heeft daar geen last van.
 
+### 1c. Google-login + tweede e-mail koppelen (fase 30)
+
+Zo log je met zowel je magic-link-mail als je Google/Gmail in **hetzelfde**
+account (dezelfde inventaris):
+
+1. **Google OAuth-credentials aanmaken**
+   - Ga naar <https://console.cloud.google.com/> → maak (of kies) een project.
+   - *APIs & Services* → *OAuth consent screen*: kies **External**, vul een
+     app-naam + je e-mail in, en voeg jezelf toe als *Test user* (dan hoef je
+     de app niet te laten verifiëren zolang het om een paar mensen gaat).
+   - *APIs & Services* → *Credentials* → *Create Credentials* → *OAuth client
+     ID* → type **Web application**.
+   - Onder **Authorized redirect URIs** exact deze toevoegen:
+     `https://ffifhjwjauvhohmhhbip.supabase.co/auth/v1/callback`
+   - Kopieer de **Client ID** en **Client secret**.
+2. **In Supabase** → [Authentication → Providers → Google](https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/auth/providers)
+   → aanzetten, Client ID + secret plakken, opslaan.
+3. **Manual linking aanzetten** → [Authentication → Sign In / Providers →
+   *Manual linking*](https://supabase.com/dashboard/project/ffifhjwjauvhohmhhbip/auth/providers)
+   inschakelen (nodig voor het koppelen van een tweede login aan een bestaand
+   account).
+4. **Koppelen**: log in met je bestaande e-mailadres → **Instellingen →
+   Login-methodes → *Koppel Google-account*** → kies je Gmail. Vanaf dan logt
+   *Log in met Google* je in hetzelfde account. (De eerste keer los inloggen
+   met een nieuwe Gmail maakt juist een apart account — koppel dus altijd
+   vanuit je bestaande account.)
+
 ### 1b. Multi-user / vrienden uitnodigen (fase 21)
 
 De app is multi-tenant: elke gebruiker ziet alleen z'n eigen producten,
