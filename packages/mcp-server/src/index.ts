@@ -63,6 +63,14 @@ import {
   createProductStubDefinition,
   handleCreateProductStub,
 } from "./tools/create_product_stub.js";
+import {
+  getProductContextDefinition,
+  handleGetProductContext,
+} from "./tools/get_product_context.js";
+import {
+  saveMarketResearchDefinition,
+  handleSaveMarketResearch,
+} from "./tools/save_market_research.js";
 
 // Ping tool — handig om de verbinding te checken zonder dat er data hoeft te zijn.
 const pingDefinition = {
@@ -92,6 +100,8 @@ const TOOLS = [
   { def: lookupBookDefinition, handler: handleLookupBook },
   { def: inventorySummaryDefinition, handler: handleInventorySummary },
   { def: createProductStubDefinition, handler: handleCreateProductStub },
+  { def: getProductContextDefinition, handler: handleGetProductContext },
+  { def: saveMarketResearchDefinition, handler: handleSaveMarketResearch },
 ];
 
 async function handlePing() {
