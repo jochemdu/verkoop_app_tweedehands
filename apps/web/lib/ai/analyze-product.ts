@@ -77,6 +77,11 @@ export function buildAnalysisSchema(categorySlugs: readonly string[]) {
   search_keywords: z
     .array(z.string())
     .describe("3-6 zoektermen om vraagprijzen op Marktplaats/Tweakers te checken."),
+  photo_advice: z
+    .array(z.string())
+    .describe(
+      "0-4 concrete NL fototips voor een betere advertentie (bijv. 'maak een detailfoto van het typeplaatje', 'fotografeer de beschadiging linksonder'). Leeg als de set compleet is.",
+    ),
   });
 }
 

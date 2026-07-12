@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { productIdentifierColumn } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
 import { AnalyzeButton } from "./analyze-button";
 import { AddPhotosButton } from "./add-photos-button";
+import { PhotoTools, type ToolPhoto } from "./photo-tools";
 
 export default async function ProductDetailPage({
   params,
@@ -35,22 +35,22 @@ export default async function ProductDetailPage({
     .order("order_index");
 
   // Genereer signed URLs (1u geldig) voor alle photos in één batch-call.
-  let signedPhotos: Array<{
-    id: string;
-    url: string;
-    photo_type: string | null;
-  }> = [];
+  let signedPhotos: ToolPhoto[] = [];
   if (photos && photos.length > 0) {
     const paths = photos.map((p) => p.storage_path);
     const { data: signed } = await supabase.storage
       .from("product-photos")
       .createSignedUrls(paths, 3600);
     if (signed) {
-      signedPhotos = photos.map((p, i) => ({
-        id: p.id,
-        url: signed[i]?.signedUrl ?? "",
-        photo_type: p.photo_type,
-      }));
+      signedPhotos = photos
+        .map((p, i) => ({
+          id: p.id,
+          url: signed[i]?.signedUrl ?? "",
+          storage_path: p.storage_path,
+          order_index: p.order_index ?? i,
+          photo_type: p.photo_type,
+        }))
+        .filter((p) => p.url);
     }
   }
 
@@ -80,36 +80,26 @@ export default async function ProductDetailPage({
       </div>
 
       {signedPhotos.length > 0 ? (
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {signedPhotos.map((photo) =>
-            photo.url ? (
-              <a
-                key={photo.id}
-                href={photo.url}
-                target="_blank"
-                rel="noreferrer"
-                className="relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
-              >
-                <Image
-                  src={photo.url}
-                  alt=""
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-                {photo.photo_type && photo.photo_type !== "general" && (
-                  <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
-                    {photo.photo_type}
-                  </span>
-                )}
-              </a>
-            ) : null,
-          )}
-        </section>
+        <PhotoTools
+          productId={product.id}
+          userId={user!.id}
+          photos={signedPhotos}
+        />
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Geen foto&apos;s.
         </div>
+      )}
+
+      {Array.isArray(product.photo_advice) && product.photo_advice.length > 0 && (
+        <section className="rounded-xl border border-warning bg-warning-soft p-4">
+          <h2 className="section-title text-warning">Fototips van de AI</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+            {product.photo_advice.map((tip: string, i: number) => (
+              <li key={i}>{tip}</li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <EditProductForm product={product} />

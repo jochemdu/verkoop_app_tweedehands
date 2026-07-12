@@ -1,0 +1,429 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Eraser,
+  Pencil,
+  RotateCw,
+  Star,
+  Trash2,
+  X,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { filenameFor } from "@/lib/image";
+
+export type ToolPhoto = {
+  id: string;
+  url: string;
+  storage_path: string;
+  order_index: number;
+  photo_type: string | null;
+};
+
+// Foto-gereedschap (fase 28): herordenen, hoofdfoto kiezen, bewerken
+// (roteren/helderheid/contrast/vierkant) en achtergrond verwijderen.
+// Bewerkte versies worden als níeuwe foto opgeslagen — origineel blijft.
+export function PhotoTools({
+  productId,
+  userId,
+  photos,
+}: {
+  productId: string;
+  userId: string;
+  photos: ToolPhoto[];
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<ToolPhoto | null>(null);
+  const sorted = useMemo(
+    () => [...photos].sort((a, b) => a.order_index - b.order_index),
+    [photos],
+  );
+
+  async function persistOrder(next: ToolPhoto[]) {
+    setBusy(true);
+    try {
+      const supabase = createClient();
+      // RLS (own_photos) staat updates op eigen rijen toe.
+      const results = await Promise.all(
+        next.map((p, i) =>
+          supabase.from("photos").update({ order_index: i }).eq("id", p.id),
+        ),
+      );
+      const failed = results.find((r) => r.error);
+      if (failed?.error) toast.error(`Volgorde opslaan mislukt: ${failed.error.message}`);
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function makePrimary(photo: ToolPhoto) {
+    const next = [photo, ...sorted.filter((p) => p.id !== photo.id)];
+    void persistOrder(next);
+  }
+
+  function move(photo: ToolPhoto, dir: -1 | 1) {
+    const idx = sorted.findIndex((p) => p.id === photo.id);
+    const target = idx + dir;
+    if (target < 0 || target >= sorted.length) return;
+    const next = [...sorted];
+    [next[idx], next[target]] = [next[target]!, next[idx]!];
+    void persistOrder(next);
+  }
+
+  async function removePhoto(photo: ToolPhoto) {
+    if (!window.confirm("Deze foto definitief verwijderen?")) return;
+    setBusy(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("photos").delete().eq("id", photo.id);
+      if (error) {
+        toast.error(`Verwijderen mislukt: ${error.message}`);
+        return;
+      }
+      // Storage-object best-effort (legacy paden vallen buiten de user-map).
+      await supabase.storage.from("product-photos").remove([photo.storage_path]);
+      toast.success("Foto verwijderd");
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {sorted.map((photo, i) => (
+          <figure key={photo.id} className="group relative">
+            <a
+              href={photo.url}
+              target="_blank"
+              rel="noreferrer"
+              className="relative block aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+            >
+              <Image src={photo.url} alt="" fill unoptimized className="object-cover" />
+              {i === 0 && (
+                <span className="badge absolute left-1 top-1 bg-accent text-accent-foreground">
+                  <Star className="size-3" aria-hidden /> hoofdfoto
+                </span>
+              )}
+              {photo.photo_type && photo.photo_type !== "general" && (
+                <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">
+                  {photo.photo_type}
+                </span>
+              )}
+            </a>
+            <figcaption className="mt-1 flex items-center justify-center gap-1 opacity-70 transition-opacity group-hover:opacity-100">
+              {i !== 0 && (
+                <IconBtn label="Maak hoofdfoto" onClick={() => makePrimary(photo)} disabled={busy}>
+                  <Star className="size-3.5" aria-hidden />
+                </IconBtn>
+              )}
+              <IconBtn label="Naar links" onClick={() => move(photo, -1)} disabled={busy || i === 0}>
+                <ArrowLeft className="size-3.5" aria-hidden />
+              </IconBtn>
+              <IconBtn label="Naar rechts" onClick={() => move(photo, 1)} disabled={busy || i === sorted.length - 1}>
+                <ArrowRight className="size-3.5" aria-hidden />
+              </IconBtn>
+              <IconBtn label="Bewerken" onClick={() => setEditing(photo)} disabled={busy}>
+                <Pencil className="size-3.5" aria-hidden />
+              </IconBtn>
+              <IconBtn label="Verwijderen" onClick={() => removePhoto(photo)} disabled={busy} danger>
+                <Trash2 className="size-3.5" aria-hidden />
+              </IconBtn>
+            </figcaption>
+          </figure>
+        ))}
+      </section>
+
+      {editing && (
+        <PhotoEditor
+          photo={editing}
+          productId={productId}
+          userId={userId}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            router.refresh();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function IconBtn({
+  label,
+  onClick,
+  disabled,
+  danger,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-md border border-border bg-card p-1.5 transition-colors disabled:opacity-40 ${
+        danger ? "text-destructive hover:bg-destructive/10" : "hover:bg-muted"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ============================== Editor =============================== */
+
+function PhotoEditor({
+  photo,
+  productId,
+  userId,
+  onClose,
+  onSaved,
+}: {
+  photo: ToolPhoto;
+  productId: string;
+  userId: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [source, setSource] = useState<ImageBitmap | null>(null);
+  const [rotation, setRotation] = useState(0); // 0/90/180/270
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [square, setSquare] = useState(false);
+  const [removingBg, setRemovingBg] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Bron laden via fetch → geen canvas-tainting (Supabase stuurt CORS *).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(photo.url);
+        if (!res.ok) throw new Error(`foto laden gaf ${res.status}`);
+        const bitmap = await createImageBitmap(await res.blob());
+        if (!cancelled) setSource(bitmap);
+      } catch (err) {
+        if (!cancelled)
+          setLoadError(err instanceof Error ? err.message : "laden mislukt");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [photo.url]);
+
+  // Tekent de huidige bewerking; bij export op vol formaat, anders preview.
+  // Roteren gebeurt om het middelpunt; vierkant = center-crop op de kortste
+  // zijde (het canvas knipt zelf af wat buiten beeld valt).
+  function draw(target: HTMLCanvasElement, forExport = false) {
+    if (!source) return;
+    const rotated = rotation % 180 !== 0;
+    const srcW = source.width;
+    const srcH = source.height;
+    const contentW = rotated ? srcH : srcW;
+    const contentH = rotated ? srcW : srcH;
+    const cropW = square ? Math.min(contentW, contentH) : contentW;
+    const cropH = square ? Math.min(contentW, contentH) : contentH;
+    const maxDim = forExport ? 1920 : 520;
+    const scale = Math.min(1, maxDim / Math.max(cropW, cropH));
+    target.width = Math.round(cropW * scale);
+    target.height = Math.round(cropH * scale);
+    const ctx = target.getContext("2d");
+    if (!ctx) return;
+    ctx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+    ctx.save();
+    ctx.translate(target.width / 2, target.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.scale(scale, scale);
+    ctx.drawImage(source, -srcW / 2, -srcH / 2);
+    ctx.restore();
+    ctx.filter = "none";
+  }
+
+  // Preview bijwerken bij elke wijziging.
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (c && source) draw(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, rotation, brightness, contrast, square]);
+
+  async function removeBg() {
+    if (!source) return;
+    setRemovingBg(true);
+    const t = toast.loading(
+      "Achtergrond verwijderen… (eerste keer downloadt de browser een AI-model van ±40MB)",
+    );
+    try {
+      const { removeBackground } = await import("@imgly/background-removal");
+      // Huidige bron → PNG met transparantie → composite op wit.
+      const exportCanvas = document.createElement("canvas");
+      exportCanvas.width = source.width;
+      exportCanvas.height = source.height;
+      exportCanvas.getContext("2d")!.drawImage(source, 0, 0);
+      const blob: Blob = await new Promise((res, rej) =>
+        exportCanvas.toBlob((b) => (b ? res(b) : rej(new Error("toBlob faalde"))), "image/png"),
+      );
+      const cutout = await removeBackground(blob);
+      const cutoutBitmap = await createImageBitmap(cutout);
+      const composed = document.createElement("canvas");
+      composed.width = cutoutBitmap.width;
+      composed.height = cutoutBitmap.height;
+      const ctx = composed.getContext("2d")!;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, composed.width, composed.height);
+      ctx.drawImage(cutoutBitmap, 0, 0);
+      const newBitmap = await createImageBitmap(composed);
+      setSource(newBitmap);
+      toast.success("Achtergrond verwijderd — product staat op wit");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Achtergrond verwijderen mislukt");
+    } finally {
+      toast.dismiss(t);
+      setRemovingBg(false);
+    }
+  }
+
+  async function save() {
+    if (!source) return;
+    setSaving(true);
+    try {
+      const exportCanvas = document.createElement("canvas");
+      draw(exportCanvas, true);
+      const blob: Blob = await new Promise((res, rej) =>
+        exportCanvas.toBlob(
+          (b) => (b ? res(b) : rej(new Error("toBlob faalde"))),
+          "image/jpeg",
+          0.9,
+        ),
+      );
+      const supabase = createClient();
+      const path = `${userId}/inbox/${filenameFor(0, "bewerkt.jpg")}`;
+      const { error: upErr } = await supabase.storage
+        .from("product-photos")
+        .upload(path, blob, { contentType: "image/jpeg" });
+      if (upErr) throw new Error(upErr.message);
+      const res = await fetch(`/api/products/${productId}/photos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photo_paths: [path] }),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? "opslaan mislukt");
+      toast.success("Bewerkte foto toegevoegd (origineel blijft bewaard)");
+      onSaved();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Opslaan mislukt");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="card w-full max-w-xl space-y-4 p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Foto bewerken</h2>
+          <button type="button" onClick={onClose} className="btn btn-ghost p-1.5" aria-label="Sluiten">
+            <X className="size-4" aria-hidden />
+          </button>
+        </div>
+
+        <div className="flex justify-center rounded-lg border border-border bg-muted/40 p-3">
+          {loadError ? (
+            <p className="py-16 text-sm text-destructive">{loadError}</p>
+          ) : source ? (
+            <canvas ref={canvasRef} className="max-h-[420px] max-w-full rounded" />
+          ) : (
+            <p className="py-16 text-sm text-muted-foreground">Laden…</p>
+          )}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1 text-sm">
+            <span className="text-xs text-muted-foreground">Helderheid: {brightness}%</span>
+            <input
+              type="range"
+              min={50}
+              max={160}
+              value={brightness}
+              onChange={(e) => setBrightness(Number(e.target.value))}
+              className="w-full accent-accent"
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="text-xs text-muted-foreground">Contrast: {contrast}%</span>
+            <input
+              type="range"
+              min={50}
+              max={160}
+              value={contrast}
+              onChange={(e) => setContrast(Number(e.target.value))}
+              className="w-full accent-accent"
+            />
+          </label>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setRotation((r) => (r + 90) % 360)}
+            className="btn btn-outline"
+            disabled={!source}
+          >
+            <RotateCw className="size-4" aria-hidden /> Roteer 90°
+          </button>
+          <button
+            type="button"
+            onClick={() => setSquare((s) => !s)}
+            className={`btn ${square ? "btn-primary" : "btn-outline"}`}
+            disabled={!source}
+          >
+            Vierkant {square ? "aan" : "uit"}
+          </button>
+          <button
+            type="button"
+            onClick={removeBg}
+            disabled={!source || removingBg}
+            className="btn btn-outline"
+          >
+            <Eraser className="size-4" aria-hidden />
+            {removingBg ? "Bezig…" : "Achtergrond weg"}
+          </button>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="btn btn-outline">
+            Annuleren
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={!source || saving}
+            className="btn btn-accent"
+          >
+            {saving ? "Opslaan…" : "Opslaan als nieuwe foto"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
