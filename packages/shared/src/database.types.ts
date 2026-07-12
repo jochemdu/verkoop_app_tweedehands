@@ -546,6 +546,71 @@ export type Database = {
           },
         ]
       }
+      market_comparables: {
+        Row: {
+          brand: string | null
+          color: string | null
+          condition: string | null
+          created_at: string
+          currency: string
+          description_snippet: string | null
+          id: string
+          is_sold: boolean | null
+          model: string | null
+          notes: string | null
+          price: number | null
+          product_id: string
+          source: string
+          title: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          color?: string | null
+          condition?: string | null
+          created_at?: string
+          currency?: string
+          description_snippet?: string | null
+          id?: string
+          is_sold?: boolean | null
+          model?: string | null
+          notes?: string | null
+          price?: number | null
+          product_id: string
+          source: string
+          title: string
+          url?: string | null
+          user_id?: string
+        }
+        Update: {
+          brand?: string | null
+          color?: string | null
+          condition?: string | null
+          created_at?: string
+          currency?: string
+          description_snippet?: string | null
+          id?: string
+          is_sold?: boolean | null
+          model?: string | null
+          notes?: string | null
+          price?: number | null
+          product_id?: string
+          source?: string
+          title?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_comparables_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_trends: {
         Row: {
           category: string
@@ -834,6 +899,7 @@ export type Database = {
           missing_items: string[] | null
           new_price: number | null
           new_price_source_url: string | null
+          photo_advice: string[] | null
           provenance_notes: string | null
           recommended_price: number | null
           selling_tier: string | null
@@ -874,6 +940,7 @@ export type Database = {
           missing_items?: string[] | null
           new_price?: number | null
           new_price_source_url?: string | null
+          photo_advice?: string[] | null
           provenance_notes?: string | null
           recommended_price?: number | null
           selling_tier?: string | null
@@ -914,6 +981,7 @@ export type Database = {
           missing_items?: string[] | null
           new_price?: number | null
           new_price_source_url?: string | null
+          photo_advice?: string[] | null
           provenance_notes?: string | null
           recommended_price?: number | null
           selling_tier?: string | null

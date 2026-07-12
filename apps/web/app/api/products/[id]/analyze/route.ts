@@ -102,6 +102,7 @@ export async function POST(
         estimated_value_min: analysis.estimated_value_min,
         estimated_value_max: analysis.estimated_value_max,
         recommended_price: analysis.recommended_price,
+        photo_advice: analysis.photo_advice,
         identified_via: "web_ai_pipeline",
         analyzed_at: new Date().toISOString(),
         status: "pending_review",

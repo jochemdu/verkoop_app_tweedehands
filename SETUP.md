@@ -151,10 +151,22 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 }
 ```
 
-13 tools geladen: `ping`, `list_inventory`, `get_product_photos`,
+19 tools geladen: `ping`, `list_inventory`, `get_product_photos`,
 `search_products`, `suggest_bundle`, `create_listing`, `update_product`,
-`lookup_ean`, `fetch_tweakers_prices`, `mark_listing_published`,
-`create_taxatie_pdf`, `lookup_silver_hallmark`, `lookup_tin_mark`.
+`lookup_ean`, `lookup_book`, `fetch_tweakers_prices`,
+`mark_listing_published`, `create_taxatie_pdf`, `lookup_silver_hallmark`,
+`lookup_tin_mark`, `inventory_summary`, `create_product_stub`,
+`get_product_context`, `save_market_research`.
+
+**Marktonderzoek-workflow (fase 29)** — vraag Claude Desktop bijv.
+*"doe marktonderzoek voor sticker 0042 en schrijf een verkooptekst"*:
+1. `get_product_context` — product + specs + foto's + eerder onderzoek in één call
+2. Claude zoekt zelf op het web naar vergelijkbare (verkochte) advertenties
+   op Marktplaats/Vinted/eBay — prijs, staat, model, kleur, formuleringen
+3. `save_market_research` — alles gestructureerd opgeslagen in
+   `market_comparables`, optioneel met prijsadvies direct op het product
+4. `create_listing` — verkooptekst op basis van het onderzoek, klaar voor
+   review op `/listings`
 
 ## Volledige workflow (end-to-end)
 
