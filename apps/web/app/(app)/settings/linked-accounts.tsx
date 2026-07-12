@@ -29,9 +29,12 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
     setBusy(true);
     try {
       const supabase = createClient();
+      // Bare callback-URL (geen ?next=): Supabase valideert redirectTo tegen
+      // de Redirect URLs-allowlist en zou bij een query-string terugvallen op
+      // de Site URL. Na het koppelen landt de gebruiker op het dashboard.
       const { data, error } = await supabase.auth.linkIdentity({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/settings` },
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) {
         toast.error(
