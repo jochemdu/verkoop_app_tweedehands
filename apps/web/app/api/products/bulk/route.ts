@@ -63,7 +63,17 @@ export async function POST(req: NextRequest) {
       photo_type: "general" as const,
       user_id: user.id,
     }));
-    await supabase.from("photos").insert(photoRows);
+    const { error: photosErr } = await supabase.from("photos").insert(photoRows);
+    if (photosErr) {
+      // Rollback: product-rij weg + geüploade bestanden opruimen, zodat we geen
+      // fotoloos product en geen wees-objecten in storage achterlaten.
+      await supabase.from("products").delete().eq("id", product.id);
+      await supabase.storage.from("product-photos").remove(photo_paths);
+      return NextResponse.json(
+        { error: `Foto's koppelen mislukt: ${photosErr.message}` },
+        { status: 500 },
+      );
+    }
     return NextResponse.json({ created: 1, products: [product] });
   }
 
@@ -110,6 +120,8 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
     if (productErr || !product) {
+      // Geüploade foto opruimen: er komt geen product/photo-rij die ernaar wijst.
+      await supabase.storage.from("product-photos").remove([path]);
       errors.push({ photo_path: path, error: productErr?.message ?? "unknown" });
       continue;
     }
@@ -121,8 +133,10 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
     });
     if (photoErr) {
-      // Rollback product rij als photo insert faalt — voorkomt dangling product.
+      // Rollback product rij + storage-object als photo insert faalt — voorkomt
+      // dangling product én wees-object.
       await supabase.from("products").delete().eq("id", product.id);
+      await supabase.storage.from("product-photos").remove([path]);
       errors.push({ photo_path: path, error: photoErr.message });
       continue;
     }

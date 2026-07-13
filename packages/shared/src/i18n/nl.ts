@@ -772,6 +772,43 @@ export const nl = {
     lstEmptyPre: "Laat Claude Desktop een concept aanmaken via de ",
     lstEmptyPost: " MCP tool, en review hem op de web-app.",
   },
+  // Weergavenamen per categorie-slug. De categories-tabel bevat Nederlandse
+  // namen; dit vertaalt ze naar de UI-taal. Ontbrekende slugs vallen terug op de
+  // db-naam of de slug zelf (zie t.has-gebruik in de componenten).
+  categoryNames: {
+    ram_dimm: "RAM DIMM",
+    ram_sodimm: "RAM SODIMM (laptop)",
+    cpu: "Processor (CPU)",
+    gpu: "Videokaart (GPU)",
+    console: "Spelcomputer",
+    console_game: "Spelletje",
+    smartphone: "Smartphone",
+    laptop: "Laptop",
+    pokemon_card: "Pokémon-kaart",
+    antique_tin: "Antiek tin / tinnewerk",
+    antique_silver: "Antiek zilver",
+    antique_other: "Antiek (overig)",
+    electronics_other: "Elektronica (overig)",
+    clothing: "Kleding",
+    handbags: "Tassen",
+    shoes: "Schoenen",
+    accessories: "Accessoires",
+    jewelry: "Sieraden",
+    watches: "Horloges",
+    books: "Boeken",
+    toys: "Speelgoed",
+    board_games: "Bordspellen",
+    vinyl_music: "Vinyl & muziek",
+    kitchenware: "Keukengerei",
+    tools: "Gereedschap",
+    sports: "Sport & outdoor",
+    bicycles: "Fietsen",
+    furniture: "Meubels",
+    home_decor: "Woondecoratie",
+    garden: "Tuin",
+    unknown: "Onbekend",
+    other: "Overig",
+  },
 };
 
 // Bewust géén `as const`: de leaf-waarden zijn `string` zodat vertalingen

@@ -137,6 +137,7 @@ export function VirtualTable({
 }) {
   const router = useRouter();
   const t = useTranslations("inventoryTable");
+  const tc = useTranslations("categoryNames");
   const dateTag = localeTag(useLocale());
   const parentRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -295,7 +296,11 @@ export function VirtualTable({
                     <span className="italic text-muted-foreground">{t("noTitle")}</span>
                   )}
                 </span>
-                <span className="text-xs text-muted-foreground">{row.category_slug}</span>
+                <span className="text-xs text-muted-foreground">
+                  {row.category_slug && tc.has(row.category_slug)
+                    ? tc(row.category_slug)
+                    : row.category_slug}
+                </span>
                 <span>
                   <span className={`badge ${statusBadgeClass(row.status)}`}>
                     {row.status}

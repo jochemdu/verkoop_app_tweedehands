@@ -68,6 +68,10 @@ export async function GET(
         image_url: result.product.image_url,
         raw_response: result as never,
         cached_at: new Date().toISOString(),
+        // Verlengt de cache expliciet bij elke hit; de DB-default (NOW()+90d)
+        // geldt alleen bij INSERT, niet bij upsert-on-conflict, waardoor een rij
+        // anders permanent "verlopen" bleef en elke lookup de externe API raakte.
+        expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       });
     }
     return NextResponse.json(result);

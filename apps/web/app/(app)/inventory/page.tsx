@@ -87,6 +87,9 @@ export default async function InventoryPage({
   };
 
   const t = await getTranslations("inventory");
+  const tc = await getTranslations("categoryNames");
+  const categoryName = (slug: string, fallback: string) =>
+    tc.has(slug) ? tc(slug) : fallback;
 
   return (
     <main className="space-y-6">
@@ -145,7 +148,7 @@ export default async function InventoryPage({
             <option value="">{t("all")}</option>
             {(categories ?? []).map((c) => (
               <option key={c.slug} value={c.slug}>
-                {c.name}
+                {categoryName(c.slug, c.name)}
               </option>
             ))}
           </select>
