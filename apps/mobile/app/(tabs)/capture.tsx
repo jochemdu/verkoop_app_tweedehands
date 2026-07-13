@@ -22,8 +22,10 @@ import {
   useSpeechRecognitionEvent,
   type ExpoSpeechRecognitionResultEvent,
 } from "expo-speech-recognition";
+import NetInfo from "@react-native-community/netinfo";
 import { supabase } from "@/lib/supabase";
 import { createProductWithPhotos } from "@/lib/products/createProduct";
+import { enqueueCapture } from "@/lib/outbox/sync";
 import { stickerIdSchema } from "@verkoopassistent/shared";
 import { parseClothingLabel } from "@/lib/clothing-parser";
 
@@ -295,38 +297,68 @@ export default function CaptureScreen() {
           ? "ocr_separate"
           : "ocr_inline";
 
-      // Gedeelde helper (fase 32): upload + product + photos met rollback.
-      await createProductWithPhotos({
-        userId: user.id,
+      const photoInputs = photos.map((p) => ({
+        uri: p.uri,
+        captureMode: p.source,
+        photoType: p.source === "sticker_ocr" ? "sticker" : "general",
+        width: p.width ?? null,
+        height: p.height ?? null,
+        stickerVisible: p.source === "sticker_ocr",
+        detectedSticker: p.source === "sticker_ocr" ? stickerId : null,
+        ocrConfidence: p.source === "sticker_ocr" ? stickerConfidence : null,
+      }));
+      const captureData = {
         stickerId: stickerId || null,
-        stickerInputMethod: inputMethod,
+        stickerInputMethod: inputMethod as
+          | "ocr_inline"
+          | "ocr_separate"
+          | "manual",
         stickerConfidence,
         workingTitle: workingTitle || null,
         indexingNotes: notes || null,
         ean: ean || null,
-        photos: photos.map((p) => ({
-          uri: p.uri,
-          captureMode: p.source,
-          photoType: p.source === "sticker_ocr" ? "sticker" : "general",
-          width: p.width ?? null,
-          height: p.height ?? null,
-          stickerVisible: p.source === "sticker_ocr",
-          detectedSticker: p.source === "sticker_ocr" ? stickerId : null,
-          ocrConfidence: p.source === "sticker_ocr" ? stickerConfidence : null,
-        })),
-      });
+      };
 
-      if (stickerId) {
-        await supabase
-          .from("app_settings")
-          .update({ value: parseInt(stickerId, 10) })
-          .eq("key", "last_sticker_number");
+      // Offline? → in de wachtrij; sync gebeurt automatisch zodra er weer
+      // verbinding is (fase 33). Foto's worden persistent gemaakt.
+      let savedOnline = false;
+      const net = await NetInfo.fetch();
+      if (net.isConnected !== false) {
+        try {
+          // Gedeelde helper (fase 32): upload + product + photos met rollback.
+          await createProductWithPhotos({
+            userId: user.id,
+            ...captureData,
+            photos: photoInputs,
+          });
+          savedOnline = true;
+        } catch (onlineErr) {
+          // Verbinding halverwege weggevallen? De helper heeft z'n eigen
+          // uploads/rijen teruggerold, dus veilig om alsnog te queuen. Bij een
+          // andere fout (mét verbinding) laten we hem doorschieten.
+          const recheck = await NetInfo.fetch();
+          if (recheck.isConnected !== false) throw onlineErr;
+        }
       }
 
-      Alert.alert(
-        "Opgeslagen",
-        `${photos.length} foto('s) onder ${stickerId || "(zonder sticker)"}.`,
-      );
+      if (savedOnline) {
+        if (stickerId) {
+          await supabase
+            .from("app_settings")
+            .update({ value: parseInt(stickerId, 10) })
+            .eq("key", "last_sticker_number");
+        }
+        Alert.alert(
+          "Opgeslagen",
+          `${photos.length} foto('s) onder ${stickerId || "(zonder sticker)"}.`,
+        );
+      } else {
+        await enqueueCapture({ ...captureData, photos: photoInputs });
+        Alert.alert(
+          "Offline opgeslagen",
+          "Geen verbinding — deze indexering staat in de wachtrij en wordt automatisch gesynct zodra je weer online bent.",
+        );
+      }
 
       // Reset voor volgende sessie
       setPhotos([]);
