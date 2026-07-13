@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { productIdentifierColumn } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
@@ -55,6 +56,8 @@ export default async function ProductDetailPage({
     }
   }
 
+  const t = await getTranslations("product");
+
   return (
     <main className="space-y-6">
       <div className="flex items-start justify-between">
@@ -63,13 +66,13 @@ export default async function ProductDetailPage({
             href="/inventory"
             className="text-sm text-muted-foreground hover:underline"
           >
-            ← Inventaris
+            {t("back")}
           </Link>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">
-            {product.title ?? product.working_title ?? "(naamloos)"}
+            {product.title ?? product.working_title ?? t("unnamed")}
           </h1>
           <p className="font-mono text-sm text-muted-foreground">
-            {product.sticker_id ?? "geen sticker"} · {product.category_slug} ·{" "}
+            {product.sticker_id ?? t("noSticker")} · {product.category_slug} ·{" "}
             {product.status}
           </p>
         </div>
@@ -88,13 +91,13 @@ export default async function ProductDetailPage({
         />
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          Geen foto&apos;s.
+          {t("noPhotos")}
         </div>
       )}
 
       {Array.isArray(product.photo_advice) && product.photo_advice.length > 0 && (
         <section className="rounded-xl border border-warning bg-warning-soft p-4">
-          <h2 className="section-title text-warning">Fototips van de AI</h2>
+          <h2 className="section-title text-warning">{t("photoTipsTitle")}</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
             {product.photo_advice.map((tip: string, i: number) => (
               <li key={i}>{tip}</li>

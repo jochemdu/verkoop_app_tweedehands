@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   PRODUCT_CONDITIONS,
   PRODUCT_STATUSES,
@@ -22,6 +23,7 @@ type Product = {
 
 export function EditProductForm({ product }: { product: Product }) {
   const router = useRouter();
+  const t = useTranslations("product");
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     sticker_id: "",
@@ -53,40 +55,37 @@ export function EditProductForm({ product }: { product: Product }) {
     const json = await res.json();
     setSaving(false);
     if (!res.ok) {
-      toast.error(json.error ?? "Opslaan mislukt");
+      toast.error(json.error ?? t("saveFailed"));
       return;
     }
-    toast.success("Opgeslagen");
+    toast.success(t("saved"));
     router.refresh();
   }
 
   return (
     <form onSubmit={save} className="card space-y-4 p-5">
-      <h2 className="section-title">
-        Productgegevens
-      </h2>
+      <h2 className="section-title">{t("dataTitle")}</h2>
 
       {product.sticker_id === null && (
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Sticker koppelen</span>
+          <span className="font-medium">{t("linkSticker")}</span>
           <input
             value={form.sticker_id}
             onChange={(e) => setForm({ ...form, sticker_id: e.target.value })}
-            placeholder="4 cijfers, bijv. 0042"
+            placeholder={t("stickerPlaceholder")}
             inputMode="numeric"
             pattern="\d{4}"
             maxLength={4}
             className="input w-40 font-mono"
           />
           <span className="block text-xs text-muted-foreground">
-            Dit product heeft nog geen sticker (bijv. een stub uit de
-            kamer-scan). Plak fysiek een sticker en vul het nummer hier in.
+            {t("stickerHelp")}
           </span>
         </label>
       )}
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium">Definitieve titel</span>
+        <span className="font-medium">{t("finalTitle")}</span>
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -95,7 +94,7 @@ export function EditProductForm({ product }: { product: Product }) {
       </label>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium">Omschrijving</span>
+        <span className="font-medium">{t("description")}</span>
         <textarea
           rows={4}
           value={form.description}
@@ -106,7 +105,7 @@ export function EditProductForm({ product }: { product: Product }) {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Conditie</span>
+          <span className="font-medium">{t("condition")}</span>
           <select
             value={form.condition}
             onChange={(e) =>
@@ -123,7 +122,7 @@ export function EditProductForm({ product }: { product: Product }) {
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Status</span>
+          <span className="font-medium">{t("status")}</span>
           <select
             value={form.status}
             onChange={(e) =>
@@ -139,7 +138,7 @@ export function EditProductForm({ product }: { product: Product }) {
           </select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Adviesprijs €</span>
+          <span className="font-medium">{t("price")}</span>
           <input
             type="number"
             step="0.01"
@@ -158,7 +157,7 @@ export function EditProductForm({ product }: { product: Product }) {
           disabled={saving}
           className="btn btn-accent"
         >
-          {saving ? "Opslaan…" : "Opslaan"}
+          {saving ? t("saving") : t("save")}
         </button>
       </div>
     </form>

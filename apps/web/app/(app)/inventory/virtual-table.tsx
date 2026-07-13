@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { STICKER_PRESETS, type StickerPreset } from "@verkoopassistent/shared";
-import { PRESET_LABELS } from "../stickers/sticker-form";
+import { PRESET_LABEL_KEYS } from "../stickers/sticker-form";
 import { Sparkles } from "lucide-react";
 
 type Row = {
@@ -28,6 +29,7 @@ function PrintDialog({
   stickerIds: string[];
   onClose: () => void;
 }) {
+  const t = useTranslations("stickers");
   const [preset, setPreset] = useState<StickerPreset>("medium_38x21");
   const [withQr, setWithQr] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -42,11 +44,11 @@ function PrintDialog({
       });
       const json = (await res.json()) as { pdfUrl?: string; error?: string };
       if (!res.ok || !json.pdfUrl) {
-        toast.error(json.error ?? "Genereren mislukt");
+        toast.error(json.error ?? t("genFailed"));
         return;
       }
       window.open(json.pdfUrl, "_blank", "noopener");
-      toast.success(`${stickerIds.length} stickers gegenereerd`);
+      toast.success(t("stickersGenerated", { count: stickerIds.length }));
       onClose();
     } finally {
       setBusy(false);
@@ -57,14 +59,14 @@ function PrintDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="card w-full max-w-md space-y-4 p-6 shadow-sm">
         <h2 className="text-lg font-semibold">
-          Stickers printen ({stickerIds.length})
+          {t("printModalTitle", { count: stickerIds.length })}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
           {stickerIds.slice(0, 12).join(", ")}
           {stickerIds.length > 12 ? ` … +${stickerIds.length - 12}` : ""}
         </p>
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Formaat</span>
+          <span className="font-medium">{t("format")}</span>
           <select
             value={preset}
             onChange={(e) => setPreset(e.target.value as StickerPreset)}
@@ -72,7 +74,7 @@ function PrintDialog({
           >
             {STICKER_PRESETS.map((p) => (
               <option key={p} value={p}>
-                {PRESET_LABELS[p]}
+                {t(PRESET_LABEL_KEYS[p])}
               </option>
             ))}
           </select>
@@ -84,7 +86,7 @@ function PrintDialog({
             checked={withQr}
             onChange={(e) => setWithQr(e.target.checked)}
           />
-          <span>QR-code (scan opent de productpagina)</span>
+          <span>{t("qrScanLabel")}</span>
         </label>
         <div className="flex justify-end gap-2">
           <button
@@ -92,7 +94,7 @@ function PrintDialog({
             onClick={onClose}
             className="btn btn-outline"
           >
-            Annuleren
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -100,7 +102,7 @@ function PrintDialog({
             disabled={busy}
             className="btn btn-accent"
           >
-            {busy ? "Genereren…" : "Genereer PDF"}
+            {busy ? t("generating") : t("genPdf")}
           </button>
         </div>
       </div>
@@ -134,6 +136,7 @@ export function VirtualTable({
   enableActions?: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("inventoryTable");
   const parentRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [printOpen, setPrintOpen] = useState(false);
@@ -183,14 +186,16 @@ export function VirtualTable({
       // Sequentieel: elke analyse is een zware vision-call; parallel zou
       // rate limits raken en de progress-toast betekenisloos maken.
       for (const [i, id] of ids.entries()) {
-        toast.loading(`AI-analyse ${i + 1}/${ids.length}…`, { id: "bulk-analyze" });
+        toast.loading(t("analyzeProgress", { i: i + 1, total: ids.length }), {
+          id: "bulk-analyze",
+        });
         const res = await fetch(`/api/products/${id}/analyze`, { method: "POST" });
         if (res.ok) ok++;
         else failed++;
       }
       toast.dismiss("bulk-analyze");
-      if (failed === 0) toast.success(`${ok} producten geanalyseerd`);
-      else toast.warning(`${ok} gelukt, ${failed} mislukt (zie productpagina's)`);
+      if (failed === 0) toast.success(t("analyzed", { count: ok }));
+      else toast.warning(t("analyzePartial", { ok, failed }));
       setSelected(new Set());
       router.refresh();
     } finally {
@@ -201,11 +206,7 @@ export function VirtualTable({
 
   async function bulkDelete() {
     const count = selected.size;
-    if (
-      !window.confirm(
-        `${count} producten naar de prullenbak verplaatsen? (Herstellen kan via de Prullenbak-weergave.)`,
-      )
-    ) {
+    if (!window.confirm(t("deleteConfirm", { count }))) {
       return;
     }
     setDeleting(true);
@@ -217,10 +218,10 @@ export function VirtualTable({
       });
       const json = (await res.json()) as { soft_deleted?: number; error?: string };
       if (!res.ok) {
-        toast.error(json.error ?? "Verwijderen mislukt");
+        toast.error(json.error ?? t("deleteFailed"));
         return;
       }
-      toast.success(`${json.soft_deleted ?? count} producten naar prullenbak`);
+      toast.success(t("movedToTrash", { count: json.soft_deleted ?? count }));
       setSelected(new Set());
       router.refresh();
     } finally {
@@ -245,15 +246,15 @@ export function VirtualTable({
               className="size-4 align-middle"
               checked={allSelected}
               onChange={toggleAll}
-              aria-label="Selecteer alles"
+              aria-label={t("selectAll")}
             />
           </span>
-          <span>Sticker</span>
-          <span>Titel</span>
-          <span>Categorie</span>
-          <span>Status</span>
-          <span>Geïndexeerd</span>
-          <span className="text-right">Actie</span>
+          <span>{t("thSticker")}</span>
+          <span>{t("thTitle")}</span>
+          <span>{t("thCategory")}</span>
+          <span>{t("thStatus")}</span>
+          <span>{t("thIndexed")}</span>
+          <span className="text-right">{t("thAction")}</span>
         </div>
         <div
           style={{
@@ -284,13 +285,13 @@ export function VirtualTable({
                     className="size-4 align-middle"
                     checked={isSelected}
                     onChange={() => toggle(row.id)}
-                    aria-label={`Selecteer ${row.sticker_id ?? row.id}`}
+                    aria-label={t("selectRow", { id: row.sticker_id ?? row.id })}
                   />
                 </span>
                 <span className="font-mono text-xs">{row.sticker_id ?? "—"}</span>
                 <span className="truncate">
                   {row.title ?? row.working_title ?? (
-                    <span className="italic text-muted-foreground">(geen titel)</span>
+                    <span className="italic text-muted-foreground">{t("noTitle")}</span>
                   )}
                 </span>
                 <span className="text-xs text-muted-foreground">{row.category_slug}</span>
@@ -309,7 +310,7 @@ export function VirtualTable({
                     href={`/inventory/${row.sticker_id ?? row.id}`}
                     className="text-xs font-medium text-accent hover:underline"
                   >
-                    Bekijk
+                    {t("view")}
                   </Link>
                 </span>
               </div>
@@ -320,19 +321,19 @@ export function VirtualTable({
 
       {enableActions && selected.size > 0 && (
         <div className="card sticky bottom-4 z-20 flex items-center gap-3 bg-card/95 px-4 py-3 shadow-sm backdrop-blur">
-          <span className="text-sm font-medium">{selected.size} geselecteerd</span>
+          <span className="text-sm font-medium">
+            {t("selectedCount", { count: selected.size })}
+          </span>
           <button
             type="button"
             onClick={() => setPrintOpen(true)}
             disabled={selectedStickerIds.length === 0}
             className="btn btn-accent"
             title={
-              selectedStickerIds.length === 0
-                ? "Geen van de geselecteerde producten heeft een sticker-ID"
-                : undefined
+              selectedStickerIds.length === 0 ? t("noStickerTitle") : undefined
             }
           >
-            Print stickers ({selectedStickerIds.length})
+            {t("printStickers", { count: selectedStickerIds.length })}
           </button>
           <button
             type="button"
@@ -340,7 +341,7 @@ export function VirtualTable({
             disabled={analyzing}
             className="btn btn-outline"
           >
-            {analyzing ? "AI bezig…" : (<><Sparkles className="size-4" aria-hidden />Analyseer ({selected.size})</>)}
+            {analyzing ? t("aiBusy") : (<><Sparkles className="size-4" aria-hidden />{t("analyze", { count: selected.size })}</>)}
           </button>
           <button
             type="button"
@@ -348,12 +349,13 @@ export function VirtualTable({
             disabled={deleting}
             className="btn border border-destructive bg-transparent text-destructive hover:bg-destructive hover:text-destructive-foreground"
           >
-            {deleting ? "Verwijderen…" : "Verwijderen"}
+            {deleting ? t("deleting") : t("deleteBtn")}
           </button>
           {selectedStickerIds.length < selected.size && (
             <span className="text-xs text-muted-foreground">
-              {selected.size - selectedStickerIds.length} zonder sticker-ID worden
-              overgeslagen bij printen
+              {t("skippedNoSticker", {
+                count: selected.size - selectedStickerIds.length,
+              })}
             </span>
           )}
           <button
@@ -361,7 +363,7 @@ export function VirtualTable({
             onClick={() => setSelected(new Set())}
             className="btn btn-ghost ml-auto text-xs"
           >
-            Selectie wissen
+            {t("clearSelection")}
           </button>
         </div>
       )}

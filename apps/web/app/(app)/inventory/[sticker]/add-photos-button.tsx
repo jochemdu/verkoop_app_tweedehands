@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { resizeImage, filenameFor } from "@/lib/image";
 import { Camera } from "lucide-react";
@@ -15,6 +16,7 @@ export function AddPhotosButton({
   userId: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("product");
   const fileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
@@ -31,7 +33,7 @@ export function AddPhotosButton({
         const { error } = await supabase.storage
           .from("product-photos")
           .upload(path, resized, { contentType: "image/jpeg" });
-        if (error) throw new Error(`Upload mislukt: ${error.message}`);
+        if (error) throw new Error(t("uploadFailed", { msg: error.message }));
         uploadedPaths.push(path);
       }
       const res = await fetch(`/api/products/${productId}/photos`, {
@@ -40,11 +42,11 @@ export function AddPhotosButton({
         body: JSON.stringify({ photo_paths: uploadedPaths }),
       });
       const json = (await res.json()) as { added?: number; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Foto's koppelen mislukt");
-      toast.success(`${json.added} foto('s) toegevoegd`);
+      if (!res.ok) throw new Error(json.error ?? t("linkFailed"));
+      toast.success(t("added", { count: json.added ?? 0 }));
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Foto's toevoegen mislukt");
+      toast.error(err instanceof Error ? err.message : t("addFailed"));
       // Files zonder photo-rij niet laten slingeren in storage.
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("product-photos").remove(uploadedPaths);
@@ -71,7 +73,7 @@ export function AddPhotosButton({
         disabled={busy}
         className="btn btn-outline"
       >
-        {busy ? "Uploaden…" : (<><Camera className="size-4" aria-hidden />Foto&apos;s toevoegen</>)}
+        {busy ? t("uploading") : (<><Camera className="size-4" aria-hidden />{t("addPhotos")}</>)}
       </button>
     </>
   );
