@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   ArrowRight,
@@ -38,6 +39,7 @@ export function PhotoTools({
   photos: ToolPhoto[];
 }) {
   const router = useRouter();
+  const t = useTranslations("product");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<ToolPhoto | null>(null);
   const sorted = useMemo(
@@ -56,7 +58,7 @@ export function PhotoTools({
         ),
       );
       const failed = results.find((r) => r.error);
-      if (failed?.error) toast.error(`Volgorde opslaan mislukt: ${failed.error.message}`);
+      if (failed?.error) toast.error(t("orderFailed", { msg: failed.error.message }));
       router.refresh();
     } finally {
       setBusy(false);
@@ -78,18 +80,18 @@ export function PhotoTools({
   }
 
   async function removePhoto(photo: ToolPhoto) {
-    if (!window.confirm("Deze foto definitief verwijderen?")) return;
+    if (!window.confirm(t("removePhotoConfirm"))) return;
     setBusy(true);
     try {
       const supabase = createClient();
       const { error } = await supabase.from("photos").delete().eq("id", photo.id);
       if (error) {
-        toast.error(`Verwijderen mislukt: ${error.message}`);
+        toast.error(t("removeFailed", { msg: error.message }));
         return;
       }
       // Storage-object best-effort (legacy paden vallen buiten de user-map).
       await supabase.storage.from("product-photos").remove([photo.storage_path]);
-      toast.success("Foto verwijderd");
+      toast.success(t("photoRemoved"));
       router.refresh();
     } finally {
       setBusy(false);
@@ -110,7 +112,7 @@ export function PhotoTools({
               <Image src={photo.url} alt="" fill unoptimized className="object-cover" />
               {i === 0 && (
                 <span className="badge absolute left-1 top-1 bg-accent text-accent-foreground">
-                  <Star className="size-3" aria-hidden /> hoofdfoto
+                  <Star className="size-3" aria-hidden /> {t("primaryBadge")}
                 </span>
               )}
               {photo.photo_type && photo.photo_type !== "general" && (
@@ -121,20 +123,20 @@ export function PhotoTools({
             </a>
             <figcaption className="mt-1 flex items-center justify-center gap-1 opacity-70 transition-opacity group-hover:opacity-100">
               {i !== 0 && (
-                <IconBtn label="Maak hoofdfoto" onClick={() => makePrimary(photo)} disabled={busy}>
+                <IconBtn label={t("makePrimary")} onClick={() => makePrimary(photo)} disabled={busy}>
                   <Star className="size-3.5" aria-hidden />
                 </IconBtn>
               )}
-              <IconBtn label="Naar links" onClick={() => move(photo, -1)} disabled={busy || i === 0}>
+              <IconBtn label={t("moveLeft")} onClick={() => move(photo, -1)} disabled={busy || i === 0}>
                 <ArrowLeft className="size-3.5" aria-hidden />
               </IconBtn>
-              <IconBtn label="Naar rechts" onClick={() => move(photo, 1)} disabled={busy || i === sorted.length - 1}>
+              <IconBtn label={t("moveRight")} onClick={() => move(photo, 1)} disabled={busy || i === sorted.length - 1}>
                 <ArrowRight className="size-3.5" aria-hidden />
               </IconBtn>
-              <IconBtn label="Bewerken" onClick={() => setEditing(photo)} disabled={busy}>
+              <IconBtn label={t("edit")} onClick={() => setEditing(photo)} disabled={busy}>
                 <Pencil className="size-3.5" aria-hidden />
               </IconBtn>
-              <IconBtn label="Verwijderen" onClick={() => removePhoto(photo)} disabled={busy} danger>
+              <IconBtn label={t("delete")} onClick={() => removePhoto(photo)} disabled={busy} danger>
                 <Trash2 className="size-3.5" aria-hidden />
               </IconBtn>
             </figcaption>
@@ -202,6 +204,7 @@ function PhotoEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("product");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [source, setSource] = useState<ImageBitmap | null>(null);
   const [rotation, setRotation] = useState(0); // 0/90/180/270
@@ -218,17 +221,18 @@ function PhotoEditor({
     (async () => {
       try {
         const res = await fetch(photo.url);
-        if (!res.ok) throw new Error(`foto laden gaf ${res.status}`);
+        if (!res.ok) throw new Error(t("fetchError", { status: res.status }));
         const bitmap = await createImageBitmap(await res.blob());
         if (!cancelled) setSource(bitmap);
       } catch (err) {
         if (!cancelled)
-          setLoadError(err instanceof Error ? err.message : "laden mislukt");
+          setLoadError(err instanceof Error ? err.message : t("loadFailed"));
       }
     })();
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photo.url]);
 
   // Tekent de huidige bewerking; bij export op vol formaat, anders preview.
@@ -269,9 +273,7 @@ function PhotoEditor({
   async function removeBg() {
     if (!source) return;
     setRemovingBg(true);
-    const t = toast.loading(
-      "Achtergrond verwijderen… (eerste keer downloadt de browser een AI-model van ±40MB)",
-    );
+    const tid = toast.loading(t("bgLoading"));
     try {
       const { removeBackground } = await import("@imgly/background-removal");
       // Huidige bron → PNG met transparantie → composite op wit.
@@ -293,11 +295,11 @@ function PhotoEditor({
       ctx.drawImage(cutoutBitmap, 0, 0);
       const newBitmap = await createImageBitmap(composed);
       setSource(newBitmap);
-      toast.success("Achtergrond verwijderd — product staat op wit");
+      toast.success(t("bgDone"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Achtergrond verwijderen mislukt");
+      toast.error(err instanceof Error ? err.message : t("bgFailed"));
     } finally {
-      toast.dismiss(t);
+      toast.dismiss(tid);
       setRemovingBg(false);
     }
   }
@@ -327,11 +329,11 @@ function PhotoEditor({
         body: JSON.stringify({ photo_paths: [path] }),
       });
       const json = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(json.error ?? "opslaan mislukt");
-      toast.success("Bewerkte foto toegevoegd (origineel blijft bewaard)");
+      if (!res.ok) throw new Error(json.error ?? t("editorSaveFailed"));
+      toast.success(t("editorSaved"));
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Opslaan mislukt");
+      toast.error(err instanceof Error ? err.message : t("editorSaveFailed"));
     } finally {
       setSaving(false);
     }
@@ -341,8 +343,8 @@ function PhotoEditor({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="card w-full max-w-xl space-y-4 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Foto bewerken</h2>
-          <button type="button" onClick={onClose} className="btn btn-ghost p-1.5" aria-label="Sluiten">
+          <h2 className="text-lg font-semibold">{t("editTitle")}</h2>
+          <button type="button" onClick={onClose} className="btn btn-ghost p-1.5" aria-label={t("close")}>
             <X className="size-4" aria-hidden />
           </button>
         </div>
@@ -353,13 +355,13 @@ function PhotoEditor({
           ) : source ? (
             <canvas ref={canvasRef} className="max-h-[420px] max-w-full rounded" />
           ) : (
-            <p className="py-16 text-sm text-muted-foreground">Laden…</p>
+            <p className="py-16 text-sm text-muted-foreground">{t("loading")}</p>
           )}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="space-y-1 text-sm">
-            <span className="text-xs text-muted-foreground">Helderheid: {brightness}%</span>
+            <span className="text-xs text-muted-foreground">{t("brightness", { value: brightness })}</span>
             <input
               type="range"
               min={50}
@@ -370,7 +372,7 @@ function PhotoEditor({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-xs text-muted-foreground">Contrast: {contrast}%</span>
+            <span className="text-xs text-muted-foreground">{t("contrast", { value: contrast })}</span>
             <input
               type="range"
               min={50}
@@ -389,7 +391,7 @@ function PhotoEditor({
             className="btn btn-outline"
             disabled={!source}
           >
-            <RotateCw className="size-4" aria-hidden /> Roteer 90°
+            <RotateCw className="size-4" aria-hidden /> {t("rotate")}
           </button>
           <button
             type="button"
@@ -397,7 +399,7 @@ function PhotoEditor({
             className={`btn ${square ? "btn-primary" : "btn-outline"}`}
             disabled={!source}
           >
-            Vierkant {square ? "aan" : "uit"}
+            {square ? t("squareOn") : t("squareOff")}
           </button>
           <button
             type="button"
@@ -406,13 +408,13 @@ function PhotoEditor({
             className="btn btn-outline"
           >
             <Eraser className="size-4" aria-hidden />
-            {removingBg ? "Bezig…" : "Achtergrond weg"}
+            {removingBg ? t("bgBusy") : t("removeBg")}
           </button>
         </div>
 
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="btn btn-outline">
-            Annuleren
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -420,7 +422,7 @@ function PhotoEditor({
             disabled={!source || saving}
             className="btn btn-accent"
           >
-            {saving ? "Opslaan…" : "Opslaan als nieuwe foto"}
+            {saving ? t("editorSaving") : t("saveAsNew")}
           </button>
         </div>
       </div>
