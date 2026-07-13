@@ -155,7 +155,7 @@ Build duurt ~15-20 min op Expo servers. Install de .apk/.ipa op je toestel, dan:
 pnpm dev:mobile    # start Metro → scan QR met dev-client app (niet Expo Go)
 ```
 
-Features actief in dev build: 3 sticker-modi (OCR separate / OCR inline / manual), on-device ML Kit OCR, EAN barcode scanner, auto-increment sticker-ID.
+Features actief in dev build: 3 sticker-modi (OCR separate / OCR inline / manual), on-device ML Kit OCR, EAN barcode scanner, auto-increment sticker-ID, **camera-roll import** (fase 32, bestaande foto's → stub-producten) en een **offline-wachtrij** (fase 33: indexeren zonder internet; syncet automatisch zodra er weer verbinding is, met een badge op de Indexeren-tab).
 
 ## MCP Server installeren in Claude Desktop/Code
 
