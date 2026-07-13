@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { aiRateLimit } from "@/lib/rate-limit";
 import { runBlindSpotAudit } from "@/lib/ai/blind-spots";
 
 export const runtime = "nodejs";
@@ -11,6 +12,13 @@ export async function POST(_req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
+  const rl = aiRateLimit(user.id, "audit");
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Te veel zware verzoeken — wacht een paar minuten." },
+      { status: 429 },
+    );
+  }
 
   const [{ data: products }, { data: categories }, { data: profile }] =
     await Promise.all([

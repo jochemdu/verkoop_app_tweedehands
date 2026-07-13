@@ -55,6 +55,21 @@ export function isSafeInboxPath(path: string, userId?: string): boolean {
   return true;
 }
 
+/**
+ * Maakt een zoekterm veilig voor gebruik in een PostgREST `.or(...)` filter
+ * met `ilike`. PostgREST splitst een `.or()`-string op komma's en gebruikt
+ * `()` voor groepering, dus die tekens moeten eruit; `%` en `_` zijn
+ * ilike-wildcards en `\` de escape — die neutraliseren we zodat de gebruiker
+ * geen extra condities kan injecteren of de query kan breken.
+ */
+export function sanitizeIlikeQuery(input: string): string {
+  return String(input)
+    .slice(0, 100)
+    .replace(/[\\%_,()*]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function sanitizeAll<T extends Record<string, unknown>>(
   row: T,
   fields: (keyof T)[],

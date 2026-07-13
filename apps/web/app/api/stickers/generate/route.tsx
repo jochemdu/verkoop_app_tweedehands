@@ -7,6 +7,7 @@ import {
   type StickerPreset,
 } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
+import { aiRateLimit } from "@/lib/rate-limit";
 import { StickerSheet, type StickerLabel } from "@/lib/pdf/sticker-sheet";
 
 export const runtime = "nodejs";
@@ -75,6 +76,13 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
+  }
+  const rl = aiRateLimit(user.id, "stickers");
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Te veel zware verzoeken — wacht een paar minuten." },
+      { status: 429 },
+    );
   }
 
   const body = await req.json();

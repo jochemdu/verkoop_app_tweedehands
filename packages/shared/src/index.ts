@@ -49,6 +49,7 @@ export {
 export {
   sanitizeForLLM,
   isSafeInboxPath,
+  sanitizeIlikeQuery,
   sanitizeAll,
 } from "./security";
 

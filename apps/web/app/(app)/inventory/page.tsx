@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { PRODUCT_STATUSES, type ProductStatus } from "@verkoopassistent/shared";
+import {
+  PRODUCT_STATUSES,
+  sanitizeIlikeQuery,
+  type ProductStatus,
+} from "@verkoopassistent/shared";
 import { AddProductButton } from "./add-product-button";
 import { VirtualTable } from "./virtual-table";
 
@@ -43,9 +47,10 @@ export default async function InventoryPage({
     query = query.is("deleted_at", null);
   }
 
-  if (params.q) {
+  const q = params.q ? sanitizeIlikeQuery(params.q) : "";
+  if (q) {
     query = query.or(
-      `working_title.ilike.%${params.q}%,title.ilike.%${params.q}%,indexing_notes.ilike.%${params.q}%`,
+      `working_title.ilike.%${q}%,title.ilike.%${q}%,indexing_notes.ilike.%${q}%`,
     );
   }
   if (params.status && PRODUCT_STATUSES.includes(params.status as ProductStatus)) {

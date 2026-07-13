@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { productIdentifierColumn, signedPhotoUrls } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
+import { aiRateLimit } from "@/lib/rate-limit";
 import { analyzeProductPhotos } from "@/lib/ai/analyze-product";
 
 export const runtime = "nodejs";
@@ -18,6 +19,13 @@ export async function POST(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
+  const rl = aiRateLimit(user.id, "analyze");
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Te veel zware verzoeken — wacht een paar minuten." },
+      { status: 429 },
+    );
+  }
 
   const { id } = await params;
   const { data: product } = await supabase
