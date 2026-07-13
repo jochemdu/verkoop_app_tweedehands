@@ -26,9 +26,9 @@ import NetInfo from "@react-native-community/netinfo";
 import { supabase } from "@/lib/supabase";
 import { createProductWithPhotos } from "@/lib/products/createProduct";
 import { enqueueCapture } from "@/lib/outbox/sync";
-import { stickerIdSchema } from "@verkoopassistent/shared";
+import { stickerIdSchema, localeTag } from "@verkoopassistent/shared";
 import { parseClothingLabel } from "@/lib/clothing-parser";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation, useLocale } from "@/lib/i18n";
 
 type CapturedPhoto = {
   uri: string;
@@ -41,6 +41,7 @@ type Mode = "ocr_separate" | "ocr_inline" | "manual";
 
 export default function CaptureScreen() {
   const t = useTranslation("mobile");
+  const locale = useLocale();
   const [permission, requestPermission] = useCameraPermissions();
 
   const [mode, setMode] = useState<Mode>("ocr_separate");
@@ -83,7 +84,7 @@ export default function CaptureScreen() {
         return;
       }
       ExpoSpeechRecognitionModule.start({
-        lang: "nl-NL",
+        lang: localeTag(locale),
         interimResults: false,
         continuous: false,
       });

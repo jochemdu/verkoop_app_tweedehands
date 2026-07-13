@@ -1,4 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
+import { localeTag } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { StickerForm } from "./sticker-form";
 
@@ -31,6 +32,7 @@ export default async function StickersPage() {
   const suggestedStart = Math.max(lastUsed + 1, 1);
 
   const t = await getTranslations("stickers");
+  const dateTag = localeTag(await getLocale());
 
   return (
     <main className="space-y-8">
@@ -67,7 +69,7 @@ export default async function StickersPage() {
                 </span>
                 <span className="text-muted-foreground">
                   {s.created_at
-                    ? new Date(s.created_at).toLocaleString("nl-NL", {
+                    ? new Date(s.created_at).toLocaleString(dateTag, {
                         dateStyle: "short",
                         timeStyle: "short",
                       })

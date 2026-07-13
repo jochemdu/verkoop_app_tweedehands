@@ -104,7 +104,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
     const json = await res.json();
     setBusy(false);
     if (!res.ok) {
-      toast.error(json.error ?? "Bulk aanmaken mislukt");
+      toast.error(json.error ?? t("bulkFailed"));
       return;
     }
 

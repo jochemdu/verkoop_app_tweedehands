@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { BlindSpotSection } from "./blind-spot-section";
 import { RoomAuditSection } from "./room-audit-section";
-import { CATEGORY_SLUGS } from "@verkoopassistent/shared";
+import { CATEGORY_SLUGS, localeTag } from "@verkoopassistent/shared";
 import { getCurrentMonth, getMonthLabel, type SeasonalPrompt } from "@/lib/seasonal";
 
 // Verwachte typische inventaris-samenstelling. Laag getal = "minstens X items in
@@ -76,7 +76,7 @@ export default async function SuggestionsPage() {
   });
 
   const month = getCurrentMonth();
-  const monthLabel = getMonthLabel(await getLocaleTag());
+  const monthLabel = getMonthLabel(localeTag(await getLocale()));
   const seasonal = t.raw(`season.m${month}`) as SeasonalPrompt[] | undefined;
 
   return (
@@ -169,16 +169,4 @@ export default async function SuggestionsPage() {
       </div>
     </main>
   );
-}
-
-async function getLocaleTag(): Promise<string> {
-  const { getLocale } = await import("next-intl/server");
-  const locale = await getLocale();
-  const TAGS: Record<string, string> = {
-    nl: "nl-NL",
-    en: "en-GB",
-    de: "de-DE",
-    fr: "fr-FR",
-  };
-  return TAGS[locale] ?? "nl-NL";
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Link2, Mail, Unlink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -12,18 +13,16 @@ export type Identity = {
   email: string | null;
 };
 
-const PROVIDER_LABEL: Record<string, string> = {
-  email: "E-mail (magic link)",
-  google: "Google",
-};
-
 // Fase 30: meerdere login-methodes aan één account koppelen. Google-koppeling
 // gebruikt Supabase manual identity linking, zodat je met je Gmail in
 // hetzelfde account (en dus dezelfde inventaris) landt als je magic-link-mail.
 export function LinkedAccounts({ identities }: { identities: Identity[] }) {
   const router = useRouter();
+  const t = useTranslations("settings");
   const [busy, setBusy] = useState(false);
   const hasGoogle = identities.some((i) => i.provider === "google");
+  const providerLabel = (provider: string) =>
+    provider === "google" ? "Google" : t("providerEmail");
 
   async function linkGoogle() {
     setBusy(true);
@@ -39,8 +38,8 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
       if (error) {
         toast.error(
           error.message.includes("Manual linking")
-            ? "Manual linking staat uit in Supabase (Authentication → Settings)."
-            : `Koppelen mislukt: ${error.message}`,
+            ? t("manualLinkingOff")
+            : t("linkFailed", { msg: error.message }),
         );
         return;
       }
@@ -52,10 +51,10 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
 
   async function unlink(identity: Identity) {
     if (identities.length <= 1) {
-      toast.error("Je kunt je laatste login-methode niet ontkoppelen.");
+      toast.error(t("cannotUnlinkLast"));
       return;
     }
-    if (!window.confirm(`${PROVIDER_LABEL[identity.provider] ?? identity.provider} ontkoppelen?`))
+    if (!window.confirm(t("confirmUnlink", { provider: providerLabel(identity.provider) })))
       return;
     setBusy(true);
     try {
@@ -66,15 +65,15 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
         (i) => i.identity_id === identity.identity_id,
       );
       if (!target) {
-        toast.error("Identity niet gevonden — herlaad de pagina.");
+        toast.error(t("identityNotFound"));
         return;
       }
       const { error } = await supabase.auth.unlinkIdentity(target);
       if (error) {
-        toast.error(`Ontkoppelen mislukt: ${error.message}`);
+        toast.error(t("unlinkFailed", { msg: error.message }));
         return;
       }
-      toast.success("Login-methode ontkoppeld");
+      toast.success(t("unlinked"));
       router.refresh();
     } finally {
       setBusy(false);
@@ -84,11 +83,8 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
   return (
     <section className="card space-y-4 p-6">
       <div>
-        <h2 className="section-title">Login-methodes</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Koppel meerdere manieren om in te loggen aan dit ene account — handig
-          als je zowel je e-mail als je Google-account wilt gebruiken.
-        </p>
+        <h2 className="section-title">{t("loginMethods")}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">{t("linkedHelp")}</p>
       </div>
 
       <ul className="divide-y divide-border">
@@ -102,9 +98,7 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
               )}
             </span>
             <span className="flex-1 truncate">
-              <span className="font-medium">
-                {PROVIDER_LABEL[i.provider] ?? i.provider}
-              </span>
+              <span className="font-medium">{providerLabel(i.provider)}</span>
               {i.email && (
                 <span className="block text-xs text-muted-foreground">{i.email}</span>
               )}
@@ -114,7 +108,7 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
                 type="button"
                 onClick={() => unlink(i)}
                 disabled={busy}
-                title="Ontkoppelen"
+                title={t("unlink")}
                 className="btn btn-ghost p-1.5 text-muted-foreground hover:text-destructive"
               >
                 <Unlink className="size-4" aria-hidden />
@@ -132,7 +126,7 @@ export function LinkedAccounts({ identities }: { identities: Identity[] }) {
           className="btn btn-outline"
         >
           <Link2 className="size-4" aria-hidden />
-          {busy ? "Bezig…" : "Koppel Google-account"}
+          {busy ? t("busy") : t("linkGoogle")}
         </button>
       )}
     </section>
