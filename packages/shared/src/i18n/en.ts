@@ -1,0 +1,62 @@
+import type { Messages } from "./nl";
+
+export const en: Messages = {
+  langName: {
+    nl: "Dutch",
+    en: "English",
+    de: "German",
+    fr: "French",
+  },
+  nav: {
+    dashboard: "Dashboard",
+    inventory: "Inventory",
+    listings: "Listings",
+    suggestions: "Suggestions",
+    taxatie: "Appraisal",
+    upload: "Bulk upload",
+    stickers: "Stickers",
+    settings: "Settings",
+    logout: "Log out",
+  },
+  common: {
+    save: "Save",
+    saving: "Saving…",
+    cancel: "Cancel",
+    delete: "Delete",
+    back: "Back",
+    loading: "Loading…",
+    search: "Search",
+    filter: "Filter",
+    reset: "Reset",
+    saved: "Saved",
+  },
+  login: {
+    title: "VerkoopAssistent",
+    subtitle: "Log in with a magic link in your inbox.",
+    email: "Email address",
+    emailPlaceholder: "you@example.com",
+    sendMagicLink: "Send login email",
+    sending: "Sending…",
+    or: "or",
+    google: "Log in with Google",
+    checkInbox:
+      "Check your inbox: click the magic link, or enter the 6-digit code from the email below.",
+    code: "Login code",
+    loginWithCode: "Log in with code",
+    checking: "Checking…",
+    otherEmail: "Different email / resend",
+  },
+  settings: {
+    title: "Settings",
+    displayName: "Display name",
+    displayNamePlaceholder: "E.g. Jochem",
+    displayLanguage: "Display language (app)",
+    displayLanguageHelp:
+      "The language of the app interface. Applied immediately after saving.",
+    listingLanguage: "Listing language (AI)",
+    listingLanguageHelp: "The AI writes titles and sales copy in this language.",
+    loginMethods: "Login methods",
+    loginMethodsHelp: "Link multiple ways to log in to this single account.",
+    linkGoogle: "Link Google account",
+  },
+};

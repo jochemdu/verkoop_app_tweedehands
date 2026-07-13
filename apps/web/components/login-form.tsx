@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { loginSchema, type LoginInput } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const router = useRouter();
+  const t = useTranslations("login");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -81,12 +83,11 @@ export function LoginForm() {
     return (
       <div className="space-y-4">
         <div className="rounded-lg border border-dashed border-accent bg-accent-soft p-4 text-sm">
-          Check je inbox: klik de magic link, <em>of</em> vul hieronder de
-          6-cijferige code uit de mail in.
+          {t("checkInbox")}
         </div>
         <form onSubmit={verifyCode} className="space-y-3">
           <label className="block space-y-1 text-sm">
-            <span className="font-medium">Inlogcode</span>
+            <span className="font-medium">{t("code")}</span>
             <input
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
@@ -103,7 +104,7 @@ export function LoginForm() {
             disabled={verifying || code.length < 6}
             className="btn btn-accent w-full"
           >
-            {verifying ? "Controleren…" : "Log in met code"}
+            {verifying ? t("checking") : t("loginWithCode")}
           </button>
           <button
             type="button"
@@ -113,7 +114,7 @@ export function LoginForm() {
             }}
             className="btn btn-ghost w-full"
           >
-            Ander e-mailadres / opnieuw versturen
+            {t("otherEmail")}
           </button>
         </form>
       </div>
@@ -124,13 +125,13 @@ export function LoginForm() {
     <div className="space-y-4">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">E-mailadres</span>
+          <span className="font-medium">{t("email")}</span>
           <input
             type="email"
             autoComplete="email"
             autoFocus
             className="input"
-            placeholder="jij@voorbeeld.nl"
+            placeholder={t("emailPlaceholder")}
             {...register("email")}
           />
           {errors.email && (
@@ -142,13 +143,13 @@ export function LoginForm() {
           disabled={isSubmitting}
           className="btn btn-accent w-full"
         >
-          {isSubmitting ? "Versturen…" : "Stuur inlogmail"}
+          {isSubmitting ? t("sending") : t("sendMagicLink")}
         </button>
       </form>
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
-        of
+        {t("or")}
         <span className="h-px flex-1 bg-border" />
       </div>
 
@@ -158,7 +159,7 @@ export function LoginForm() {
         className="btn btn-outline w-full"
       >
         <GoogleIcon className="size-4" />
-        Log in met Google
+        {t("google")}
       </button>
     </div>
   );

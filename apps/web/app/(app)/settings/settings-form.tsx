@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
@@ -25,6 +27,9 @@ export function SettingsForm({
   userId: string;
   profile: Profile;
 }) {
+  const router = useRouter();
+  const t = useTranslations("settings");
+  const tc = useTranslations("common");
   const [form, setForm] = useState<Profile>(profile);
   const [busy, setBusy] = useState(false);
 
@@ -35,8 +40,15 @@ export function SettingsForm({
       const { error } = await supabase
         .from("profiles")
         .upsert({ id: userId, ...form });
-      if (error) toast.error(`Opslaan mislukt: ${error.message}`);
-      else toast.success("Instellingen opgeslagen");
+      if (error) {
+        toast.error(`Opslaan mislukt: ${error.message}`);
+        return;
+      }
+      // Weergavetaal meteen toepassen: cookie zetten (next-intl leest die)
+      // en de server-componenten opnieuw renderen.
+      document.cookie = `locale=${form.display_language}; path=/; max-age=31536000; samesite=lax`;
+      toast.success(tc("saved"));
+      router.refresh();
     } finally {
       setBusy(false);
     }
@@ -45,17 +57,17 @@ export function SettingsForm({
   return (
     <div className="card space-y-4 p-6">
       <label className="block space-y-1 text-sm">
-        <span className="font-medium">Weergavenaam</span>
+        <span className="font-medium">{t("displayName")}</span>
         <input
           value={form.display_name}
           onChange={(e) => setForm({ ...form, display_name: e.target.value })}
-          placeholder="Bijv. Jochem"
+          placeholder={t("displayNamePlaceholder")}
           className="input"
         />
       </label>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Weergavetaal (app)</span>
+          <span className="font-medium">{t("displayLanguage")}</span>
           <select
             value={form.display_language}
             onChange={(e) => setForm({ ...form, display_language: e.target.value })}
@@ -67,13 +79,10 @@ export function SettingsForm({
               </option>
             ))}
           </select>
-          <span className="block text-xs text-muted-foreground">
-            UI-vertaling volgt in een latere fase; deze voorkeur wordt alvast
-            opgeslagen.
-          </span>
+          <span className="block text-xs text-muted-foreground">{t("displayLanguageHelp")}</span>
         </label>
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Advertentietaal (AI)</span>
+          <span className="font-medium">{t("listingLanguage")}</span>
           <select
             value={form.listing_language}
             onChange={(e) => setForm({ ...form, listing_language: e.target.value })}
@@ -85,9 +94,7 @@ export function SettingsForm({
               </option>
             ))}
           </select>
-          <span className="block text-xs text-muted-foreground">
-            De AI schrijft titels en verkoopteksten in deze taal.
-          </span>
+          <span className="block text-xs text-muted-foreground">{t("listingLanguageHelp")}</span>
         </label>
       </div>
       <button
@@ -96,7 +103,7 @@ export function SettingsForm({
         disabled={busy}
         className="btn btn-accent"
       >
-        {busy ? "Opslaan…" : "Opslaan"}
+        {busy ? tc("saving") : tc("save")}
       </button>
     </div>
   );

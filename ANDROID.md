@@ -58,18 +58,20 @@ Twee routes, van licht naar netjes:
 Vergeet niet: elke vriend logt in met z'n eigen magic-link account — de app
 is multi-tenant (fase 21), dus iedereen ziet alleen z'n eigen spullen.
 
-## UI-vertaling (i18n) — plan voor een volgende fase
+## UI-vertaling (i18n)
 
 De advertentietaal is al instelbaar (fase 23, `/settings`). De **weergavetaal**
-van de app zelf vergt string-extractie over alle schermen:
+van de app zelf is opgezet in fase 35:
 
-| Stap | Wat | Tooling |
+| Stap | Wat | Status |
 |---|---|---|
-| 1 | Message-catalogs in `packages/shared/src/i18n/{nl,en,de,fr}.ts` | — |
-| 2 | Web: provider + `useTranslations()` in alle componenten | `next-intl` |
-| 3 | Mobile: zelfde catalogs, device-taal als default | `i18next` + `expo-localization` |
-| 4 | `profiles.display_language` (bestaat al) stuurt de gekozen taal | — |
-| 5 | AI-vertaling van de NL-catalog naar en/de/fr, daarna review | eenmalig |
+| 1 | Message-catalogs in `packages/shared/src/i18n/{nl,en,de,fr}.ts` (nl = bron) | ✅ opgezet |
+| 2 | Web: `next-intl` provider + `useTranslations()` | ✅ bedraad; nav/login/settings om |
+| 3 | Locale uit `profiles.display_language` → `locale`-cookie (geen URL-routing) | ✅ |
+| 4 | Resterende ~35 schermen: strings naar de catalog + `t()` | ⏳ mechanische follow-up |
+| 5 | Mobile: zelfde catalogs via `i18next` + `expo-localization` | ⏳ later |
 
-Omvang: mechanisch maar breed (~40 componenten/schermen). Advies: in één
-gefocuste sessie doen ("vertaal de UI") zodat de extractie consistent blijft.
+**Patroon voor een nieuw scherm:** voeg de strings toe aan de `nl`-catalog (+
+en/de/fr), en gebruik in het component `useTranslations("<namespace>")` (client)
+of `getTranslations` (server). Wisselen van taal gebeurt via `/settings` →
+Weergavetaal (zet de `locale`-cookie en herrendert direct).

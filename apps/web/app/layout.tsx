@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Outfit, Work_Sans, Fira_Code } from "next/font/google";
 import { Toaster } from "sonner";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -12,17 +14,20 @@ export const metadata: Metadata = {
   description: "Persoonlijke inventaris- en verkoopmanager",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
   return (
     <html
-      lang="nl"
+      lang={locale}
       className={`${outfit.variable} ${workSans.variable} ${firaCode.variable}`}
     >
       <body>
-        {children}
-        <Toaster position="top-center" richColors />
+        <NextIntlClientProvider>
+          {children}
+          <Toaster position="top-center" richColors />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
