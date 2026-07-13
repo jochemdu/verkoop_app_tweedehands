@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "@/lib/i18n";
 
 type ListingRow = {
   id: string;
@@ -27,6 +28,7 @@ type ListingRow = {
 };
 
 export default function ListingsScreen() {
+  const t = useTranslation("mobile");
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -68,11 +70,11 @@ export default function ListingsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>Geen advertenties</Text>
+              <Text style={styles.emptyTitle}>{t("lstEmptyTitle")}</Text>
               <Text style={styles.emptyText}>
-                Laat Claude Desktop een concept aanmaken via de{" "}
-                <Text style={{ fontFamily: "Courier" }}>create_listing</Text>{" "}
-                MCP tool, en review hem op de web-app.
+                {t("lstEmptyPre")}
+                <Text style={{ fontFamily: "Courier" }}>create_listing</Text>
+                {t("lstEmptyPost")}
               </Text>
             </View>
           }

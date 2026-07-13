@@ -11,10 +11,12 @@ import {
 import * as Linking from "expo-linking";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "@/lib/i18n";
 
 const REDIRECT_URL = Linking.createURL("/auth/callback");
 
 export default function LoginScreen() {
+  const t = useTranslation("mobile");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -33,7 +35,7 @@ export default function LoginScreen() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           type: type as any,
         });
-        if (error) Alert.alert("Login mislukt", error.message);
+        if (error) Alert.alert(t("loginFailed"), error.message);
       }
     };
 
@@ -52,7 +54,7 @@ export default function LoginScreen() {
     });
     setSending(false);
     if (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert(t("error"), error.message);
       return;
     }
     setSent(true);
@@ -61,14 +63,12 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>VerkoopAssistent</Text>
-        <Text style={styles.subtitle}>
-          Log in met een magic link in je inbox.
-        </Text>
+        <Text style={styles.title}>{t("appName")}</Text>
+        <Text style={styles.subtitle}>{t("loginSubtitle")}</Text>
 
         {sent ? (
           <View style={styles.sentBox}>
-            <Text>Check je inbox. Tik op de link om in te loggen.</Text>
+            <Text>{t("loginCheckInbox")}</Text>
           </View>
         ) : (
           <>
@@ -78,7 +78,7 @@ export default function LoginScreen() {
               autoComplete="email"
               autoCorrect={false}
               keyboardType="email-address"
-              placeholder="jij@voorbeeld.nl"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChangeText={setEmail}
               editable={!sending}
@@ -91,7 +91,7 @@ export default function LoginScreen() {
               {sending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>Stuur magic link</Text>
+                <Text style={styles.buttonText}>{t("sendMagicLink")}</Text>
               )}
             </Pressable>
           </>

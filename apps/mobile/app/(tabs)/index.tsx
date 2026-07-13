@@ -10,9 +10,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/auth/useSession";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Dashboard() {
   const { session, signOut } = useSession();
+  const t = useTranslation("mobile");
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [indexedCount, setIndexedCount] = useState<number | null>(null);
 
@@ -34,24 +36,24 @@ export default function Dashboard() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
-          <Text style={styles.heading}>Dashboard</Text>
+          <Text style={styles.heading}>{t("dashboard")}</Text>
           <Text style={styles.email}>{session?.user.email}</Text>
         </View>
 
         <View style={styles.statsRow}>
-          <Stat label="Totaal" value={totalCount} />
-          <Stat label="Klaar voor analyse" value={indexedCount} />
+          <Stat label={t("total")} value={totalCount} />
+          <Stat label={t("readyForAnalysis")} value={indexedCount} />
         </View>
 
         <Pressable
           style={styles.primaryAction}
           onPress={() => router.push("/(tabs)/capture")}
         >
-          <Text style={styles.primaryActionText}>+ Nieuw product indexeren</Text>
+          <Text style={styles.primaryActionText}>{t("newProduct")}</Text>
         </Pressable>
 
         <Pressable style={styles.outlineAction} onPress={signOut}>
-          <Text style={styles.outlineActionText}>Uitloggen</Text>
+          <Text style={styles.outlineActionText}>{t("logout")}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

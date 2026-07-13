@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { useTranslation } from "@/lib/i18n";
 
 type ProductRow = {
   id: string;
@@ -22,6 +23,7 @@ type ProductRow = {
 };
 
 export default function InventoryScreen() {
+  const t = useTranslation("mobile");
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,10 +69,8 @@ export default function InventoryScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>Nog niks geïndexeerd</Text>
-              <Text style={styles.emptyText}>
-                Ga naar de Indexeren-tab om je eerste product vast te leggen.
-              </Text>
+              <Text style={styles.emptyTitle}>{t("invEmptyTitle")}</Text>
+              <Text style={styles.emptyText}>{t("invEmptyText")}</Text>
             </View>
           }
           contentContainerStyle={styles.list}
@@ -81,7 +81,7 @@ export default function InventoryScreen() {
               </Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.title}>
-                  {item.title ?? item.working_title ?? "(geen titel)"}
+                  {item.title ?? item.working_title ?? t("noTitle")}
                 </Text>
                 <Text style={styles.meta}>
                   {item.category_slug} · {item.status}
