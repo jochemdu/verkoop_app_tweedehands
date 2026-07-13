@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   stickerSheetGenerateSchema,
   STICKER_PRESETS,
@@ -17,13 +18,16 @@ type GenerateResult = {
   sheet: { id: string; start_number: number; end_number: number };
 };
 
-export const PRESET_LABELS: Record<StickerPreset, string> = {
-  compact_21x15: "Compact — 21×15 mm, 160 per vel",
-  medium_38x21: "Middel — 38×21 mm, 65 per vel (QR leesbaar)",
-  large_63x38: "Groot — 63×38 mm, 21 per vel (QR + groot nummer)",
+// preset → i18n-sleutel (stickers-namespace). Wordt ook door de inventaris-
+// printmodal gebruikt.
+export const PRESET_LABEL_KEYS: Record<StickerPreset, string> = {
+  compact_21x15: "presetCompact",
+  medium_38x21: "presetMedium",
+  large_63x38: "presetLarge",
 };
 
 export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
+  const t = useTranslations("stickers");
   const [result, setResult] = useState<GenerateResult | null>(null);
 
   const {
@@ -48,12 +52,14 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
     });
     const json = (await res.json()) as GenerateResult & { error?: string };
     if (!res.ok) {
-      toast.error(json.error ?? "Onbekende fout");
+      toast.error(json.error ?? t("unknownError"));
       return;
     }
     setResult(json);
     toast.success(
-      `Vel gegenereerd: ${String(json.sheet.start_number).padStart(4, "0")}–${String(json.sheet.end_number).padStart(4, "0")}`,
+      t("sheetGenerated", {
+        range: `${String(json.sheet.start_number).padStart(4, "0")}–${String(json.sheet.end_number).padStart(4, "0")}`,
+      }),
     );
   }
 
@@ -64,7 +70,7 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
     >
       <div className="grid grid-cols-2 gap-4">
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Startnummer</span>
+          <span className="font-medium">{t("startNumber")}</span>
           <input
             type="number"
             min={1}
@@ -79,7 +85,7 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
           )}
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Aantal stickers</span>
+          <span className="font-medium">{t("count")}</span>
           <input
             type="number"
             min={1}
@@ -95,14 +101,14 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="font-medium">Formaat</span>
+          <span className="font-medium">{t("format")}</span>
           <select
             className="input"
             {...register("preset")}
           >
             {STICKER_PRESETS.map((p) => (
               <option key={p} value={p}>
-                {PRESET_LABELS[p]}
+                {t(PRESET_LABEL_KEYS[p])}
               </option>
             ))}
           </select>
@@ -110,11 +116,8 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
         <label className="flex items-end gap-2 pb-2 text-sm">
           <input type="checkbox" className="size-4" {...register("withQr")} />
           <span>
-            <span className="font-medium">QR-code op elke sticker</span>
-            <span className="block text-xs text-muted-foreground">
-              Scan opent de productpagina. Op compact-formaat is de QR klein
-              (9 mm) — kies Middel of Groot voor vlot scannen.
-            </span>
+            <span className="font-medium">{t("qrLabel")}</span>
+            <span className="block text-xs text-muted-foreground">{t("qrHelp")}</span>
           </span>
         </label>
       </div>
@@ -125,7 +128,7 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
           disabled={isSubmitting}
           className="btn btn-accent"
         >
-          {isSubmitting ? "Genereren…" : "Genereer & print"}
+          {isSubmitting ? t("generating") : t("generate")}
         </button>
         {result && (
           <a
@@ -134,17 +137,14 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
             rel="noopener noreferrer"
             className="text-sm font-medium text-accent hover:underline"
           >
-            PDF openen (geldig 1 uur)
+            {t("openPdf")}
           </a>
         )}
       </div>
 
       {result && (
         <div className="rounded-lg border border-border bg-muted p-4 text-xs">
-          <p className="font-medium">
-            Tip: open de PDF, print met <em>Werkelijk formaat</em> (geen
-            schaling) op stickerpapier A4, en knip langs de stippellijnen.
-          </p>
+          <p className="font-medium">{t("tip")}</p>
         </div>
       )}
     </form>

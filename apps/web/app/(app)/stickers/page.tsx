@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { StickerForm } from "./sticker-form";
 
@@ -29,32 +30,29 @@ export default async function StickersPage() {
   const lastUsed = Number(settingRaw?.value ?? 0);
   const suggestedStart = Math.max(lastUsed + 1, 1);
 
+  const t = await getTranslations("stickers");
+
   return (
     <main className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Stickervel genereren</h1>
-        <p className="text-sm text-muted-foreground">
-          A4 portrait, 4 kwartieren van 40 stickers (21×15&nbsp;mm) — 160
-          stickers per vel.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <section className="card p-6">
-        <p className="text-sm text-muted-foreground">Laatst gebruikt</p>
+        <p className="text-sm text-muted-foreground">{t("lastUsed")}</p>
         <p className="text-lg font-medium">
-          {lastUsed > 0 ? String(lastUsed).padStart(4, "0") : "nog geen"}
+          {lastUsed > 0 ? String(lastUsed).padStart(4, "0") : t("none")}
         </p>
       </section>
 
       <StickerForm suggestedStart={suggestedStart} />
 
       <section>
-        <h2 className="section-title mb-3">
-          Eerder gegenereerd
-        </h2>
+        <h2 className="section-title mb-3">{t("earlier")}</h2>
         {sheets.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            Nog geen vellen. Begin hierboven.
+            {t("emptyEarlier")}
           </div>
         ) : (
           <ul className="card divide-y divide-border">

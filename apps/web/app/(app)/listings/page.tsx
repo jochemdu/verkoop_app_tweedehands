@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { LISTING_STATUSES, type ListingStatus } from "@verkoopassistent/shared";
 
@@ -39,14 +40,13 @@ export default async function ListingsPage({
     statusCounts[s] = (statusCounts[s] ?? 0) + 1;
   });
 
+  const t = await getTranslations("listings");
+
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Advertenties</h1>
-        <p className="text-sm text-muted-foreground">
-          Concepten van Claude via MCP verschijnen hier. Review, bewerk en
-          markeer als gepubliceerd na handmatig plaatsen op het platform.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -58,7 +58,7 @@ export default async function ListingsPage({
               : "border-border bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
-          Alle ({counts?.length ?? 0})
+          {t("all", { count: counts?.length ?? 0 })}
         </Link>
         {LISTING_STATUSES.map((s) => (
           <Link
@@ -77,20 +77,21 @@ export default async function ListingsPage({
 
       {!listings || listings.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          Geen advertenties in deze filter. Laat Claude Desktop er eentje
-          aanmaken met de <code>create_listing</code> MCP tool.
+          {t("emptyPre")}
+          <code>create_listing</code>
+          {t("emptyPost")}
         </div>
       ) : (
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                <th className="p-3 font-medium">Sticker</th>
-                <th className="p-3 font-medium">Titel</th>
-                <th className="p-3 font-medium">Platform</th>
-                <th className="p-3 font-medium">Prijs</th>
-                <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium">Aangemaakt</th>
+                <th className="p-3 font-medium">{t("colSticker")}</th>
+                <th className="p-3 font-medium">{t("colTitle")}</th>
+                <th className="p-3 font-medium">{t("colPlatform")}</th>
+                <th className="p-3 font-medium">{t("colPrice")}</th>
+                <th className="p-3 font-medium">{t("colStatus")}</th>
+                <th className="p-3 font-medium">{t("colCreated")}</th>
                 <th className="p-3" />
               </tr>
             </thead>
@@ -106,7 +107,7 @@ export default async function ListingsPage({
                     <td className="p-3">
                       {l.final_title ?? l.generated_title ?? (
                         <span className="italic text-muted-foreground">
-                          (geen titel)
+                          {t("noTitle")}
                         </span>
                       )}
                     </td>
@@ -128,7 +129,7 @@ export default async function ListingsPage({
                     </td>
                     <td className="p-3 text-right">
                       <Link href={`/listings/${l.id}`} className="text-xs font-medium text-accent hover:underline">
-                        Review
+                        {t("review")}
                       </Link>
                     </td>
                   </tr>

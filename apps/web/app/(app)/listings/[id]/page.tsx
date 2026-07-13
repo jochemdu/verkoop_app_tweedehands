@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { ListingActions } from "./listing-actions";
 
@@ -27,6 +28,8 @@ export default async function ListingDetailPage({
     ? listing.platforms[0]
     : listing.platforms;
 
+  const t = await getTranslations("listings");
+
   return (
     <main className="space-y-6">
       <div>
@@ -34,14 +37,14 @@ export default async function ListingDetailPage({
           href="/listings"
           className="text-sm text-muted-foreground hover:underline"
         >
-          ← Advertenties
+          {t("back")}
         </Link>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">
-          {listing.final_title ?? listing.generated_title ?? "(geen titel)"}
+          {listing.final_title ?? listing.generated_title ?? t("noTitle")}
         </h1>
         <p className="text-sm text-muted-foreground">
           <span className="font-mono">{product?.sticker_id ?? "—"}</span> ·{" "}
-          {platform?.name} · status{" "}
+          {platform?.name} · {t("statusLabel")}{" "}
           <span className="font-medium">{listing.status}</span>
         </p>
       </div>

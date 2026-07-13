@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { CheckCircle2 } from "lucide-react";
 import type { ListingStatus } from "@verkoopassistent/shared";
 
@@ -27,6 +28,7 @@ export function ListingActions({
   productStickerId: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("listings");
   const [form, setForm] = useState({
     final_title: listing.final_title,
     final_description: listing.final_description,
@@ -44,7 +46,7 @@ export function ListingActions({
       body: JSON.stringify(payload),
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error ?? "Update faalde");
+    if (!res.ok) throw new Error(json.error ?? t("updateFailed"));
     return json;
   }
 
@@ -53,10 +55,10 @@ export function ListingActions({
     setSaving(true);
     try {
       await patch(form);
-      toast.success("Opgeslagen");
+      toast.success(t("saved"));
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "onbekend");
+      toast.error(err instanceof Error ? err.message : t("unknown"));
     } finally {
       setSaving(false);
     }
@@ -66,10 +68,10 @@ export function ListingActions({
     setSaving(true);
     try {
       await patch({ status: "approved", ...form });
-      toast.success("Goedgekeurd — nu kun je hem op " + platformName + " plaatsen.");
+      toast.success(t("approved", { platform: platformName }));
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "onbekend");
+      toast.error(err instanceof Error ? err.message : t("unknown"));
     } finally {
       setSaving(false);
     }
@@ -77,30 +79,30 @@ export function ListingActions({
 
   async function markPublished() {
     if (!listingUrl) {
-      toast.error("Plak eerst de URL van de geplaatste advertentie.");
+      toast.error(t("needUrl"));
       return;
     }
     setPublishing(true);
     try {
       await patch({ status: "published", listing_url: listingUrl });
-      toast.success("Gemarkeerd als gepubliceerd");
+      toast.success(t("markedPublished"));
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "onbekend");
+      toast.error(err instanceof Error ? err.message : t("unknown"));
     } finally {
       setPublishing(false);
     }
   }
 
   async function copyToClipboard() {
-    const full = `${form.final_title}\n\n${form.final_description}\n\nPrijs: €${form.price.toFixed(
+    const full = `${form.final_title}\n\n${form.final_description}\n\n${t("copyPriceLabel")}: €${form.price.toFixed(
       2,
-    )}\nVerzending: €${form.shipping_price.toFixed(2)}\n\nSticker-ID: ${productStickerId}`;
+    )}\n${t("copyShippingLabel")}: €${form.shipping_price.toFixed(2)}\n\n${t("copyStickerLabel")}: ${productStickerId}`;
     try {
       await navigator.clipboard.writeText(full);
-      toast.success("Gekopieerd — plak op " + platformName);
+      toast.success(t("copied", { platform: platformName }));
     } catch {
-      toast.error("Clipboard niet beschikbaar");
+      toast.error(t("clipboardUnavailable"));
     }
   }
 
@@ -111,12 +113,10 @@ export function ListingActions({
     <div className="space-y-6">
       {/* Edit form */}
       <form onSubmit={saveEdit} className="card space-y-4 p-5">
-        <h2 className="section-title">
-          Advertentie-tekst
-        </h2>
+        <h2 className="section-title">{t("adText")}</h2>
 
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Titel</span>
+          <span className="font-medium">{t("titleLabel")}</span>
           <input
             value={form.final_title}
             onChange={(e) => setForm({ ...form, final_title: e.target.value })}
@@ -126,7 +126,7 @@ export function ListingActions({
         </label>
 
         <label className="block space-y-1 text-sm">
-          <span className="font-medium">Omschrijving</span>
+          <span className="font-medium">{t("descLabel")}</span>
           <textarea
             rows={10}
             value={form.final_description}
@@ -140,7 +140,7 @@ export function ListingActions({
 
         <div className="grid grid-cols-2 gap-3">
           <label className="space-y-1 text-sm">
-            <span className="font-medium">Prijs €</span>
+            <span className="font-medium">{t("priceLabel")}</span>
             <input
               type="number"
               step="0.01"
@@ -153,7 +153,7 @@ export function ListingActions({
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="font-medium">Verzending €</span>
+            <span className="font-medium">{t("shipLabel")}</span>
             <input
               type="number"
               step="0.01"
@@ -173,14 +173,14 @@ export function ListingActions({
             disabled={saving || isPublished}
             className="btn btn-outline"
           >
-            Wijzigingen opslaan
+            {t("saveChanges")}
           </button>
           <button
             type="button"
             onClick={copyToClipboard}
             className="btn btn-outline"
           >
-            Kopieer tekst
+            {t("copyText")}
           </button>
         </div>
       </form>
@@ -188,36 +188,32 @@ export function ListingActions({
       {/* Status flow */}
       {!isPublished && (
         <div className="card p-5 space-y-4">
-          <h2 className="section-title">
-            Workflow
-          </h2>
+          <h2 className="section-title">{t("workflow")}</h2>
 
           {!isApproved ? (
             <div className="space-y-2">
-              <p className="text-sm">
-                Review de tekst hierboven. Klaar? Goedkeuren als volgende stap.
-              </p>
+              <p className="text-sm">{t("reviewPrompt")}</p>
               <button
                 onClick={approve}
                 disabled={saving}
                 className="btn btn-accent"
               >
-                {saving ? "Bezig…" : "Goedkeuren"}
+                {saving ? t("busy") : t("approve")}
               </button>
             </div>
           ) : (
             <div className="space-y-3">
               <div className="rounded-md bg-muted p-3 text-sm">
-                <p className="font-medium">Volgende stap op {platformName}:</p>
+                <p className="font-medium">{t("nextStepOn", { platform: platformName })}</p>
                 <ol className="mt-2 list-decimal pl-5 text-xs text-muted-foreground">
-                  <li>Klik <em>Kopieer tekst</em> hierboven</li>
-                  <li>Plaats de advertentie op {platformName}</li>
-                  <li>Kopieer de URL van de geplaatste advertentie</li>
-                  <li>Plak hieronder en klik <em>Markeer gepubliceerd</em></li>
+                  <li>{t("step1")}</li>
+                  <li>{t("step2", { platform: platformName })}</li>
+                  <li>{t("step3")}</li>
+                  <li>{t("step4")}</li>
                 </ol>
               </div>
               <label className="block space-y-1 text-sm">
-                <span className="font-medium">URL geplaatste advertentie</span>
+                <span className="font-medium">{t("urlLabel")}</span>
                 <input
                   type="url"
                   value={listingUrl}
@@ -231,7 +227,7 @@ export function ListingActions({
                 disabled={publishing}
                 className="btn btn-accent"
               >
-                {publishing ? "Bezig…" : "Markeer gepubliceerd"}
+                {publishing ? t("busy") : t("markPublished")}
               </button>
             </div>
           )}
@@ -242,7 +238,7 @@ export function ListingActions({
         <div className="rounded-xl border border-accent bg-accent-soft p-5 text-sm">
           <p className="flex items-center gap-1.5 font-medium text-accent">
             <CheckCircle2 className="size-4" aria-hidden />
-            Gepubliceerd
+            {t("publishedTitle")}
           </p>
           <a
             href={listing.listing_url}
