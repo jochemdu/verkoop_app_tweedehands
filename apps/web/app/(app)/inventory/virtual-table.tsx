@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
-import { STICKER_PRESETS, type StickerPreset } from "@verkoopassistent/shared";
+import { useTranslations, useLocale } from "next-intl";
+import { STICKER_PRESETS, localeTag, type StickerPreset } from "@verkoopassistent/shared";
 import { PRESET_LABEL_KEYS } from "../stickers/sticker-form";
 import { Sparkles } from "lucide-react";
 
@@ -137,6 +137,7 @@ export function VirtualTable({
 }) {
   const router = useRouter();
   const t = useTranslations("inventoryTable");
+  const dateTag = localeTag(useLocale());
   const parentRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [printOpen, setPrintOpen] = useState(false);
@@ -302,7 +303,7 @@ export function VirtualTable({
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {row.indexed_at
-                    ? new Date(row.indexed_at).toLocaleDateString("nl-NL", { dateStyle: "short" })
+                    ? new Date(row.indexed_at).toLocaleDateString(dateTag, { dateStyle: "short" })
                     : "—"}
                 </span>
                 <span className="text-right">

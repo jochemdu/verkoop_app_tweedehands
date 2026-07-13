@@ -18,3 +18,17 @@ export function isLocale(value: unknown): value is Locale {
 export function getMessages(locale: string): Messages {
   return isLocale(locale) ? MESSAGES[locale] : MESSAGES[DEFAULT_LOCALE];
 }
+
+// BCP-47 tag per locale voor Intl-formattering (datums, getallen) en
+// spraakherkenning. Eén bron van waarheid zodat schermen niet elk hun eigen
+// "nl-NL" hardcoderen.
+const LOCALE_TAGS: Record<Locale, string> = {
+  nl: "nl-NL",
+  en: "en-GB",
+  de: "de-DE",
+  fr: "fr-FR",
+};
+
+export function localeTag(locale: string): string {
+  return isLocale(locale) ? LOCALE_TAGS[locale] : LOCALE_TAGS[DEFAULT_LOCALE];
+}

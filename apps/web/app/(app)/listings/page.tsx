@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { LISTING_STATUSES, type ListingStatus } from "@verkoopassistent/shared";
+import { LISTING_STATUSES, localeTag, type ListingStatus } from "@verkoopassistent/shared";
 
 type Search = {
   status?: string;
@@ -41,6 +41,8 @@ export default async function ListingsPage({
   });
 
   const t = await getTranslations("listings");
+  const dateTag = localeTag(await getLocale());
+  const statusLabel = (s: string | null) => (s ? t(`st_${s}`) : "—");
 
   return (
     <main className="space-y-6">
@@ -70,7 +72,7 @@ export default async function ListingsPage({
                 : "border-border bg-card text-muted-foreground hover:bg-muted"
             }`}
           >
-            {s} ({statusCounts[s] ?? 0})
+            {statusLabel(s)} ({statusCounts[s] ?? 0})
           </Link>
         ))}
       </div>
@@ -117,12 +119,12 @@ export default async function ListingsPage({
                     </td>
                     <td className="p-3">
                       <span className="badge bg-muted text-muted-foreground">
-                        {l.status}
+                        {statusLabel(l.status)}
                       </span>
                     </td>
                     <td className="p-3 text-xs text-muted-foreground">
                       {l.created_at
-                        ? new Date(l.created_at).toLocaleDateString("nl-NL", {
+                        ? new Date(l.created_at).toLocaleDateString(dateTag, {
                             dateStyle: "short",
                           })
                         : "—"}

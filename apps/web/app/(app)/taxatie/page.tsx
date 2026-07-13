@@ -1,10 +1,12 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
+import { localeTag } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { TaxatieForm } from "./taxatie-form";
 
 export default async function TaxatiePage() {
   const supabase = await createClient();
   const t = await getTranslations("taxatie");
+  const dateTag = localeTag(await getLocale());
 
   // Alle producten beschikbaar voor taxatie (bevat ook al-geanalyseerde items).
   const { data: products } = await supabase
@@ -45,7 +47,7 @@ export default async function TaxatiePage() {
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {e.exported_at
-                    ? new Date(e.exported_at).toLocaleString("nl-NL", {
+                    ? new Date(e.exported_at).toLocaleString(dateTag, {
                         dateStyle: "short",
                         timeStyle: "short",
                       })

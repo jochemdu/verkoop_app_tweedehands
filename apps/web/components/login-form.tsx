@@ -33,14 +33,14 @@ export function LoginForm() {
     const json = await res.json();
     if (!res.ok) {
       if (json.code === "RATE_LIMITED") {
-        toast.error("Te veel pogingen, wacht 15 minuten.");
+        toast.error(t("tooManyAttempts"));
       } else {
-        toast.error(json.error ?? "Kon magic link niet versturen");
+        toast.error(json.error ?? t("magicFailed"));
       }
       return;
     }
     setSentTo(data.email);
-    toast.success(`Inlogmail verstuurd naar ${data.email}`);
+    toast.success(t("magicSent", { email: data.email }));
   }
 
   async function signInWithGoogle() {
@@ -49,7 +49,7 @@ export function LoginForm() {
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    if (error) toast.error(`Google-login mislukt: ${error.message}`);
+    if (error) toast.error(t("googleFailed", { msg: error.message }));
     // Bij succes navigeert de browser vanzelf naar Google.
   }
 
@@ -68,10 +68,10 @@ export function LoginForm() {
         type: "email",
       });
       if (error) {
-        toast.error("Code onjuist of verlopen — probeer opnieuw.");
+        toast.error(t("codeInvalid"));
         return;
       }
-      toast.success("Ingelogd!");
+      toast.success(t("loggedIn"));
       router.push("/");
       router.refresh();
     } finally {

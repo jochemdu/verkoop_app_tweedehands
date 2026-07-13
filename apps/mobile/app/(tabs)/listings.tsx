@@ -90,7 +90,7 @@ export default function ListingsScreen() {
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.title}>
-                    {item.final_title ?? item.generated_title ?? "(geen titel)"}
+                    {item.final_title ?? item.generated_title ?? t("noTitle")}
                   </Text>
                   <Text style={styles.meta}>
                     {product?.sticker_id ?? "—"} · {platform?.name} · €

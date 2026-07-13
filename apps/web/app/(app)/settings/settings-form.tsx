@@ -41,7 +41,7 @@ export function SettingsForm({
         .from("profiles")
         .upsert({ id: userId, ...form });
       if (error) {
-        toast.error(`Opslaan mislukt: ${error.message}`);
+        toast.error(t("saveFailed", { msg: error.message }));
         return;
       }
       // Weergavetaal meteen toepassen: cookie zetten (next-intl leest die)

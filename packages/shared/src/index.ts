@@ -80,6 +80,7 @@ export {
   MESSAGES,
   isLocale,
   getMessages,
+  localeTag,
   type Locale,
   type Messages,
 } from "./i18n";
