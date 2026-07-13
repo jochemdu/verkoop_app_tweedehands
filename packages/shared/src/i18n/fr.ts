@@ -432,6 +432,7 @@ export const fr: Messages = {
   },
   mobile: {
     appName: "VerkoopAssistent",
+    language: "Langue",
     tabDashboard: "Tableau de bord",
     tabIndex: "Indexer",
     tabImport: "Importer",

@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/lib/auth/useSession";
 import { useTranslation } from "@/lib/i18n";
+import { LanguagePicker } from "@/components/language-picker";
 
 export default function Dashboard() {
   const { session, signOut } = useSession();
@@ -52,9 +53,12 @@ export default function Dashboard() {
           <Text style={styles.primaryActionText}>{t("newProduct")}</Text>
         </Pressable>
 
-        <Pressable style={styles.outlineAction} onPress={signOut}>
-          <Text style={styles.outlineActionText}>{t("logout")}</Text>
-        </Pressable>
+        <View style={styles.footer}>
+          <LanguagePicker />
+          <Pressable style={styles.outlineAction} onPress={signOut}>
+            <Text style={styles.outlineActionText}>{t("logout")}</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -92,8 +96,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryActionText: { color: "#fff", fontSize: 15, fontWeight: "500" },
+  footer: { marginTop: "auto", gap: 12 },
   outlineAction: {
-    marginTop: "auto",
     borderWidth: 1,
     borderColor: "#e4e4e7",
     borderRadius: 10,

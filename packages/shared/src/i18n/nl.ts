@@ -627,6 +627,7 @@ export const nl = {
   },
   mobile: {
     appName: "VerkoopAssistent",
+    language: "Taal",
     tabDashboard: "Dashboard",
     tabIndex: "Indexeren",
     tabImport: "Importeren",
