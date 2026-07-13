@@ -28,6 +28,7 @@ import { createProductWithPhotos } from "@/lib/products/createProduct";
 import { enqueueCapture } from "@/lib/outbox/sync";
 import { stickerIdSchema } from "@verkoopassistent/shared";
 import { parseClothingLabel } from "@/lib/clothing-parser";
+import { useTranslation } from "@/lib/i18n";
 
 type CapturedPhoto = {
   uri: string;
@@ -39,6 +40,7 @@ type CapturedPhoto = {
 type Mode = "ocr_separate" | "ocr_inline" | "manual";
 
 export default function CaptureScreen() {
+  const t = useTranslation("mobile");
   const [permission, requestPermission] = useCameraPermissions();
 
   const [mode, setMode] = useState<Mode>("ocr_separate");
@@ -77,7 +79,7 @@ export default function CaptureScreen() {
     try {
       const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("Microfoon-toegang nodig", "Geef permissie in instellingen.");
+        Alert.alert(t("micPermTitle"), t("micPermMsg"));
         return;
       }
       ExpoSpeechRecognitionModule.start({
@@ -87,7 +89,7 @@ export default function CaptureScreen() {
       });
       setRecording(true);
     } catch (err) {
-      Alert.alert("Voice fout", err instanceof Error ? err.message : "onbekend");
+      Alert.alert(t("voiceError"), err instanceof Error ? err.message : t("unknown"));
     }
   }
 
@@ -137,18 +139,15 @@ export default function CaptureScreen() {
 
       const candidates = await runOcr(photo.uri);
       if (candidates.length === 0) {
-        Alert.alert(
-          "Geen 4-cijferig nummer gevonden",
-          "Probeer de foto dichter op de sticker te nemen, of schakel naar Handmatig mode.",
-        );
+        Alert.alert(t("noNumberTitle"), t("noNumberMsg"));
         return;
       }
 
       // Bij meerdere kandidaten: vraag user te kiezen.
       if (candidates.length > 1) {
         Alert.alert(
-          "Meerdere nummers gevonden",
-          `Gevonden: ${candidates.join(", ")}. Welke is de sticker?`,
+          t("multiNumberTitle"),
+          t("multiNumberMsg", { list: candidates.join(", ") }),
           candidates.map((c) => ({
             text: c,
             onPress: () => {
@@ -166,7 +165,7 @@ export default function CaptureScreen() {
         if (mode === "ocr_separate") setCameraMode("product");
       }
     } catch (err) {
-      Alert.alert("OCR fout", err instanceof Error ? err.message : "onbekend");
+      Alert.alert(t("ocrError"), err instanceof Error ? err.message : t("unknown"));
     } finally {
       setOcrProcessing(false);
     }
@@ -188,8 +187,8 @@ export default function CaptureScreen() {
           setStickerConfidence(0.75);
         } else if (candidates.length > 1) {
           Alert.alert(
-            "Meerdere nummers in beeld",
-            `Kies de sticker: ${candidates.join(", ")}`,
+            t("multiInViewTitle"),
+            t("multiInViewMsg", { list: candidates.join(", ") }),
             candidates.map((c) => ({
               text: c,
               onPress: () => {
@@ -204,7 +203,7 @@ export default function CaptureScreen() {
 
       setPhotos((p) => [...p, { uri: photo.uri, source: "product" }]);
     } catch (err) {
-      Alert.alert("Foto fout", err instanceof Error ? err.message : "onbekend");
+      Alert.alert(t("photoError"), err instanceof Error ? err.message : t("unknown"));
     }
   }
 
@@ -229,7 +228,7 @@ export default function CaptureScreen() {
         setWorkingTitle(parts.join(" — "));
       }
       const extraNote = [
-        parsed.material ? `Materiaal: ${parsed.material}` : null,
+        parsed.material ? t("materialNote", { material: parsed.material }) : null,
       ]
         .filter(Boolean)
         .join(" · ");
@@ -238,7 +237,7 @@ export default function CaptureScreen() {
       setPhotos((p) => [...p, { uri: photo.uri, source: "product" }]);
       setCameraMode("product");
     } catch (err) {
-      Alert.alert("Label OCR fout", err instanceof Error ? err.message : "onbekend");
+      Alert.alert(t("labelOcrError"), err instanceof Error ? err.message : t("unknown"));
     } finally {
       setOcrProcessing(false);
     }
@@ -257,9 +256,9 @@ export default function CaptureScreen() {
       if (!data?.match) return;
       if (isIsbn && data.book) {
         const b = data.book;
-        const t = b.title ? `${b.title}${b.authors?.[0] ? ` — ${b.authors[0]}` : ""}` : "";
-        if (t && !workingTitle) setWorkingTitle(t);
-        const extra = [b.publisher && `Uitgever: ${b.publisher}`, b.year && `Jaar: ${b.year}`, b.language && `Taal: ${b.language}`].filter(Boolean).join(" · ");
+        const bookTitle = b.title ? `${b.title}${b.authors?.[0] ? ` — ${b.authors[0]}` : ""}` : "";
+        if (bookTitle && !workingTitle) setWorkingTitle(bookTitle);
+        const extra = [b.publisher && t("bookPublisher", { value: b.publisher }), b.year && t("bookYear", { value: b.year }), b.language && t("bookLanguage", { value: b.language })].filter(Boolean).join(" · ");
         if (extra) setNotes((prev) => (prev ? `${prev}\n${extra}` : extra));
       } else if (!isIsbn && data.product) {
         if (data.product.name && !workingTitle) {
@@ -274,12 +273,12 @@ export default function CaptureScreen() {
 
   async function save() {
     if (photos.length === 0) {
-      Alert.alert("Voeg eerst minstens één foto toe");
+      Alert.alert(t("addPhotoFirst"));
       return;
     }
     const parsed = stickerIdSchema.optional().safeParse(stickerId || undefined);
     if (!parsed.success) {
-      Alert.alert("Ongeldig sticker-ID", "Moet exact 4 cijfers zijn.");
+      Alert.alert(t("invalidSticker"), t("invalidStickerMsg"));
       return;
     }
 
@@ -288,7 +287,7 @@ export default function CaptureScreen() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Niet ingelogd");
+      if (!user) throw new Error(t("notLoggedIn"));
 
       const inputMethod =
         mode === "manual"
@@ -349,15 +348,15 @@ export default function CaptureScreen() {
             .eq("key", "last_sticker_number");
         }
         Alert.alert(
-          "Opgeslagen",
-          `${photos.length} foto('s) onder ${stickerId || "(zonder sticker)"}.`,
+          t("saved"),
+          t("savedMsg", {
+            count: photos.length,
+            sticker: stickerId || t("noStickerValue"),
+          }),
         );
       } else {
         await enqueueCapture({ ...captureData, photos: photoInputs });
-        Alert.alert(
-          "Offline opgeslagen",
-          "Geen verbinding — deze indexering staat in de wachtrij en wordt automatisch gesynct zodra je weer online bent.",
-        );
+        Alert.alert(t("savedOffline"), t("savedOfflineMsg"));
       }
 
       // Reset voor volgende sessie
@@ -374,7 +373,7 @@ export default function CaptureScreen() {
       setPhase("configure");
       setCameraMode("sticker");
     } catch (err) {
-      Alert.alert("Fout", err instanceof Error ? err.message : "onbekend");
+      Alert.alert(t("errorTitle"), err instanceof Error ? err.message : t("unknown"));
     } finally {
       setSaving(false);
     }
@@ -391,12 +390,10 @@ export default function CaptureScreen() {
   if (!permission.granted) {
     return (
       <SafeAreaView style={styles.centerContainer}>
-        <Text style={styles.permissionTitle}>Camera-toegang nodig</Text>
-        <Text style={styles.permissionText}>
-          VerkoopAssistent heeft de camera nodig voor product- en stickerfoto's.
-        </Text>
+        <Text style={styles.permissionTitle}>{t("cameraPermTitle")}</Text>
+        <Text style={styles.permissionText}>{t("cameraPermMsg")}</Text>
         <Pressable style={styles.primaryButton} onPress={requestPermission}>
-          <Text style={styles.primaryButtonText}>Toegang toestaan</Text>
+          <Text style={styles.primaryButtonText}>{t("allowAccess")}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -408,75 +405,75 @@ export default function CaptureScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.card}>
-            <Text style={styles.label}>Sticker-modus</Text>
+            <Text style={styles.label}>{t("stickerMode")}</Text>
             <View style={styles.modeRow}>
               <ModeChip
                 active={mode === "ocr_separate"}
                 onPress={() => setMode("ocr_separate")}
-                label="Eerst sticker-foto"
-                hint="Hoge OCR zekerheid"
+                label={t("modeFirstSticker")}
+                hint={t("modeFirstStickerHint")}
               />
               <ModeChip
                 active={mode === "ocr_inline"}
                 onPress={() => setMode("ocr_inline")}
-                label="OCR in productfoto"
-                hint="Sneller"
+                label={t("modeOcrInline")}
+                hint={t("modeOcrInlineHint")}
               />
               <ModeChip
                 active={mode === "manual"}
                 onPress={() => setMode("manual")}
-                label="Handmatig"
-                hint="Offline"
+                label={t("modeManual")}
+                hint={t("modeManualHint")}
               />
             </View>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>Sticker-ID</Text>
+            <Text style={styles.label}>{t("stickerIdLabel")}</Text>
             <TextInput
               value={stickerId}
               onChangeText={(v) => {
                 setStickerId(v);
                 setStickerConfidence(null);
               }}
-              placeholder="0042 (of laat leeg voor OCR)"
+              placeholder={t("stickerIdPlaceholder")}
               keyboardType="number-pad"
               maxLength={4}
               style={styles.inputMono}
             />
             {lastUsed !== null && (
               <Text style={styles.hint}>
-                Laatst gebruikt: {String(lastUsed).padStart(4, "0")}
+                {t("lastUsedLabel", { value: String(lastUsed).padStart(4, "0") })}
               </Text>
             )}
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>Werktitel (optioneel)</Text>
+            <Text style={styles.label}>{t("workingTitleLabel")}</Text>
             <TextInput
               value={workingTitle}
               onChangeText={setWorkingTitle}
-              placeholder="bijv. DDR2 SODIMM"
+              placeholder={t("workingTitlePlaceholder")}
               style={styles.input}
             />
           </View>
 
           <View style={styles.card}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Notitie (optioneel)</Text>
+              <Text style={styles.label}>{t("noteLabel")}</Text>
               <Pressable
                 onPress={recording ? stopVoice : startVoice}
                 style={[styles.micButton, recording && styles.micButtonActive]}
               >
                 <Text style={recording ? styles.micTextActive : styles.micText}>
-                  {recording ? "● Stop" : "🎤 Spreek"}
+                  {recording ? t("micStop") : t("micSpeak")}
                 </Text>
               </Pressable>
             </View>
             <TextInput
               value={notes}
               onChangeText={setNotes}
-              placeholder="kast in garage links (of tik mic om te dicteren)"
+              placeholder={t("notePlaceholder")}
               multiline
               style={[styles.input, { minHeight: 60 }]}
             />
@@ -490,7 +487,7 @@ export default function CaptureScreen() {
               else setCameraMode("sticker");
             }}
           >
-            <Text style={styles.primaryButtonText}>Naar camera →</Text>
+            <Text style={styles.primaryButtonText}>{t("toCamera")}</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
@@ -502,10 +499,10 @@ export default function CaptureScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
         <Pressable onPress={() => setPhase("configure")}>
-          <Text style={styles.backText}>← Terug</Text>
+          <Text style={styles.backText}>{t("back")}</Text>
         </Pressable>
         <Text style={styles.topBarTitle}>
-          {stickerId ? `Sticker ${stickerId}` : "Geen sticker"}
+          {stickerId ? t("stickerN", { id: stickerId }) : t("noSticker")}
         </Text>
         <View style={{ width: 60 }} />
       </View>
@@ -514,23 +511,23 @@ export default function CaptureScreen() {
         <CameraModeChip
           active={cameraMode === "sticker"}
           onPress={() => setCameraMode("sticker")}
-          label="Sticker"
+          label={t("camSticker")}
           disabled={mode === "manual" || !!stickerId}
         />
         <CameraModeChip
           active={cameraMode === "product"}
           onPress={() => setCameraMode("product")}
-          label="Product"
+          label={t("camProduct")}
         />
         <CameraModeChip
           active={cameraMode === "barcode"}
           onPress={() => setCameraMode("barcode")}
-          label="Barcode"
+          label={t("camBarcode")}
         />
         <CameraModeChip
           active={cameraMode === "clothing_label"}
           onPress={() => setCameraMode("clothing_label")}
-          label="Label"
+          label={t("camLabel")}
         />
       </View>
 
@@ -548,7 +545,7 @@ export default function CaptureScreen() {
           <View style={styles.ocrOverlay}>
             <ActivityIndicator color="#fff" />
             <Text style={styles.ocrText}>
-              {cameraMode === "clothing_label" ? "Label lezen…" : "Sticker lezen…"}
+              {cameraMode === "clothing_label" ? t("readingLabel") : t("readingSticker")}
             </Text>
           </View>
         )}
@@ -603,14 +600,14 @@ export default function CaptureScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.saveButtonText}>
-                Opslaan ({photos.length})
+                {t("saveN", { count: photos.length })}
               </Text>
             )}
           </Pressable>
         </View>
 
         {ean && (
-          <Text style={styles.eanHint}>Barcode: {ean}</Text>
+          <Text style={styles.eanHint}>{t("barcodeHint", { ean })}</Text>
         )}
       </View>
     </SafeAreaView>

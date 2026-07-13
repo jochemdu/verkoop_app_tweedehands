@@ -17,6 +17,7 @@ import {
   createProductWithPhotos,
   type PhotoInput,
 } from "@/lib/products/createProduct";
+import { useTranslation } from "@/lib/i18n";
 
 // Fase 32: importeer bestaande foto's uit de camera-roll i.p.v. opnieuw
 // fotograferen. Elke foto (of groep) wordt een stub-product; sticker plakken
@@ -26,6 +27,7 @@ import {
 type Picked = ImagePicker.ImagePickerAsset;
 
 export default function ImportScreen() {
+  const t = useTranslation("mobile");
   const [assets, setAssets] = useState<Picked[]>([]);
   const [onePerPhoto, setOnePerPhoto] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -34,10 +36,7 @@ export default function ImportScreen() {
   async function pick() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Geen toegang",
-        "Geef toegang tot je foto's om te kunnen importeren.",
-      );
+      Alert.alert(t("noAccess"), t("noAccessMsg"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -90,7 +89,7 @@ export default function ImportScreen() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Niet ingelogd");
+      if (!user) throw new Error(t("notLoggedIn"));
 
       if (onePerPhoto) {
         // Eén stub-product per foto.
@@ -104,8 +103,8 @@ export default function ImportScreen() {
           setDone(i + 1);
         }
         Alert.alert(
-          "Geïmporteerd",
-          `${assets.length} foto('s) als los product aangemaakt.`,
+          t("imported"),
+          t("importedSeparate", { count: assets.length }),
         );
       } else {
         // Alle foto's samen één product.
@@ -115,11 +114,11 @@ export default function ImportScreen() {
         });
         for (const asset of assets) await recordCandidate(user.id, asset, productId);
         setDone(assets.length);
-        Alert.alert("Geïmporteerd", `1 product met ${assets.length} foto('s).`);
+        Alert.alert(t("imported"), t("importedSingle", { count: assets.length }));
       }
       setAssets([]);
     } catch (err) {
-      Alert.alert("Import mislukt", err instanceof Error ? err.message : "onbekend");
+      Alert.alert(t("importFailed"), err instanceof Error ? err.message : t("unknown"));
     } finally {
       setBusy(false);
     }
@@ -128,15 +127,12 @@ export default function ImportScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Uit camera-roll importeren</Text>
-        <Text style={styles.subtitle}>
-          Kies bestaande foto&apos;s; elke import wordt een stub-product dat je
-          later analyseert en een sticker geeft.
-        </Text>
+        <Text style={styles.title}>{t("importTitle")}</Text>
+        <Text style={styles.subtitle}>{t("importSubtitle")}</Text>
       </View>
 
       <View style={styles.row}>
-        <Text style={styles.rowLabel}>Los product per foto</Text>
+        <Text style={styles.rowLabel}>{t("onePerPhoto")}</Text>
         <Switch value={onePerPhoto} onValueChange={setOnePerPhoto} disabled={busy} />
       </View>
 
@@ -145,10 +141,12 @@ export default function ImportScreen() {
         disabled={busy}
         style={({ pressed }) => [styles.pickBtn, pressed && styles.pressed]}
         accessibilityRole="button"
-        accessibilityLabel="Kies foto's uit je bibliotheek"
+        accessibilityLabel={t("pickPhotosA11y")}
       >
         <Text style={styles.pickBtnText}>
-          {assets.length > 0 ? `${assets.length} foto's gekozen` : "Kies foto's"}
+          {assets.length > 0
+            ? t("photosChosen", { count: assets.length })
+            : t("pickPhotos")}
         </Text>
       </Pressable>
 
@@ -161,7 +159,7 @@ export default function ImportScreen() {
           <Image source={{ uri: item.uri }} style={styles.thumb} />
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>Nog geen foto&apos;s gekozen.</Text>
+          <Text style={styles.empty}>{t("emptyPhotos")}</Text>
         }
       />
 
@@ -174,18 +172,18 @@ export default function ImportScreen() {
             (pressed || busy) && styles.pressed,
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Importeer de gekozen foto's"
+          accessibilityLabel={t("importA11y")}
         >
           {busy ? (
             <View style={styles.busyRow}>
               <ActivityIndicator color="#fff" />
               <Text style={styles.importBtnText}>
-                Importeren… {done}/{assets.length}
+                {t("importing", { done, total: assets.length })}
               </Text>
             </View>
           ) : (
             <Text style={styles.importBtnText}>
-              Importeer {assets.length} foto&apos;s
+              {t("importN", { count: assets.length })}
             </Text>
           )}
         </Pressable>
