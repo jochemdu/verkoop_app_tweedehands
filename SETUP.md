@@ -195,6 +195,38 @@ Kort (Claude Desktop, `%APPDATA%\Claude\claude_desktop_config.json`):
 4. `create_listing` — verkooptekst op basis van het onderzoek, klaar voor
    review op `/listings`
 
+## Gehoste MCP voor claude.ai (fase 34)
+
+Naast de lokale stdio-MCP (Claude Desktop) is er een **gehoste** MCP-server als
+route in de web-app (`/api/mcp`), zodat je vanuit **claude.ai in de browser**
+je inventaris kunt uitlezen en verkoopteksten kunt laten schrijven. Elke
+gebruiker logt in via OAuth en ziet **alleen z'n eigen data** (per-request een
+user-gescopte token → Postgres-RLS dwingt de isolatie af; geen service-role in
+de datapad).
+
+**Eénmalige config op Vercel** (Project → Settings → Environment Variables):
+
+- `SUPABASE_SERVICE_ROLE_KEY` — Dashboard → Settings → API → *service_role* (Reveal).
+  Alleen voor de interne OAuth-tabellen, niet voor productdata.
+- `SUPABASE_JWT_SECRET` — Dashboard → Settings → API → *JWT Settings → JWT Secret*.
+  Waarmee we per request een kortlevend user-token tekenen dat RLS accepteert.
+
+**Connector toevoegen in claude.ai** (Settings → Connectors → *Add custom
+connector*):
+
+1. URL: `https://<jouw-productie-domein>/api/mcp`
+2. claude.ai doorloopt automatisch OAuth (dynamic client registration → login →
+   consent). Je moet in datzelfde browser-tabblad ingelogd zijn op
+   VerkoopAssistent; op de consent-pagina klik je *Autoriseer Claude*.
+3. Daarna kun je in claude.ai vragen als *"welke producten heb ik in
+   'pending_review'?"* of *"doe marktonderzoek voor sticker 0042 en schrijf een
+   verkooptekst"*.
+
+Beschikbare tools (gehost): `list_inventory`, `search_products`,
+`get_product_context`, `get_product_photos`, `update_product`,
+`save_market_research`. De volledige 19-tool set blijft via de lokale
+Claude-Desktop-MCP beschikbaar.
+
 ## Volledige workflow (end-to-end)
 
 0. **Kamer-scan (optioneel)** — web `/suggestions` → upload kamerfoto's → AI
