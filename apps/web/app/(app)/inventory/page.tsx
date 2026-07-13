@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   PRODUCT_STATUSES,
@@ -85,13 +86,17 @@ export default async function InventoryPage({
     return `/inventory?${q.toString()}`;
   };
 
+  const t = await getTranslations("inventory");
+
   return (
     <main className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inventaris</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            {count ?? 0} producten {showDeleted ? "(verwijderd)" : "totaal"}
+            {showDeleted
+              ? t("countDeleted", { count: count ?? 0 })
+              : t("countTotal", { count: count ?? 0 })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -99,7 +104,7 @@ export default async function InventoryPage({
             href={showDeleted ? "/inventory" : "/inventory?deleted=1"}
             className="btn btn-outline"
           >
-            {showDeleted ? "← Actief" : "Prullenbak"}
+            {showDeleted ? t("active") : t("trash")}
           </Link>
           {!showDeleted && <AddProductButton />}
         </div>
@@ -107,22 +112,22 @@ export default async function InventoryPage({
 
       <form className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-5">
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Zoeken</span>
+          <span className="text-muted-foreground">{t("searchLabel")}</span>
           <input
             name="q"
             defaultValue={params.q}
-            placeholder="titel of notities"
+            placeholder={t("searchPlaceholder")}
             className="input"
           />
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Status</span>
+          <span className="text-muted-foreground">{t("status")}</span>
           <select
             name="status"
             defaultValue={params.status ?? ""}
             className="input"
           >
-            <option value="">(alle)</option>
+            <option value="">{t("all")}</option>
             {PRODUCT_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -131,13 +136,13 @@ export default async function InventoryPage({
           </select>
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Categorie</span>
+          <span className="text-muted-foreground">{t("category")}</span>
           <select
             name="category"
             defaultValue={params.category ?? ""}
             className="input"
           >
-            <option value="">(alle)</option>
+            <option value="">{t("all")}</option>
             {(categories ?? []).map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.name}
@@ -146,7 +151,7 @@ export default async function InventoryPage({
           </select>
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Sticker van</span>
+          <span className="text-muted-foreground">{t("stickerFrom")}</span>
           <input
             name="sticker_from"
             defaultValue={params.sticker_from}
@@ -155,7 +160,7 @@ export default async function InventoryPage({
           />
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-muted-foreground">Sticker tot</span>
+          <span className="text-muted-foreground">{t("stickerTo")}</span>
           <input
             name="sticker_to"
             defaultValue={params.sticker_to}
@@ -168,17 +173,17 @@ export default async function InventoryPage({
             type="submit"
             className="btn btn-accent"
           >
-            Filter
+            {t("filter")}
           </button>
           <Link href="/inventory" className="btn btn-outline">
-            Reset
+            {t("reset")}
           </Link>
         </div>
       </form>
 
       {!products || products.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          Geen producten gevonden.
+          {t("empty")}
         </div>
       ) : (
         <>
@@ -186,17 +191,17 @@ export default async function InventoryPage({
 
           <nav className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              Pagina {page} van {totalPages} ({count} totaal)
+              {t("page", { page, total: totalPages, count: count ?? 0 })}
             </span>
             <div className="flex gap-2">
               {page > 1 && (
                 <Link href={buildPageUrl(page - 1)} className="btn btn-outline px-2 py-1 text-xs">
-                  ← Vorige
+                  {t("prev")}
                 </Link>
               )}
               {page < totalPages && (
                 <Link href={buildPageUrl(page + 1)} className="btn btn-outline px-2 py-1 text-xs">
-                  Volgende →
+                  {t("next")}
                 </Link>
               )}
             </div>

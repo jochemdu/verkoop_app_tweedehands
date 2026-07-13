@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import {
   BarChart,
   Bar,
@@ -49,11 +51,12 @@ export function DashboardCharts({
   status: StatusCount[];
   weekly: WeeklyPoint[];
 }) {
+  const t = useTranslations("charts");
   const hasData = category.length > 0 || status.length > 0;
 
   return (
     <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <ChartCard title="Categorieverdeling">
+      <ChartCard title={t("categories")}>
         {category.length === 0 ? (
           <EmptyHint />
         ) : (
@@ -80,7 +83,7 @@ export function DashboardCharts({
         )}
       </ChartCard>
 
-      <ChartCard title="Status verdeling">
+      <ChartCard title={t("status")}>
         {status.length === 0 ? (
           <EmptyHint />
         ) : (
@@ -96,7 +99,7 @@ export function DashboardCharts({
         )}
       </ChartCard>
 
-      <ChartCard title="Geïndexeerd per week (laatste 12 weken)" wide>
+      <ChartCard title={t("weekly")} wide>
         {!hasData || weekly.every((w) => w.count === 0) ? (
           <EmptyHint />
         ) : (
@@ -139,9 +142,10 @@ function ChartCard({
 }
 
 function EmptyHint() {
+  const t = useTranslations("charts");
   return (
     <div className="flex h-[220px] items-center justify-center text-xs text-muted-foreground">
-      Nog geen data
+      {t("noData")}
     </div>
   );
 }
