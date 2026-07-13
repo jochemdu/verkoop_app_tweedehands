@@ -7,6 +7,7 @@ import {
   UploadCloud,
   type LucideIcon,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCharts } from "./dashboard-charts";
 
@@ -112,23 +113,23 @@ export default async function Dashboard() {
         return sum + Number(v || 0);
       }, 0);
 
+  const t = await getTranslations("dashboard");
+
   return (
     <main className="space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Stat label="Totaal" value={totalProducts ?? 0} />
-        <Stat label="Indexed" value={indexedCount ?? 0} hint="klaar voor analyse" />
-        <Stat label="Ready" value={readyCount ?? 0} hint="klaar voor listing" />
-        <Stat label="Listed" value={listedCount ?? 0} hint="actieve ads" />
-        <Stat label="Sold" value={soldCount ?? 0} accent />
+        <Stat label={t("statTotal")} value={totalProducts ?? 0} />
+        <Stat label={t("statIndexed")} value={indexedCount ?? 0} hint={t("hintIndexed")} />
+        <Stat label={t("statReady")} value={readyCount ?? 0} hint={t("hintReady")} />
+        <Stat label={t("statListed")} value={listedCount ?? 0} hint={t("hintListed")} />
+        <Stat label={t("statSold")} value={soldCount ?? 0} accent />
       </section>
 
       <section className="card flex items-center justify-between gap-4 p-5">
         <div>
-          <p className="text-sm text-muted-foreground">
-            Geschatte inventaris-waarde (sold of recommended_price)
-          </p>
+          <p className="text-sm text-muted-foreground">{t("estValue")}</p>
           <p className="mt-1 font-heading text-4xl font-bold tracking-tight text-accent">
             € {totalEstValue.toFixed(2).replace(".", ",")}
           </p>
@@ -145,12 +146,12 @@ export default async function Dashboard() {
       />
 
       <section className="card p-5">
-        <h2 className="section-title mb-3">Recent geïndexeerd</h2>
+        <h2 className="section-title mb-3">{t("recent")}</h2>
         {!recent || recent.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nog niks geïndexeerd. Begin via{" "}
+            {t("emptyPrefix")}
             <Link className="font-medium text-accent underline" href="/upload">
-              bulk upload
+              {t("emptyLink")}
             </Link>
             .
           </p>
@@ -162,7 +163,7 @@ export default async function Dashboard() {
                   {p.sticker_id ?? "—"}
                 </span>
                 <span className="flex-1 truncate">
-                  {p.working_title ?? "(geen titel)"}
+                  {p.working_title ?? t("noTitle")}
                 </span>
                 <span className="badge hidden bg-muted text-muted-foreground sm:inline-flex">
                   {p.category_slug}
@@ -171,7 +172,7 @@ export default async function Dashboard() {
                   href={`/inventory/${p.sticker_id ?? p.id}`}
                   className="flex items-center gap-1 text-xs font-medium text-accent hover:underline"
                 >
-                  Bekijk
+                  {t("view")}
                   <ArrowRight className="size-3" aria-hidden />
                 </Link>
               </li>
@@ -183,20 +184,20 @@ export default async function Dashboard() {
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Action
           href="/upload"
-          title="Bulk upload"
-          body="Sleep foto's → auto sticker-ID."
+          title={t("actUploadTitle")}
+          body={t("actUploadBody")}
           icon={UploadCloud}
         />
         <Action
           href="/stickers"
-          title="Print stickers"
-          body="A4 stickervel genereren."
+          title={t("actStickersTitle")}
+          body={t("actStickersBody")}
           icon={Tags}
         />
         <Action
           href="/taxatie"
-          title="Taxatie dossier"
-          body="PDF voor antiek-taxateur."
+          title={t("actTaxatieTitle")}
+          body={t("actTaxatieBody")}
           icon={FileText}
         />
       </section>
