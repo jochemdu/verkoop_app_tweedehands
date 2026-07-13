@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { aiRateLimit } from "@/lib/rate-limit";
 import {
   TaxatieDossier,
   type TaxatieProduct,
@@ -24,6 +25,13 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
+  const rl = aiRateLimit(user.id, "taxatie");
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Te veel zware verzoeken — wacht een paar minuten." },
+      { status: 429 },
+    );
+  }
 
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {

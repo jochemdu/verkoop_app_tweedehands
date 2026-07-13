@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { aiRateLimit } from "@/lib/rate-limit";
 import { runRoomAudit } from "@/lib/ai/room-audit";
 
 export const runtime = "nodejs";
@@ -36,6 +37,13 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
+  const rl = aiRateLimit(user.id, "room-audit");
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Te veel zware verzoeken — wacht een paar minuten." },
+      { status: 429 },
+    );
+  }
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {

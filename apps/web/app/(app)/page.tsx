@@ -24,7 +24,9 @@ export default async function Dashboard() {
     { data: recent },
     { data: allProducts },
   ] = await Promise.all([
-    supabase.from("dashboard_stats").select("*").maybeSingle(),
+    // Fase 31: per-user RPC i.p.v. directe matview-select (matviews kennen
+    // geen RLS; directe select lekte cross-tenant en brak bij >1 user).
+    supabase.rpc("get_dashboard_stats").maybeSingle(),
     supabase
       .from("products")
       .select("id, sticker_id, working_title, category_slug, indexed_at")

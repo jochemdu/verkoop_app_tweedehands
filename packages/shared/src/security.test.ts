@@ -1,5 +1,28 @@
 import { describe, it, expect } from "vitest";
-import { sanitizeForLLM, isSafeInboxPath } from "./security";
+import {
+  sanitizeForLLM,
+  isSafeInboxPath,
+  sanitizeIlikeQuery,
+} from "./security";
+
+describe("sanitizeIlikeQuery", () => {
+  it("laat normale zoektermen intact", () => {
+    expect(sanitizeIlikeQuery("Nintendo Switch")).toBe("Nintendo Switch");
+  });
+  it("verwijdert PostgREST-brekende tekens (komma, haakjes, wildcards)", () => {
+    expect(sanitizeIlikeQuery("a,b(c)%_*d")).toBe("a b c d");
+  });
+  it("normaliseert witruimte en kapt op lengte", () => {
+    expect(sanitizeIlikeQuery("  veel    ruimte  ")).toBe("veel ruimte");
+    expect(sanitizeIlikeQuery("x".repeat(200)).length).toBe(100);
+  });
+  it("neutraliseert een OR-injectiepoging", () => {
+    // Zonder escape zou dit een extra ilike-conditie injecteren.
+    const out = sanitizeIlikeQuery("x%,user_id.eq.00000000");
+    expect(out).not.toContain(",");
+    expect(out).not.toContain("%");
+  });
+});
 
 describe("sanitizeForLLM", () => {
   it("passes clean text through unchanged", () => {

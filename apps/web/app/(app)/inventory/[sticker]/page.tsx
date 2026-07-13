@@ -24,6 +24,7 @@ export default async function ProductDetailPage({
     .from("products")
     .select("*")
     .eq(productIdentifierColumn(sticker), sticker)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (!product) notFound();

@@ -1166,6 +1166,21 @@ export type Database = {
       }
     }
     Functions: {
+      get_dashboard_stats: {
+        Args: never
+        Returns: {
+          total_products: number
+          indexed_count: number
+          ready_count: number
+          listed_count: number
+          sold_count: number
+          pending_count: number
+          approved_count: number
+          archived_count: number
+          total_est_value: number
+          refreshed_at: string
+        }[]
+      }
       find_similar_photos: {
         Args: {
           p_exclude_photo_id?: string

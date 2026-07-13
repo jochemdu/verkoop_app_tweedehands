@@ -43,6 +43,18 @@ export function rateLimit(
   };
 }
 
+// Rate-limit voor dure AI/PDF-routes (maxDuration=300, Claude-vision/PDF).
+// Per gebruiker zodat één account niet de kosten/capaciteit kan opstoken.
+// Default: 20 zware calls per 5 minuten.
+export function aiRateLimit(
+  userId: string,
+  scope = "ai",
+  limit = 20,
+  windowMs = 5 * 60 * 1000,
+): RateLimitResult {
+  return rateLimit(`${scope}:${userId}`, limit, windowMs);
+}
+
 export function ipFromRequest(req: Request): string {
   const xff = req.headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]!.trim();
