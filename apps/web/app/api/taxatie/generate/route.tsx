@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
     .select(
       "id, sticker_id, title, working_title, category_slug, condition, specs, defects, provenance_notes, estimated_value_min, estimated_value_max, recommended_price",
     )
-    .in("id", product_ids);
+    .in("id", product_ids)
+    .is("deleted_at", null);
   if (productErr || !productRows || productRows.length === 0) {
     return NextResponse.json(
       { error: "Geen producten gevonden voor de meegegeven IDs" },

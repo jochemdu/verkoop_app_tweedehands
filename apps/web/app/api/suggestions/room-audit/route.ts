@@ -13,7 +13,7 @@ const MAX_PHOTOS = 4;
 // Kamerfoto's staan in product-photos onder {user_id}/room-audits/<file> —
 // zelfde bucket-isolatie als de inbox, aparte map zodat ze nooit in de
 // bulk-upload flow terechtkomen.
-const FILENAME_RE = /^[A-Za-z0-9._-]{1,200}\.(jpe?g|png|webp|heic)$/i;
+const FILENAME_RE = /^[A-Za-z0-9._-]{1,200}\.(jpe?g|png|webp|heic|heif)$/i;
 
 function isSafeRoomAuditPath(path: string, userId: string): boolean {
   const parts = path.split("/");

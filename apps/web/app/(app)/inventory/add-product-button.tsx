@@ -33,6 +33,7 @@ export function AddProductButton() {
 function AddProductModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const t = useTranslations("inventory");
+  const tc = useTranslations("categoryNames");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -131,7 +132,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
             >
               {CATEGORY_SLUGS.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {tc.has(c) ? tc(c) : c}
                 </option>
               ))}
             </select>

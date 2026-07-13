@@ -15,16 +15,22 @@ const securityHeaders = [
   },
   {
     // Strict-ish CSP. Supabase storage + Vercel + inline style voor Tailwind
-    // dark-mode query. Geen unsafe-eval. 'unsafe-inline' voor style blijft
-    // vanwege @theme-based Tailwind tokens; scripts zijn strict.
+    // dark-mode query. 'unsafe-inline' voor style blijft vanwege @theme-based
+    // Tailwind tokens; scripts zijn strict (geen unsafe-eval).
+    // 'wasm-unsafe-eval' + worker-src blob: + staticimgly.com zijn nodig voor de
+    // client-side achtergrond-verwijdering (@imgly/background-removal draait een
+    // ONNX-model in WebAssembly in een web worker en haalt de wasm/model op van
+    // staticimgly.com). 'wasm-unsafe-eval' staat alléén WASM-compilatie toe, geen
+    // arbitraire JS-eval.
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://*.supabase.co",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://staticimgly.com",
+      "worker-src 'self' blob:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

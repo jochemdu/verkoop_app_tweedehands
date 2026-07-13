@@ -57,6 +57,11 @@ export default async function ProductDetailPage({
   }
 
   const t = await getTranslations("product");
+  const tc = await getTranslations("categoryNames");
+  const categoryLabel =
+    product.category_slug && tc.has(product.category_slug)
+      ? tc(product.category_slug)
+      : product.category_slug;
 
   return (
     <main className="space-y-6">
@@ -72,7 +77,7 @@ export default async function ProductDetailPage({
             {product.title ?? product.working_title ?? t("unnamed")}
           </h1>
           <p className="font-mono text-sm text-muted-foreground">
-            {product.sticker_id ?? t("noSticker")} · {product.category_slug} ·{" "}
+            {product.sticker_id ?? t("noSticker")} · {categoryLabel} ·{" "}
             {product.status}
           </p>
         </div>
