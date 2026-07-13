@@ -73,3 +73,13 @@ export {
 
 export type { Database, Json } from "./database.types";
 export { Constants } from "./database.types";
+
+export {
+  LOCALES,
+  DEFAULT_LOCALE,
+  MESSAGES,
+  isLocale,
+  getMessages,
+  type Locale,
+  type Messages,
+} from "./i18n";
