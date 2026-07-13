@@ -3,7 +3,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@verkoopassistent/shared";
 import { env } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/auth/magic-link"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth/callback",
+  "/api/auth/magic-link",
+  // Gehoste MCP (fase 34): OAuth-metadata + endpoints regelen hun eigen auth
+  // (bearer-token / PKCE / eigen sessiecheck), dus buiten de cookie-gate.
+  "/.well-known/oauth-authorization-server",
+  "/.well-known/oauth-protected-resource",
+  "/api/mcp",
+  "/mcp/authorize",
+];
 
 type CookieInput = { name: string; value: string; options?: CookieOptions };
 
