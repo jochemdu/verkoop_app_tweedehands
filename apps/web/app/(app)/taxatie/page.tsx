@@ -1,8 +1,10 @@
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { TaxatieForm } from "./taxatie-form";
 
 export default async function TaxatiePage() {
   const supabase = await createClient();
+  const t = await getTranslations("taxatie");
 
   // Alle producten beschikbaar voor taxatie (bevat ook al-geanalyseerde items).
   const { data: products } = await supabase
@@ -21,25 +23,20 @@ export default async function TaxatiePage() {
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Taxatiedossier</h1>
-        <p className="text-sm text-muted-foreground">
-          Selecteer antieke items → genereer PDF dossier voor de taxateur
-          met foto&apos;s, specs, herkomst en waardering.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <TaxatieForm products={products ?? []} />
 
       {exportsRaw && exportsRaw.length > 0 && (
         <section>
-          <h2 className="section-title mb-3">
-            Eerder gegenereerd
-          </h2>
+          <h2 className="section-title mb-3">{t("earlier")}</h2>
           <ul className="card divide-y divide-border">
             {exportsRaw.map((e) => (
               <li key={e.id} className="flex items-center justify-between p-3 text-sm">
                 <span>
-                  {e.recipient_name ?? "(geen ontvanger)"}
+                  {e.recipient_name ?? t("noRecipient")}
                   {e.recipient_email && (
                     <span className="ml-2 text-muted-foreground">
                       {e.recipient_email}

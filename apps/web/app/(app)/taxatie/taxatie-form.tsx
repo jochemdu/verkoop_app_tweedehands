@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type Product = {
   id: string;
@@ -13,6 +14,7 @@ type Product = {
 };
 
 export function TaxatieForm({ products }: { products: Product[] }) {
+  const t = useTranslations("taxatie");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -37,7 +39,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (selected.size === 0) {
-      toast.error("Selecteer minstens één product.");
+      toast.error(t("needSelection"));
       return;
     }
     setGenerating(true);
@@ -54,13 +56,11 @@ export function TaxatieForm({ products }: { products: Product[] }) {
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "PDF generatie faalde");
+      if (!res.ok) throw new Error(json.error ?? t("pdfFailed"));
       setResultUrl(json.pdfUrl);
-      toast.success(
-        `Dossier gegenereerd met ${json.products_included} item(s).`,
-      );
+      toast.success(t("dossierGenerated", { count: json.products_included }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "onbekend");
+      toast.error(err instanceof Error ? err.message : t("unknown"));
     } finally {
       setGenerating(false);
     }
@@ -70,22 +70,24 @@ export function TaxatieForm({ products }: { products: Product[] }) {
     <div className="space-y-6">
       {products.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          Geen antieke items gevonden. Categoriseer producten als{" "}
-          <code>antique_tin</code>, <code>antique_silver</code> of{" "}
-          <code>antique_other</code> om ze hier te zien.
+          {t("emptyPre")}
+          <code>antique_tin</code>, <code>antique_silver</code>
+          {t("emptyOr")}
+          <code>antique_other</code>
+          {t("emptyPost")}
         </div>
       ) : (
         <form onSubmit={submit} className="card space-y-4 p-5">
           <div className="flex items-center justify-between">
-            <h2 className="section-title">
-              Selectie
-            </h2>
+            <h2 className="section-title">{t("selection")}</h2>
             <button
               type="button"
               onClick={toggleAll}
               className="text-xs font-medium text-accent hover:underline"
             >
-              {selected.size === products.length ? "Niks" : "Alles"} selecteren
+              {selected.size === products.length
+                ? t("selectNoneBtn")
+                : t("selectAllBtn")}
             </button>
           </div>
 
@@ -102,7 +104,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
                     {p.sticker_id ?? "—"}
                   </span>
                   <span className="flex-1 truncate">
-                    {p.title ?? p.working_title ?? "(geen titel)"}
+                    {p.title ?? p.working_title ?? t("noTitle")}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {p.category_slug}
@@ -114,33 +116,33 @@ export function TaxatieForm({ products }: { products: Product[] }) {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="space-y-1 text-sm">
-              <span className="font-medium">T.a.v. (optioneel)</span>
+              <span className="font-medium">{t("recipientLabel")}</span>
               <input
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
-                placeholder="Naam taxateur"
+                placeholder={t("recipientPlaceholder")}
                 className="input"
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="font-medium">E-mail (optioneel)</span>
+              <span className="font-medium">{t("emailLabel")}</span>
               <input
                 type="email"
                 value={recipientEmail}
                 onChange={(e) => setRecipientEmail(e.target.value)}
-                placeholder="taxateur@voorbeeld.nl"
+                placeholder={t("emailPlaceholder")}
                 className="input"
               />
             </label>
           </div>
 
           <label className="block space-y-1 text-sm">
-            <span className="font-medium">Begeleidende notitie (optioneel)</span>
+            <span className="font-medium">{t("noteLabel")}</span>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="Context voor de taxateur: wanneer verworven, bron, wensen…"
+              placeholder={t("notePlaceholder")}
               className="input"
             />
           </label>
@@ -152,8 +154,8 @@ export function TaxatieForm({ products }: { products: Product[] }) {
               className="btn btn-accent"
             >
               {generating
-                ? "Genereren…"
-                : `Genereer dossier (${selected.size} item${selected.size === 1 ? "" : "s"})`}
+                ? t("generating")
+                : t("generate", { count: selected.size })}
             </button>
             {resultUrl && (
               <a
@@ -162,7 +164,7 @@ export function TaxatieForm({ products }: { products: Product[] }) {
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-accent hover:underline"
               >
-                Open PDF (geldig 1 uur)
+                {t("openPdf")}
               </a>
             )}
           </div>

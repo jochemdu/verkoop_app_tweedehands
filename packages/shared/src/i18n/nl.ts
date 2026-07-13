@@ -526,6 +526,36 @@ export const nl = {
     deleteFailed: "Verwijderen mislukt",
     movedToTrash: "{count} producten naar prullenbak",
   },
+  taxatie: {
+    title: "Taxatiedossier",
+    subtitle:
+      "Selecteer antieke items → genereer PDF dossier voor de taxateur met foto's, specs, herkomst en waardering.",
+    earlier: "Eerder gegenereerd",
+    noRecipient: "(geen ontvanger)",
+    emptyPre: "Geen antieke items gevonden. Categoriseer producten als ",
+    emptyOr: " of ",
+    emptyPost: " om ze hier te zien.",
+    selection: "Selectie",
+    selectAllBtn: "Alles selecteren",
+    selectNoneBtn: "Niks selecteren",
+    noTitle: "(geen titel)",
+    recipientLabel: "T.a.v. (optioneel)",
+    recipientPlaceholder: "Naam taxateur",
+    emailLabel: "E-mail (optioneel)",
+    emailPlaceholder: "taxateur@voorbeeld.nl",
+    noteLabel: "Begeleidende notitie (optioneel)",
+    notePlaceholder:
+      "Context voor de taxateur: wanneer verworven, bron, wensen…",
+    generating: "Genereren…",
+    generate:
+      "Genereer dossier ({count, plural, one {# item} other {# items}})",
+    openPdf: "Open PDF (geldig 1 uur)",
+    needSelection: "Selecteer minstens één product.",
+    pdfFailed: "PDF generatie faalde",
+    unknown: "onbekend",
+    dossierGenerated:
+      "Dossier gegenereerd met {count, plural, one {# item} other {# items}}.",
+  },
 };
 
 // Bewust géén `as const`: de leaf-waarden zijn `string` zodat vertalingen
