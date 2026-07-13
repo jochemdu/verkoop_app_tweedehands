@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { BlindSpotAudit } from "@/lib/ai/blind-spots";
 import { MapPin, Sparkles, Square } from "lucide-react";
@@ -29,41 +30,21 @@ const DEFAULT_HOUSEHOLD: Household = {
   hobbies: "",
 };
 
-const FLAGS: Array<{ key: keyof Household; label: string }> = [
-  { key: "kids", label: "Kinderen (nu of vroeger) in huis" },
-  { key: "attic", label: "Zolder" },
-  { key: "garage", label: "Garage of schuur" },
-  { key: "garden", label: "Tuin" },
-  { key: "recently_moved", label: "Recent verhuisd / samengewoond" },
-  { key: "gamer", label: "Gamer (nu of vroeger)" },
-  { key: "collector", label: "Verzamelaar" },
+// Koppelt elk huishoudkenmerk aan zijn label-sleutel en checklist-pack in de
+// i18n-catalog (suggestions.flag* / suggestions.pack*).
+const FLAGS: Array<{
+  key: keyof Household;
+  labelKey: string;
+  packKey: string;
+}> = [
+  { key: "kids", labelKey: "flagKids", packKey: "packKids" },
+  { key: "attic", labelKey: "flagAttic", packKey: "packAttic" },
+  { key: "garage", labelKey: "flagGarage", packKey: "packGarage" },
+  { key: "garden", labelKey: "flagGarden", packKey: "packGarden" },
+  { key: "recently_moved", labelKey: "flagMoved", packKey: "packMoved" },
+  { key: "gamer", labelKey: "flagGamer", packKey: "packGamer" },
+  { key: "collector", labelKey: "flagCollector", packKey: "packCollector" },
 ];
-
-// Statische checklist-packs per huishoudkenmerk — direct bruikbaar zonder AI.
-const PACKS: Partial<Record<keyof Household, string[]>> = {
-  kids: [
-    "Ontgroeide (merk)kleding per maat gebundeld",
-    "Speelgoed: Lego, Playmobil, Duplo (per kilo of set)",
-    "Kinderfietsen in 3 maten, loopfiets, autostoel",
-    "Babyspullen: box, wipstoel, draagzak, buggy",
-  ],
-  attic: [
-    "Dozen die sinds de vorige verhuizing dicht zitten",
-    "Oude elektronica: routers, spelers, kabelbak",
-    "Sport-restanten: ski's, tennisrackets, tassen",
-    "Kerst/seizoensspullen in overvloed",
-  ],
-  garage: [
-    "Dubbel gereedschap, oude boormachine",
-    "Fietsonderdelen, kinderzitjes, fietsendrager",
-    "Tuingereedschap dat je nooit gebruikt",
-    "Autospullen: dakkoffer, sneeuwkettingen, velgen",
-  ],
-  garden: ["Tuinmeubels die vervangen zijn", "BBQ/heater die stof vangt", "Potten en plantenbakken"],
-  recently_moved: ["Meubels die 'tijdelijk' opgeslagen staan", "Dubbele keukenspullen", "Gordijnen/lampen van het oude huis"],
-  gamer: ["Oude consoles + games (retro loopt goed)", "Controllers, headsets, kabels", "Gaming-stoel of oude monitor"],
-  collector: ["Dubbele exemplaren uit de verzameling", "Verzamelingen die je niet meer bijhoudt (kaarten, munten, LP's)"],
-};
 
 export function BlindSpotSection({
   userId,
@@ -72,6 +53,7 @@ export function BlindSpotSection({
   userId: string;
   initialHousehold: Partial<Household> | null;
 }) {
+  const t = useTranslations("suggestions");
   const [household, setHousehold] = useState<Household>({
     ...DEFAULT_HOUSEHOLD,
     ...(initialHousehold ?? {}),
@@ -80,9 +62,10 @@ export function BlindSpotSection({
   const [auditing, setAuditing] = useState(false);
   const [audit, setAudit] = useState<BlindSpotAudit | null>(null);
 
-  const activePacks = FLAGS.filter((f) => household[f.key]).flatMap((f) =>
-    (PACKS[f.key] ?? []).map((item) => ({ flag: f.label, item })),
-  );
+  const activePacks = FLAGS.filter((f) => household[f.key]).flatMap((f) => {
+    const items = t.raw(f.packKey) as string[];
+    return items.map((item) => ({ flag: t(f.labelKey), item }));
+  });
 
   async function saveHousehold() {
     setSaving(true);
@@ -91,8 +74,8 @@ export function BlindSpotSection({
       const { error } = await supabase
         .from("profiles")
         .upsert({ id: userId, household });
-      if (error) toast.error(`Opslaan mislukt: ${error.message}`);
-      else toast.success("Huishoudprofiel opgeslagen");
+      if (error) toast.error(t("saveFailed", { msg: error.message }));
+      else toast.success(t("profileSaved"));
     } finally {
       setSaving(false);
     }
@@ -100,18 +83,18 @@ export function BlindSpotSection({
 
   async function runAudit() {
     setAuditing(true);
-    const t = toast.loading("AI zoekt blinde vlekken… (kan ~1 min duren)");
+    const tid = toast.loading(t("auditLoading"));
     try {
       const res = await fetch("/api/suggestions/audit", { method: "POST" });
       const json = (await res.json()) as { audit?: BlindSpotAudit; error?: string };
-      toast.dismiss(t);
+      toast.dismiss(tid);
       if (!res.ok || !json.audit) {
-        toast.error(json.error ?? "Audit mislukt");
+        toast.error(json.error ?? t("auditFailed"));
         return;
       }
       setAudit(json.audit);
     } finally {
-      toast.dismiss(t);
+      toast.dismiss(tid);
       setAuditing(false);
     }
   }
@@ -119,12 +102,8 @@ export function BlindSpotSection({
   return (
     <>
       <section className="card space-y-3 p-5">
-        <h2 className="section-title">
-          Huishoudprofiel
-        </h2>
-        <p className="text-xs text-muted-foreground">
-          Hoe meer de AI over je huis weet, hoe gerichter de blinde-vlekken-audit.
-        </p>
+        <h2 className="section-title">{t("householdTitle")}</h2>
+        <p className="text-xs text-muted-foreground">{t("householdIntro")}</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {FLAGS.map((f) => (
             <label key={f.key} className="flex items-center gap-2 text-sm">
@@ -136,14 +115,12 @@ export function BlindSpotSection({
                   setHousehold({ ...household, [f.key]: e.target.checked })
                 }
               />
-              {f.label}
+              {t(f.labelKey)}
             </label>
           ))}
         </div>
         <label className="block space-y-1 text-sm">
-          <span className="text-muted-foreground">
-            (Ex-)hobbies, bijv. fotografie, modelbouw, muziek…
-          </span>
+          <span className="text-muted-foreground">{t("hobbiesLabel")}</span>
           <input
             value={household.hobbies}
             onChange={(e) => setHousehold({ ...household, hobbies: e.target.value })}
@@ -157,7 +134,7 @@ export function BlindSpotSection({
             disabled={saving}
             className="btn btn-outline"
           >
-            {saving ? "Opslaan…" : "Profiel opslaan"}
+            {saving ? t("savingProfile") : t("saveProfile")}
           </button>
           <button
             type="button"
@@ -165,15 +142,13 @@ export function BlindSpotSection({
             disabled={auditing}
             className="btn btn-accent"
           >
-            {auditing ? "AI bezig…" : (<><Sparkles className="size-4" aria-hidden />AI blinde-vlekken-audit</>)}
+            {auditing ? t("aiBusy") : (<><Sparkles className="size-4" aria-hidden />{t("aiAudit")}</>)}
           </button>
         </div>
 
         {activePacks.length > 0 && (
           <div className="rounded-lg border border-border bg-muted/40 p-3">
-            <p className="section-title mb-2">
-              Checklist op basis van je profiel
-            </p>
+            <p className="section-title mb-2">{t("checklistTitle")}</p>
             <ul className="grid gap-1 text-sm sm:grid-cols-2">
               {activePacks.map((p, i) => (
                 <li key={i} className="flex gap-2">
@@ -191,9 +166,7 @@ export function BlindSpotSection({
 
       {audit && (
         <section className="card space-y-3 p-5">
-          <h2 className="section-title">
-            AI-audit: waarschijnlijk nog in huis
-          </h2>
+          <h2 className="section-title">{t("aiAuditTitle")}</h2>
           <p className="text-sm italic text-muted-foreground">{audit.general_tip}</p>
           <ul className="grid gap-3 sm:grid-cols-2">
             {audit.suggestions.map((s, i) => (
@@ -206,7 +179,7 @@ export function BlindSpotSection({
                 </div>
                 <p className="text-xs text-muted-foreground">{s.reasoning}</p>
                 <p className="text-xs">
-                  <span className="font-medium">Zoek naar:</span> {s.examples.join(", ")}
+                  <span className="font-medium">{t("seekLabel")}</span> {s.examples.join(", ")}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   <MapPin className="inline size-3" aria-hidden /> {s.where_to_look} ·{" "}
