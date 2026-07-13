@@ -36,6 +36,12 @@
           "cameraPermission": "VerkoopAssistent heeft camera-toegang nodig voor product- en stickerfoto's en barcode scannen."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "VerkoopAssistent heeft toegang tot je fotobibliotheek nodig om bestaande foto's te importeren."
+        }
+      ],
       "expo-web-browser"
     ],
     "extra": {

@@ -9,6 +9,7 @@ export default function TabsLayout() {
     <Tabs screenOptions={{ headerTitle: "VerkoopAssistent" }}>
       <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
       <Tabs.Screen name="capture" options={{ title: "Indexeren" }} />
+      <Tabs.Screen name="import" options={{ title: "Importeren" }} />
       <Tabs.Screen name="inventory" options={{ title: "Inventaris" }} />
       <Tabs.Screen name="listings" options={{ title: "Advertenties" }} />
     </Tabs>
