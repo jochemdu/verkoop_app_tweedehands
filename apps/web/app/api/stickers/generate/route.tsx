@@ -191,6 +191,16 @@ export async function POST(req: NextRequest) {
   if (insertErr) {
     // Best-effort cleanup: verwijder de upload als DB insert faalt.
     await supabase.storage.from("sticker-sheets").remove([result.storagePath]);
+    // 23P01 = exclusion_violation: een gelijktijdige print claimde dit bereik al
+    // tussen onze overlap-check en insert in. De DB-constraint vangt de race af.
+    if (insertErr.code === "23P01") {
+      return NextResponse.json(
+        {
+          error: `Bereik ${pad(startNumber)}–${pad(endNumber)} overlapt met een zojuist aangemaakt vel. Kies een ander startnummer en probeer opnieuw.`,
+        },
+        { status: 409 },
+      );
+    }
     return NextResponse.json(
       { error: `DB insert mislukt: ${insertErr.message}` },
       { status: 500 },

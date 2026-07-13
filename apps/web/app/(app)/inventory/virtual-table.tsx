@@ -36,6 +36,9 @@ function PrintDialog({
 
   async function printSelection() {
     setBusy(true);
+    // Tab synchroon openen binnen de klik-gesture; anders blokkeert de
+    // pop-upblokker window.open() ná de await en verschijnt de PDF nooit.
+    const pdfTab = window.open("about:blank", "_blank");
     try {
       const res = await fetch("/api/stickers/generate", {
         method: "POST",
@@ -44,10 +47,16 @@ function PrintDialog({
       });
       const json = (await res.json()) as { pdfUrl?: string; error?: string };
       if (!res.ok || !json.pdfUrl) {
+        pdfTab?.close();
         toast.error(json.error ?? t("genFailed"));
         return;
       }
-      window.open(json.pdfUrl, "_blank", "noopener");
+      if (pdfTab) {
+        pdfTab.opener = null;
+        pdfTab.location.href = json.pdfUrl;
+      } else {
+        window.open(json.pdfUrl, "_blank", "noopener");
+      }
       toast.success(t("stickersGenerated", { count: stickerIds.length }));
       onClose();
     } finally {

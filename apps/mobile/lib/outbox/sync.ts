@@ -40,10 +40,22 @@ export type EnqueueInput = Omit<QueuedCapture, "id" | "createdAt" | "photos"> & 
 export async function enqueueCapture(input: EnqueueInput): Promise<void> {
   const id = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
   const photos: QueuedPhoto[] = [];
-  for (let i = 0; i < input.photos.length; i++) {
-    const p = input.photos[i]!;
-    const localPath = await persistPhoto(p.uri, id, i);
-    photos.push({ ...p, localPath });
+  try {
+    for (let i = 0; i < input.photos.length; i++) {
+      const p = input.photos[i]!;
+      const localPath = await persistPhoto(p.uri, id, i);
+      photos.push({ ...p, localPath });
+    }
+  } catch (err) {
+    // Faalt een kopie halverwege, ruim dan de reeds gekopieerde bestanden op —
+    // anders blijven ze in OUTBOX_DIR staan zonder wachtrij-item dat ernaar
+    // verwijst (en dus zonder iets dat ze ooit opruimt).
+    await Promise.all(
+      photos.map((p) =>
+        FileSystem.deleteAsync(p.localPath, { idempotent: true }).catch(() => {}),
+      ),
+    );
+    throw err;
   }
   enqueue({ id, createdAt: new Date().toISOString(), ...input, photos });
 }
