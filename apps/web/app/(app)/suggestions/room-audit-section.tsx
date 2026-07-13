@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { resizeImage } from "@/lib/image";
 import type { RoomAudit } from "@/lib/ai/room-audit";
@@ -10,13 +11,13 @@ import { Camera, MapPin, Sparkles } from "lucide-react";
 
 const MAX_PHOTOS = 4;
 
-const CONFIDENCE_LABEL: Record<string, string> = {
-  high: "zeker",
-  medium: "redelijk zeker",
-  low: "gok",
-};
-
 export function RoomAuditSection({ userId }: { userId: string }) {
+  const t = useTranslations("suggestions");
+  const CONFIDENCE_LABEL: Record<string, string> = {
+    high: t("confHigh"),
+    medium: t("confMedium"),
+    low: t("confLow"),
+  };
   const fileInput = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [roomName, setRoomName] = useState("");
@@ -37,13 +38,13 @@ export function RoomAuditSection({ userId }: { userId: string }) {
 
   async function runScan() {
     if (files.length === 0) {
-      toast.error("Kies eerst één of meer kamerfoto's");
+      toast.error(t("needPhotos"));
       return;
     }
     setBusy(true);
     setAudit(null);
     setCreatedCount(0);
-    const t = toast.loading("AI scant de kamer… (kan ~1 min duren)");
+    const tid = toast.loading(t("scanLoading"));
     const supabase = createClient();
     const uploadedPaths: string[] = [];
     try {
@@ -54,7 +55,7 @@ export function RoomAuditSection({ userId }: { userId: string }) {
         const { error } = await supabase.storage
           .from("product-photos")
           .upload(path, resized, { contentType: "image/jpeg" });
-        if (error) throw new Error(`Upload mislukt: ${error.message}`);
+        if (error) throw new Error(t("uploadFailed", { msg: error.message }));
         uploadedPaths.push(path);
       }
 
@@ -68,7 +69,7 @@ export function RoomAuditSection({ userId }: { userId: string }) {
       });
       const json = (await res.json()) as { audit?: RoomAudit; error?: string };
       if (!res.ok || !json.audit) {
-        toast.error(json.error ?? "Room audit mislukt");
+        toast.error(json.error ?? t("roomAuditFailed"));
         return;
       }
       setAudit(json.audit);
@@ -80,14 +81,14 @@ export function RoomAuditSection({ userId }: { userId: string }) {
         ),
       );
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Room audit mislukt");
+      toast.error(err instanceof Error ? err.message : t("roomAuditFailed"));
       // De API-route ruimt de kamerfoto's op; dit vangt alleen het geval
       // dat de upload of het request zelf strandde vóór de route draaide.
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("product-photos").remove(uploadedPaths);
       }
     } finally {
-      toast.dismiss(t);
+      toast.dismiss(tid);
       setBusy(false);
     }
   }
@@ -112,21 +113,26 @@ export function RoomAuditSection({ userId }: { userId: string }) {
           working_title: item.name,
           category_slug: item.category_slug,
           indexing_notes: [
-            `Geschatte waarde: ${item.estimated_value} (${CONFIDENCE_LABEL[item.confidence] ?? item.confidence})`,
-            `[locatie] ${roomName.trim() ? `${roomName.trim()} — ` : ""}${item.location_hint}`,
-            "[stub] Aangemaakt via room-foto-scan, nog fysiek lokaliseren + sticker plakken + foto's maken.",
+            t("stubValueNote", {
+              value: item.estimated_value,
+              conf: CONFIDENCE_LABEL[item.confidence] ?? item.confidence,
+            }),
+            t("stubLocationNote", {
+              location: `${roomName.trim() ? `${roomName.trim()} — ` : ""}${item.location_hint}`,
+            }),
+            t("stubMarker"),
           ].join("\n"),
           status: "indexed",
           user_id: userId,
         }));
       const { error } = await supabase.from("products").insert(rows);
       if (error) {
-        toast.error(`Stubs aanmaken mislukt: ${error.message}`);
+        toast.error(t("stubsFailed", { msg: error.message }));
         return;
       }
       setCreatedCount(rows.length);
       setSelected(new Set());
-      toast.success(`${rows.length} stub-product(en) aangemaakt`);
+      toast.success(t("stubsCreated", { count: rows.length }));
     } finally {
       setCreating(false);
     }
@@ -135,22 +141,17 @@ export function RoomAuditSection({ userId }: { userId: string }) {
   return (
     <section className="card space-y-3 p-5">
       <h2 className="section-title">
-        <Camera className="inline size-4" aria-hidden /> Kamer-scan
+        <Camera className="inline size-4" aria-hidden /> {t("roomTitle")}
       </h2>
-      <p className="text-xs text-muted-foreground">
-        Maak een foto van een kamer, zolder of schuur — de AI benoemt alle
-        verkoopbare items en checkt wat je al geïndexeerd hebt. Van gemiste
-        items maak je met één klik een stub-product (sticker + foto&apos;s doe je
-        later fysiek).
-      </p>
+      <p className="text-xs text-muted-foreground">{t("roomIntro")}</p>
 
       <div className="flex flex-wrap items-end gap-2">
         <label className="space-y-1 text-sm">
-          <span className="text-xs text-muted-foreground">Ruimte (optioneel)</span>
+          <span className="text-xs text-muted-foreground">{t("roomLabel")}</span>
           <input
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
-            placeholder="bijv. zolder, garage…"
+            placeholder={t("roomPlaceholder")}
             className="input w-44"
           />
         </label>
@@ -168,8 +169,8 @@ export function RoomAuditSection({ userId }: { userId: string }) {
           className="btn btn-outline"
         >
           {files.length > 0
-            ? `${files.length} foto('s) gekozen`
-            : `Kies foto's (max ${MAX_PHOTOS})`}
+            ? t("photosChosen", { count: files.length })
+            : t("pickPhotos", { max: MAX_PHOTOS })}
         </button>
         <button
           type="button"
@@ -177,7 +178,7 @@ export function RoomAuditSection({ userId }: { userId: string }) {
           disabled={busy || files.length === 0}
           className="btn btn-accent"
         >
-          {busy ? "AI scant…" : (<><Sparkles className="size-4" aria-hidden />Scan kamer</>)}
+          {busy ? t("scanning") : (<><Sparkles className="size-4" aria-hidden />{t("scan")}</>)}
         </button>
       </div>
 
@@ -213,7 +214,7 @@ export function RoomAuditSection({ userId }: { userId: string }) {
                       {CONFIDENCE_LABEL[item.confidence] ?? item.confidence}
                       {item.probably_indexed && (
                         <span className="badge ml-1 bg-accent-soft text-accent">
-                          al geïndexeerd?
+                          {t("alreadyIndexed")}
                         </span>
                       )}
                     </span>
@@ -231,12 +232,12 @@ export function RoomAuditSection({ userId }: { userId: string }) {
               className="btn btn-accent"
             >
               {creating
-                ? "Aanmaken…"
-                : `Maak ${selected.size} stub-product(en)`}
+                ? t("creatingStubs")
+                : t("createStubs", { count: selected.size })}
             </button>
             {createdCount > 0 && (
               <Link href="/inventory" className="text-sm font-medium text-accent hover:underline">
-                Bekijk {createdCount} nieuwe stub(s) in inventaris →
+                {t("viewStubs", { count: createdCount })}
               </Link>
             )}
           </div>

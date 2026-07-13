@@ -1,8 +1,10 @@
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { BulkUpload } from "./bulk-upload";
 
 export default async function UploadPage() {
   const supabase = await createClient();
+  const t = await getTranslations("upload");
   const { data: settingRaw } = await supabase
     .from("app_settings")
     .select("value")
@@ -14,11 +16,8 @@ export default async function UploadPage() {
   return (
     <main className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Bulk foto upload</h1>
-        <p className="text-sm text-muted-foreground">
-          Sleep meerdere foto&apos;s hierin. Elke foto wordt een apart product
-          met een oplopende sticker-ID.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("pageTitle")}</h1>
+        <p className="text-sm text-muted-foreground">{t("pageSubtitle")}</p>
       </div>
       <BulkUpload suggestedStart={suggestedStart} />
     </main>

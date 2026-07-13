@@ -110,6 +110,314 @@ export const nl = {
     prev: "← Vorige",
     next: "Volgende →",
   },
+  upload: {
+    pageTitle: "Bulk foto upload",
+    pageSubtitle: "Sleep meerdere foto's hierin. Elke foto wordt een apart product met een oplopende sticker-ID.",
+    settings: "Instellingen",
+    mode: "Modus",
+    modePerPhoto: "Eén product per foto (auto-sticker)",
+    modeSingle: "Alle foto's → één product",
+    startSticker: "Start sticker",
+    stickerId: "Sticker-ID",
+    workingTitle: "Werktitel (optioneel)",
+    workingTitlePlaceholder: "wordt op alle producten gezet",
+    dropActive: "Laat hier los…",
+    dropIdle: "Sleep foto's hier, of klik om te kiezen",
+    dropHint: "JPG / PNG / WebP — worden automatisch gecomprimeerd tot max 1920px",
+    inQueue: "{count} foto's in wachtrij",
+    clear: "Wissen",
+    busy: "Bezig…",
+    submitSingle: "Upload & maak 1 product",
+    submitMulti: "Upload & maak producten",
+    statusError: "✗ fout",
+    statusPending: "wacht",
+    noUpload: "Geen foto's succesvol geüpload",
+    createdSingle: "1 product met {count} foto's aangemaakt",
+    createdMulti: "{count} producten aangemaakt",
+  },
+  suggestions: {
+    pageTitle: "Verkoop-suggesties",
+    pageSubtitle: "Gebaseerd op je inventaris + het huidige seizoen.",
+    seasonTitle: "Seizoen — {month}",
+    seasonSubtitle:
+      "Items die nu beter verkopen door het seizoen. Check je huis op deze thema's.",
+    examplesLabel: "Voorbeelden:",
+    blindSpotsTitle: "Blinde vlekken in bestaande categorieën",
+    blindSpotsSubtitle:
+      "Deze categorieën hebben nog 0 items maar je hebt ze waarschijnlijk wel.",
+    baseline: "Baseline: ≥{min} · {examples}",
+    missingTitle: "Mogelijk overgeslagen categorieën",
+    missingSubtitle:
+      "Deze categorieën bestaan in het systeem maar zijn (bijna) leeg, terwijl ze waarschijnlijk wél in je huis staan. Pak er één en indexeer een batch.",
+    expected: "Verwacht: ≥{min} items · {examples}",
+    startBulk: "Start bulk-sessie",
+    backToInventory: "Terug naar inventaris",
+    roomTitle: "Kamer-scan",
+    roomIntro:
+      "Maak een foto van een kamer, zolder of schuur — de AI benoemt alle verkoopbare items en checkt wat je al geïndexeerd hebt. Van gemiste items maak je met één klik een stub-product (sticker + foto's doe je later fysiek).",
+    roomLabel: "Ruimte (optioneel)",
+    roomPlaceholder: "bijv. zolder, garage…",
+    pickPhotos: "Kies foto's (max {max})",
+    photosChosen: "{count} foto('s) gekozen",
+    scan: "Scan kamer",
+    scanning: "AI scant…",
+    needPhotos: "Kies eerst één of meer kamerfoto's",
+    scanLoading: "AI scant de kamer… (kan ~1 min duren)",
+    uploadFailed: "Upload mislukt: {msg}",
+    roomAuditFailed: "Room audit mislukt",
+    seekLabel: "Zoek naar:",
+    alreadyIndexed: "al geïndexeerd?",
+    createStubs: "Maak {count} stub-product(en)",
+    creatingStubs: "Aanmaken…",
+    stubsCreated: "{count} stub-product(en) aangemaakt",
+    stubsFailed: "Stubs aanmaken mislukt: {msg}",
+    viewStubs: "Bekijk {count} nieuwe stub(s) in inventaris →",
+    stubValueNote: "Geschatte waarde: {value} ({conf})",
+    stubLocationNote: "[locatie] {location}",
+    stubMarker:
+      "[stub] Aangemaakt via room-foto-scan, nog fysiek lokaliseren + sticker plakken + foto's maken.",
+    confHigh: "zeker",
+    confMedium: "redelijk zeker",
+    confLow: "gok",
+    householdTitle: "Huishoudprofiel",
+    householdIntro:
+      "Hoe meer de AI over je huis weet, hoe gerichter de blinde-vlekken-audit.",
+    hobbiesLabel: "(Ex-)hobbies, bijv. fotografie, modelbouw, muziek…",
+    saveProfile: "Profiel opslaan",
+    savingProfile: "Opslaan…",
+    aiAudit: "AI blinde-vlekken-audit",
+    aiBusy: "AI bezig…",
+    saveFailed: "Opslaan mislukt: {msg}",
+    profileSaved: "Huishoudprofiel opgeslagen",
+    auditLoading: "AI zoekt blinde vlekken… (kan ~1 min duren)",
+    auditFailed: "Audit mislukt",
+    checklistTitle: "Checklist op basis van je profiel",
+    aiAuditTitle: "AI-audit: waarschijnlijk nog in huis",
+    flagKids: "Kinderen (nu of vroeger) in huis",
+    flagAttic: "Zolder",
+    flagGarage: "Garage of schuur",
+    flagGarden: "Tuin",
+    flagMoved: "Recent verhuisd / samengewoond",
+    flagGamer: "Gamer (nu of vroeger)",
+    flagCollector: "Verzamelaar",
+    packKids: [
+      "Ontgroeide (merk)kleding per maat gebundeld",
+      "Speelgoed: Lego, Playmobil, Duplo (per kilo of set)",
+      "Kinderfietsen in 3 maten, loopfiets, autostoel",
+      "Babyspullen: box, wipstoel, draagzak, buggy",
+    ],
+    packAttic: [
+      "Dozen die sinds de vorige verhuizing dicht zitten",
+      "Oude elektronica: routers, spelers, kabelbak",
+      "Sport-restanten: ski's, tennisrackets, tassen",
+      "Kerst/seizoensspullen in overvloed",
+    ],
+    packGarage: [
+      "Dubbel gereedschap, oude boormachine",
+      "Fietsonderdelen, kinderzitjes, fietsendrager",
+      "Tuingereedschap dat je nooit gebruikt",
+      "Autospullen: dakkoffer, sneeuwkettingen, velgen",
+    ],
+    packGarden: [
+      "Tuinmeubels die vervangen zijn",
+      "BBQ/heater die stof vangt",
+      "Potten en plantenbakken",
+    ],
+    packMoved: [
+      "Meubels die 'tijdelijk' opgeslagen staan",
+      "Dubbele keukenspullen",
+      "Gordijnen/lampen van het oude huis",
+    ],
+    packGamer: [
+      "Oude consoles + games (retro loopt goed)",
+      "Controllers, headsets, kabels",
+      "Gaming-stoel of oude monitor",
+    ],
+    packCollector: [
+      "Dubbele exemplaren uit de verzameling",
+      "Verzamelingen die je niet meer bijhoudt (kaarten, munten, LP's)",
+    ],
+    blExamples: {
+      console: "PlayStation, Xbox, Wii, Nintendo handhelds",
+      console_game: "oude games die je nooit meer speelt",
+      smartphone: "oude telefoons in een lade",
+      laptop: "oude werk/school-laptop",
+      electronics_other: "adapters, kabels, oude routers, speakers",
+    },
+    missing: {
+      books: {
+        name: "Boeken",
+        examples:
+          "Boekenkast: paperbacks, non-fictie, kinderboeken. ISBN-scan gaat snel (Feat 19).",
+      },
+      vinyl_music: {
+        name: "LP's / muziek",
+        examples: "Oude platen, CD's — niche markt met fans.",
+      },
+      clothing: {
+        name: "Kleding",
+        examples: "Vinted-markt. Merk-kleding in goede staat.",
+      },
+      kitchenware: {
+        name: "Keukengerei",
+        examples: "Ongebruikte pannen, Tupperware, kleine apparaten, servies.",
+      },
+      tools: {
+        name: "Gereedschap",
+        examples: "Klussers-restanten, oude boor/zaag/meetgereedschap.",
+      },
+      toys: {
+        name: "Speelgoed",
+        examples: "Lego, Playmobil, knuffels uit je jeugd — verzamelaars-markt.",
+      },
+      board_games: {
+        name: "Gezelschapsspellen",
+        examples: "Spellen die stof vangen op zolder.",
+      },
+      handbags: {
+        name: "Tassen",
+        examples: "Merktassen, leren tassen — Vinted/Marktplaats-markt.",
+      },
+      shoes: {
+        name: "Schoenen",
+        examples: "Weinig gedragen (merk)schoenen, sneakers.",
+      },
+      garden: {
+        name: "Tuin",
+        examples: "Oude tuinmeubels, gereedschap, potten.",
+      },
+      furniture: {
+        name: "Meubels",
+        examples: "Meubels die je vervangen hebt maar nog staan.",
+      },
+    },
+    season: {
+      m1: [
+        {
+          category: "Winter uitverkoop",
+          examples: ["ski-spullen", "winterbanden", "winterjassen", "kerstverlichting"],
+          rationale: "Eindseizoen: nu verkopen voordat vraag daalt",
+        },
+        {
+          category: "Fitness / nieuwjaar",
+          examples: ["home-trainer", "yogamat", "dumbbells", "fitnesstracker"],
+          rationale: "Nieuwjaarsresoluties verhogen vraag naar fitness",
+        },
+      ],
+      m2: [
+        {
+          category: "Carnaval / feest",
+          examples: ["verkleedkleding", "pruiken", "decoraties"],
+          rationale: "Korte piek rond carnaval",
+        },
+        {
+          category: "Valentijn",
+          examples: ["cadeau-restanten", "sieraden", "parfum ongebruikt"],
+          rationale: "Cadeau-markt actief",
+        },
+      ],
+      m3: [
+        {
+          category: "Lente opruiming",
+          examples: ["winterspullen laatste kans", "tuinmeubelen", "barbecue onderhoud"],
+          rationale: "Zolder-opruim-maand, BBQ-seizoen start",
+        },
+      ],
+      m4: [
+        {
+          category: "Tuin + outdoor",
+          examples: ["tuinmeubel", "barbecue", "kamperen", "tuinkist"],
+          rationale: "Tuinseizoen gestart — vraag stijgt",
+        },
+        {
+          category: "Paaseieren / kinderen",
+          examples: ["kinderspeelgoed", "buitenspeelgoed"],
+          rationale: "Paasvakantie, ouders zoeken activiteiten",
+        },
+      ],
+      m5: [
+        {
+          category: "Kamperen / festival",
+          examples: ["tent", "slaapzak", "campinggasstel", "festivalstoel"],
+          rationale: "Festival-seizoen begint",
+        },
+        {
+          category: "Meivakantie",
+          examples: ["koffer", "reisadapter", "reisgids", "ruitermateriaal"],
+          rationale: "Reis-voorbereiding",
+        },
+      ],
+      m6: [
+        {
+          category: "Zomer outdoor",
+          examples: ["zwembad", "waterpistool", "ventilator", "zonnebrand"],
+          rationale: "Hittegolf-maand",
+        },
+      ],
+      m7: [
+        {
+          category: "Vakantie-uitrusting",
+          examples: ["koffer", "reiskrat", "fotocamera", "snorkel"],
+          rationale: "Zomervakantie piek",
+        },
+      ],
+      m8: [
+        {
+          category: "Terug-naar-school",
+          examples: ["schooltassen", "laptops", "studieboeken", "bureaus"],
+          rationale: "Studenten-markt actief",
+        },
+      ],
+      m9: [
+        {
+          category: "Winter-vroegboek",
+          examples: ["ski-schoenen", "wintersport kleding"],
+          rationale: "Early bird ski-seizoen",
+        },
+        {
+          category: "Zolder na zomer",
+          examples: ["camping na-seizoen", "tuin opruiming"],
+          rationale: "Eind zomer na-vakantie opruim",
+        },
+      ],
+      m10: [
+        {
+          category: "Halloween",
+          examples: ["kostuums", "decoratie"],
+          rationale: "Korte piek eind oktober",
+        },
+        {
+          category: "Winter-voorbereiding",
+          examples: ["winterbanden", "verwarming", "dekens"],
+          rationale: "Winter begint",
+        },
+      ],
+      m11: [
+        {
+          category: "Sinterklaas / Black Friday",
+          examples: ["cadeau-voorraad", "speelgoed", "elektronica"],
+          rationale: "Cadeau-seizoen + BF-vraag",
+        },
+        {
+          category: "Wintersport uitverkoop",
+          examples: ["ski-pakken", "snowboards"],
+          rationale: "Piek-vraag wintersport",
+        },
+      ],
+      m12: [
+        {
+          category: "Kerst / eindejaar",
+          examples: ["kerstversiering", "kerstboom-voet", "cadeau-restanten"],
+          rationale: "Kerst-piek + eindejaar-opruim",
+        },
+        {
+          category: "Oud-en-nieuw",
+          examples: ["vuurwerkbrillen", "party-spullen"],
+          rationale: "Jaarwisseling markt",
+        },
+      ],
+    },
+  },
 };
 
 // Bewust géén `as const`: de leaf-waarden zijn `string` zodat vertalingen

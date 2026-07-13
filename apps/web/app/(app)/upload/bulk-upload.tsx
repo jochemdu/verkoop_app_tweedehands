@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { resizeImage, filenameFor } from "@/lib/image";
@@ -18,6 +19,7 @@ type Mode = "per_photo" | "single";
 
 export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
   const router = useRouter();
+  const t = useTranslations("upload");
   const [queue, setQueue] = useState<QueuedFile[]>([]);
   const [mode, setMode] = useState<Mode>("per_photo");
   const [startSticker, setStartSticker] = useState(suggestedStart);
@@ -84,7 +86,7 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
 
     if (uploadedPaths.length === 0) {
       setBusy(false);
-      toast.error("Geen foto's succesvol geüpload");
+      toast.error(t("noUpload"));
       return;
     }
 
@@ -108,8 +110,8 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
 
     toast.success(
       mode === "single"
-        ? `1 product met ${uploadedPaths.length} foto's aangemaakt`
-        : `${json.created} producten aangemaakt`,
+        ? t("createdSingle", { count: uploadedPaths.length })
+        : t("createdMulti", { count: json.created }),
     );
     setQueue([]);
     router.refresh();
@@ -121,28 +123,22 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
   return (
     <div className="space-y-6">
       <div className="card p-5">
-        <h2 className="section-title mb-3">
-          Instellingen
-        </h2>
+        <h2 className="section-title mb-3">{t("settings")}</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="space-y-1 text-xs">
-            <span className="font-medium">Modus</span>
+            <span className="font-medium">{t("mode")}</span>
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value as Mode)}
               className="input"
             >
-              <option value="per_photo">
-                Eén product per foto (auto-sticker)
-              </option>
-              <option value="single">
-                Alle foto&apos;s → één product
-              </option>
+              <option value="per_photo">{t("modePerPhoto")}</option>
+              <option value="single">{t("modeSingle")}</option>
             </select>
           </label>
           <label className="space-y-1 text-xs">
             <span className="font-medium">
-              {mode === "per_photo" ? "Start sticker" : "Sticker-ID"}
+              {mode === "per_photo" ? t("startSticker") : t("stickerId")}
             </span>
             <input
               value={startSticker}
@@ -152,11 +148,11 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
             />
           </label>
           <label className="space-y-1 text-xs">
-            <span className="font-medium">Werktitel (optioneel)</span>
+            <span className="font-medium">{t("workingTitle")}</span>
             <input
               value={workingTitle}
               onChange={(e) => setWorkingTitle(e.target.value)}
-              placeholder="wordt op alle producten gezet"
+              placeholder={t("workingTitlePlaceholder")}
               className="input"
             />
           </label>
@@ -173,18 +169,16 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
       >
         <input {...getInputProps()} />
         <p className="text-sm font-medium">
-          {isDragActive ? "Laat hier los…" : "Sleep foto's hier, of klik om te kiezen"}
+          {isDragActive ? t("dropActive") : t("dropIdle")}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          JPG / PNG / WebP — worden automatisch gecomprimeerd tot max 1920px
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("dropHint")}</p>
       </div>
 
       {queue.length > 0 && (
         <div className="card space-y-3 p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">
-              {queue.length} foto&apos;s in wachtrij
+              {t("inQueue", { count: queue.length })}
             </p>
             <div className="flex gap-2">
               <button
@@ -192,14 +186,18 @@ export function BulkUpload({ suggestedStart }: { suggestedStart: string }) {
                 disabled={busy}
                 className="btn btn-outline"
               >
-                Wissen
+                {t("clear")}
               </button>
               <button
                 onClick={submit}
                 disabled={busy}
                 className="btn btn-accent"
               >
-                {busy ? "Bezig…" : `Upload & maak ${mode === "single" ? "1 product" : "producten"}`}
+                {busy
+                  ? t("busy")
+                  : mode === "single"
+                    ? t("submitSingle")
+                    : t("submitMulti")}
               </button>
             </div>
           </div>
@@ -227,14 +225,15 @@ function StatusBadge({
   status: QueuedFile["status"];
   error?: string;
 }) {
+  const t = useTranslations("upload");
   if (status === "error") {
     return (
       <span title={error} className="text-destructive">
-        ✗ fout
+        {t("statusError")}
       </span>
     );
   }
   if (status === "uploaded") return <span className="font-medium text-accent">✓</span>;
   if (status === "uploading") return <span>…</span>;
-  return <span className="text-muted-foreground">pending</span>;
+  return <span className="text-muted-foreground">{t("statusPending")}</span>;
 }
