@@ -23,6 +23,7 @@ import {
   type ExpoSpeechRecognitionResultEvent,
 } from "expo-speech-recognition";
 import { supabase } from "@/lib/supabase";
+import { createProductWithPhotos } from "@/lib/products/createProduct";
 import { stickerIdSchema } from "@verkoopassistent/shared";
 import { parseClothingLabel } from "@/lib/clothing-parser";
 
@@ -286,19 +287,6 @@ export default function CaptureScreen() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Niet ingelogd");
-      const paths: string[] = [];
-      for (let i = 0; i < photos.length; i++) {
-        const photo = photos[i]!;
-        const response = await fetch(photo.uri);
-        const blob = await response.blob();
-        const ts = new Date().toISOString().replace(/[:.]/g, "-");
-        const path = `${user.id}/inbox/${ts}_${i}_${photo.source}.jpg`;
-        const { error } = await supabase.storage
-          .from("product-photos")
-          .upload(path, blob, { contentType: "image/jpeg" });
-        if (error) throw new Error(`Upload faalde: ${error.message}`);
-        paths.push(path);
-      }
 
       const inputMethod =
         mode === "manual"
@@ -307,38 +295,26 @@ export default function CaptureScreen() {
           ? "ocr_separate"
           : "ocr_inline";
 
-      const { data: product, error: productErr } = await supabase
-        .from("products")
-        .insert({
-          sticker_id: stickerId || null,
-          sticker_input_method: stickerId ? inputMethod : null,
-          sticker_confidence: stickerConfidence,
-          working_title: workingTitle || null,
-          indexing_notes: notes || null,
-          ean: ean || null,
-        })
-        .select()
-        .single();
-      if (productErr) {
-        await supabase.storage.from("product-photos").remove(paths);
-        throw new Error(productErr.message);
-      }
-
-      await supabase.from("photos").insert(
-        paths.map((path, idx) => ({
-          product_id: product.id,
-          storage_path: path,
-          order_index: idx,
-          photo_type:
-            photos[idx]?.source === "sticker_ocr" ? ("sticker" as const) : ("general" as const),
-          capture_mode: photos[idx]?.source,
-          sticker_visible: photos[idx]?.source === "sticker_ocr",
-          detected_sticker:
-            photos[idx]?.source === "sticker_ocr" ? stickerId : null,
-          ocr_confidence:
-            photos[idx]?.source === "sticker_ocr" ? stickerConfidence : null,
+      // Gedeelde helper (fase 32): upload + product + photos met rollback.
+      await createProductWithPhotos({
+        userId: user.id,
+        stickerId: stickerId || null,
+        stickerInputMethod: inputMethod,
+        stickerConfidence,
+        workingTitle: workingTitle || null,
+        indexingNotes: notes || null,
+        ean: ean || null,
+        photos: photos.map((p) => ({
+          uri: p.uri,
+          captureMode: p.source,
+          photoType: p.source === "sticker_ocr" ? "sticker" : "general",
+          width: p.width ?? null,
+          height: p.height ?? null,
+          stickerVisible: p.source === "sticker_ocr",
+          detectedSticker: p.source === "sticker_ocr" ? stickerId : null,
+          ocrConfidence: p.source === "sticker_ocr" ? stickerConfidence : null,
         })),
-      );
+      });
 
       if (stickerId) {
         await supabase
