@@ -292,6 +292,7 @@ export const de: Messages = {
     shipLabel: "Versand €",
     saveChanges: "Änderungen speichern",
     copyText: "Text kopieren",
+    openPlatform: "{platform} zum Einstellen öffnen",
     workflow: "Workflow",
     reviewPrompt: "Überprüfe den Text oben. Fertig? Als nächsten Schritt genehmigen.",
     approve: "Genehmigen",

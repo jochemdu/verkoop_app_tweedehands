@@ -62,6 +62,8 @@ export default async function ListingDetailPage({
           external_id: listing.external_id,
         }}
         platformName={platform?.name ?? ""}
+        platformSlug={platform?.slug ?? ""}
+        platformBaseUrl={platform?.base_url ?? null}
         productStickerId={product?.sticker_id ?? ""}
       />
     </main>

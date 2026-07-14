@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ExternalLink } from "lucide-react";
 import type { ListingStatus } from "@verkoopassistent/shared";
 
 type Listing = {
@@ -18,17 +18,32 @@ type Listing = {
   external_id: string | null;
 };
 
+// Deep-links naar de "plaats advertentie"-flow per platform. De officiële
+// Marktplaats-API vereist een partner-contract, dus posten we niet via API maar
+// openen we de plaats-pagina zodat de gebruiker de gekopieerde tekst plakt.
+const SELL_URLS: Record<string, string> = {
+  marktplaats: "https://www.marktplaats.nl/plaats",
+  "2dehands": "https://www.2dehands.be/plaats",
+  vinted: "https://www.vinted.nl/items/new",
+  ebay: "https://www.ebay.nl/sl/sell",
+};
+
 export function ListingActions({
   listing,
   platformName,
+  platformSlug,
+  platformBaseUrl,
   productStickerId,
 }: {
   listing: Listing;
   platformName: string;
+  platformSlug: string;
+  platformBaseUrl: string | null;
   productStickerId: string;
 }) {
   const router = useRouter();
   const t = useTranslations("listings");
+  const sellUrl = SELL_URLS[platformSlug] ?? platformBaseUrl ?? null;
   const [form, setForm] = useState({
     final_title: listing.final_title,
     final_description: listing.final_description,
@@ -182,6 +197,18 @@ export function ListingActions({
           >
             {t("copyText")}
           </button>
+          {sellUrl && !isPublished && (
+            <a
+              href={sellUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => void copyToClipboard()}
+              className="btn btn-accent"
+            >
+              <ExternalLink className="size-4" aria-hidden />
+              {t("openPlatform", { platform: platformName })}
+            </a>
+          )}
         </div>
       </form>
 

@@ -290,6 +290,7 @@ export const en: Messages = {
     shipLabel: "Shipping €",
     saveChanges: "Save changes",
     copyText: "Copy text",
+    openPlatform: "Open {platform} to post",
     workflow: "Workflow",
     reviewPrompt: "Review the text above. Ready? Approve as the next step.",
     approve: "Approve",

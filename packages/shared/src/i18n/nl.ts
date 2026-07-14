@@ -478,6 +478,7 @@ export const nl = {
     shipLabel: "Verzending €",
     saveChanges: "Wijzigingen opslaan",
     copyText: "Kopieer tekst",
+    openPlatform: "Open {platform} om te plaatsen",
     workflow: "Workflow",
     reviewPrompt: "Review de tekst hierboven. Klaar? Goedkeuren als volgende stap.",
     approve: "Goedkeuren",
