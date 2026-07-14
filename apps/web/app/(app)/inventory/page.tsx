@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -109,6 +110,16 @@ export default async function InventoryPage({
           >
             {showDeleted ? t("active") : t("trash")}
           </Link>
+          {!showDeleted && (
+            <a
+              href="/api/export/products"
+              download
+              className="btn btn-outline"
+            >
+              <Download className="h-4 w-4" />
+              {t("exportCsv")}
+            </a>
+          )}
           {!showDeleted && <AddProductButton />}
         </div>
       </div>
