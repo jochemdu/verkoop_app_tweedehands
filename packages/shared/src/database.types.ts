@@ -848,6 +848,57 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          lowest: number | null
+          product_id: string | null
+          read_at: string | null
+          search_query: string | null
+          threshold: number | null
+          user_id: string
+          watch_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lowest?: number | null
+          product_id?: string | null
+          read_at?: string | null
+          search_query?: string | null
+          threshold?: number | null
+          user_id?: string
+          watch_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lowest?: number | null
+          product_id?: string | null
+          read_at?: string | null
+          search_query?: string | null
+          threshold?: number | null
+          user_id?: string
+          watch_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_alerts_watch_id_fkey"
+            columns: ["watch_id"]
+            isOneToOne: false
+            referencedRelation: "price_watches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_history: {
         Row: {
           currency: string | null

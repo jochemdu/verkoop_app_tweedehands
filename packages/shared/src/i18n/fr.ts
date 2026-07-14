@@ -577,6 +577,20 @@ export const fr: Messages = {
     lstEmptyPre: "Laissez Claude Desktop créer un brouillon via l'outil MCP ",
     lstEmptyPost: ", puis passez-le en revue sur l'application web.",
   },
+  alerts: {
+    navTitle: "Alertes",
+    title: "Alertes de prix",
+    subtitle:
+      "Recherches dont le prix le plus bas est passé sous ton seuil défini.",
+    empty: "Pas encore d'alertes de prix.",
+    line: "Le plus bas €{lowest} — sous ton seuil de €{threshold}",
+    noQuery: "(sans recherche)",
+    viewProduct: "Voir le produit",
+    markRead: "Lu",
+    markAllRead: "Tout marquer comme lu",
+    unread: "nouveau",
+    markFailed: "Échec du marquage",
+  },
   categoryNames: {
     ram_dimm: "RAM DIMM",
     ram_sodimm: "RAM SODIMM (portable)",

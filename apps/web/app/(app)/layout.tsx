@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Tag } from "lucide-react";
+import { Bell, Tag } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/logout-button";
 import { NavLinks } from "@/components/nav-links";
@@ -13,6 +14,11 @@ export default async function AppLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const t = await getTranslations("alerts");
+  const { count: unreadAlerts } = await supabase
+    .from("price_alerts")
+    .select("id", { count: "exact", head: true })
+    .is("read_at", null);
 
   return (
     <div className="min-h-screen">
@@ -33,6 +39,19 @@ export default async function AppLayout({
             <span className="hidden text-xs text-muted-foreground xl:inline">
               {user?.email}
             </span>
+            <Link
+              href="/alerts"
+              title={t("navTitle")}
+              aria-label={t("navTitle")}
+              className="relative flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Bell className="size-4" aria-hidden />
+              {!!unreadAlerts && unreadAlerts > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-4 text-accent-foreground">
+                  {unreadAlerts > 9 ? "9+" : unreadAlerts}
+                </span>
+              )}
+            </Link>
             <LogoutButton />
           </div>
         </nav>

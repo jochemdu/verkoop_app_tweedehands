@@ -577,6 +577,20 @@ export const de: Messages = {
     lstEmptyPre: "Lass Claude Desktop einen Entwurf über das ",
     lstEmptyPost: " MCP-Tool erstellen und prüfe ihn in der Web-App.",
   },
+  alerts: {
+    navTitle: "Meldungen",
+    title: "Preismeldungen",
+    subtitle:
+      "Suchen, deren niedrigster Preis unter deinen eingestellten Schwellenwert gefallen ist.",
+    empty: "Noch keine Preismeldungen.",
+    line: "Niedrigster €{lowest} — unter deinem Schwellenwert von €{threshold}",
+    noQuery: "(ohne Suchbegriff)",
+    viewProduct: "Produkt ansehen",
+    markRead: "Gelesen",
+    markAllRead: "Alle als gelesen",
+    unread: "neu",
+    markFailed: "Markieren fehlgeschlagen",
+  },
   categoryNames: {
     ram_dimm: "RAM DIMM",
     ram_sodimm: "RAM SODIMM (Laptop)",
