@@ -23,6 +23,7 @@ export default function TabsLayout() {
           tabBarBadge: pending > 0 ? pending : undefined,
         }}
       />
+      <Tabs.Screen name="batch-scan" options={{ title: t("tabBatch") }} />
       <Tabs.Screen name="import" options={{ title: t("tabImport") }} />
       <Tabs.Screen name="inventory" options={{ title: t("tabInventory") }} />
       <Tabs.Screen name="listings" options={{ title: t("tabListings") }} />

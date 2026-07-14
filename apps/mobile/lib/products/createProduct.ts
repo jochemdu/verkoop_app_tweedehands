@@ -57,6 +57,29 @@ async function uploadOne(
   return { path, sizeBytes: buffer.byteLength };
 }
 
+// Batch-scan (fase 47): maak een fotoloos stub-product op basis van alleen een
+// barcode + (optionele) titel. Foto's, sticker en analyse volgen later. Gebruikt
+// dezelfde gedeelde insert-kern zodat rollback/consistentie identiek blijft.
+export async function createProductStub(input: {
+  userId: string;
+  ean?: string | null;
+  workingTitle?: string | null;
+  indexingNotes?: string | null;
+}): Promise<{ productId: string }> {
+  const result = await insertProductWithPhotos(supabase, {
+    product: {
+      ean: input.ean || null,
+      working_title: input.workingTitle || null,
+      indexing_notes: input.indexingNotes || null,
+      status: "indexed",
+      user_id: input.userId,
+    },
+    photos: [],
+  });
+  if (!result.ok) throw new Error(result.error);
+  return { productId: result.product.id };
+}
+
 export async function createProductWithPhotos(
   input: CreateProductInput,
 ): Promise<{ productId: string }> {
