@@ -90,3 +90,5 @@ export {
   type InsertProductWithPhotosOptions,
   type InsertProductWithPhotosResult,
 } from "./products";
+
+export { padSticker, stickerRange } from "./sticker";

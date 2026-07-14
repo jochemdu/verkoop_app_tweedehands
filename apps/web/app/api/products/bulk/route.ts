@@ -4,6 +4,7 @@ import {
   stickerIdSchema,
   isSafeInboxPath,
   insertProductWithPhotos,
+  stickerRange,
 } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 
@@ -72,13 +73,10 @@ export async function POST(req: NextRequest) {
   if (parsed.data.startSticker) {
     // Legacy: user geeft expliciet startSticker → gebruik oude path voor backward compat.
     // We vertrouwen op UNIQUE constraint op sticker_id om conflicten te vangen.
-    stickers = [];
-    let cur = parseInt(parsed.data.startSticker, 10);
-    for (let i = 0; i < photo_paths.length; i++) {
-      if (cur > 9999) break;
-      stickers.push(String(cur).padStart(4, "0"));
-      cur++;
-    }
+    stickers = stickerRange(
+      parseInt(parsed.data.startSticker, 10),
+      photo_paths.length,
+    );
   } else {
     const { data: reserved, error: reserveErr } = await supabase.rpc(
       "reserve_next_sticker",

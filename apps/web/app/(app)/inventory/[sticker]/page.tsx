@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
-import { productIdentifierColumn } from "@verkoopassistent/shared";
+import { getTranslations, getLocale } from "next-intl/server";
+import { productIdentifierColumn, localeTag } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
 import { AnalyzeButton } from "./analyze-button";
 import { AddPhotosButton } from "./add-photos-button";
 import { PhotoTools, type ToolPhoto } from "./photo-tools";
+import { PriceChart } from "./price-chart";
+import { SoldPriceForm } from "./sold-price-form";
 
 export default async function ProductDetailPage({
   params,
@@ -55,6 +57,23 @@ export default async function ProductDetailPage({
         .filter((p) => p.url);
     }
   }
+
+  const { data: priceHistory } = await supabase
+    .from("price_history")
+    .select("price_low, price_avg, price_high, fetched_at")
+    .eq("product_id", product.id)
+    .order("fetched_at", { ascending: true })
+    .limit(60);
+
+  const dateTag = localeTag(await getLocale());
+  const priceData = (priceHistory ?? []).map((h) => ({
+    label: h.fetched_at
+      ? new Date(h.fetched_at).toLocaleDateString(dateTag, { dateStyle: "short" })
+      : "",
+    low: h.price_low,
+    avg: h.price_avg,
+    high: h.price_high,
+  }));
 
   const t = await getTranslations("product");
   const tc = await getTranslations("categoryNames");
@@ -110,6 +129,15 @@ export default async function ProductDetailPage({
           </ul>
         </section>
       )}
+
+      <PriceChart data={priceData} />
+
+      <SoldPriceForm
+        productId={product.id}
+        recommendedPrice={product.recommended_price}
+        soldPrice={product.sold_price}
+        soldAt={product.sold_at}
+      />
 
       <EditProductForm product={product} />
     </main>
