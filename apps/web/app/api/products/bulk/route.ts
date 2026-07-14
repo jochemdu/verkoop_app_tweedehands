@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   } else {
     const { data: reserved, error: reserveErr } = await supabase.rpc(
       "reserve_next_sticker",
-      { p_count: photo_paths.length, p_user_id: user.id },
+      { p_count: photo_paths.length },
     );
     if (reserveErr || !reserved) {
       return NextResponse.json(

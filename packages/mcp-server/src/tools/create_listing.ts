@@ -3,7 +3,7 @@ import { PLATFORM_SLUGS } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase";
 import { resolveProductId } from "../lib/resolve";
 import { jsonContent, errorContent } from "../lib/format";
-import { getOwnerId } from "../lib/owner.js";
+import { getOwnerId, getOwnerWorkspaceId } from "../lib/owner.js";
 
 const schema = z.object({
   product: z.string().min(1).describe("UUID of 4-cijferig sticker-ID."),
@@ -80,6 +80,7 @@ export async function handleCreateListing(input: unknown) {
       final_title: title,
       final_description: description,
       user_id: ownerId,
+      workspace_id: await getOwnerWorkspaceId(),
     })
     .select()
     .single();

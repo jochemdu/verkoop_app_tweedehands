@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getSupabase } from "../lib/supabase.js";
+import { getOwnerId, getOwnerWorkspaceId } from "../lib/owner.js";
 import { resolveProductIds } from "../lib/resolve.js";
 import { jsonContent, errorContent } from "../lib/format.js";
 
@@ -55,6 +56,8 @@ export async function handleCreateTaxatiePdf(input: unknown) {
       recipient_name: parsed.data.recipient_name ?? null,
       recipient_email: parsed.data.recipient_email ?? null,
       pdf_storage_path: null, // nog te vullen wanneer gebruiker PDF daadwerkelijk genereert
+      user_id: await getOwnerId(),
+      workspace_id: await getOwnerWorkspaceId(),
     })
     .select()
     .single();

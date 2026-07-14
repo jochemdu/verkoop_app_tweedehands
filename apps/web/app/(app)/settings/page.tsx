@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { SettingsForm } from "./settings-form";
 import { LinkedAccounts, type Identity } from "./linked-accounts";
+import { HouseholdSection } from "./household-section";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -37,6 +38,7 @@ export default async function SettingsPage() {
           listing_language: profile?.listing_language ?? "nl",
         }}
       />
+      <HouseholdSection userId={user!.id} />
       <LinkedAccounts identities={identities} />
     </main>
   );
