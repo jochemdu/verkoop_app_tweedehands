@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { productIndexSchema, isSafeInboxPath } from "@verkoopassistent/shared";
+import {
+  productIndexSchema,
+  isSafeInboxPath,
+  insertProductWithPhotos,
+} from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -35,9 +39,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { data: product, error: productErr } = await supabase
-    .from("products")
-    .insert({
+  const result = await insertProductWithPhotos(supabase, {
+    product: {
       sticker_id: productData.sticker_id ?? null,
       sticker_input_method: productData.sticker_input_method ?? null,
       sticker_confidence: productData.sticker_confidence ?? null,
@@ -46,43 +49,25 @@ export async function POST(req: NextRequest) {
       indexing_notes: productData.indexing_notes ?? null,
       ean: productData.ean ?? null,
       user_id: user.id,
-    })
-    .select()
-    .single();
-  if (productErr || !product) {
-    if (photo_paths.length > 0) {
-      await supabase.storage.from("product-photos").remove(photo_paths);
-    }
-    const isSticker = productErr?.message?.includes("sticker_id");
-    return NextResponse.json(
-      {
-        error: isSticker
-          ? `Sticker-ID ${productData.sticker_id} bestaat al.`
-          : "Product aanmaken mislukt.",
-      },
-      { status: isSticker ? 409 : 500 },
-    );
-  }
-
-  if (photo_paths.length > 0) {
-    const photoRows = photo_paths.map((path, idx) => ({
-      product_id: product.id,
+    },
+    photos: photo_paths.map((path, idx) => ({
       storage_path: path,
       order_index: idx,
       photo_type: "general" as const,
       user_id: user.id,
-    }));
-    const { error: photosErr } = await supabase.from("photos").insert(photoRows);
-    if (photosErr) {
-      return NextResponse.json(
-        {
-          product,
-          warning: `Product aangemaakt maar foto metadata opslaan mislukt.`,
-        },
-        { status: 207 },
-      );
-    }
+    })),
+    cleanupPaths: photo_paths,
+  });
+  if (!result.ok) {
+    return NextResponse.json(
+      {
+        error: result.stickerConflict
+          ? `Sticker-ID ${productData.sticker_id} bestaat al.`
+          : "Product aanmaken mislukt.",
+      },
+      { status: result.stickerConflict ? 409 : 500 },
+    );
   }
 
-  return NextResponse.json({ product });
+  return NextResponse.json({ product: result.product });
 }
