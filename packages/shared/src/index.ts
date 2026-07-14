@@ -84,3 +84,9 @@ export {
   type Locale,
   type Messages,
 } from "./i18n";
+
+export {
+  insertProductWithPhotos,
+  type InsertProductWithPhotosOptions,
+  type InsertProductWithPhotosResult,
+} from "./products";

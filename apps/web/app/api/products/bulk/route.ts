@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { stickerIdSchema, isSafeInboxPath } from "@verkoopassistent/shared";
+import {
+  stickerIdSchema,
+  isSafeInboxPath,
+  insertProductWithPhotos,
+} from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -39,42 +43,28 @@ export async function POST(req: NextRequest) {
 
   // Mode: single — alle foto's naar één product.
   if (mode === "single") {
-    const { data: product, error: productErr } = await supabase
-      .from("products")
-      .insert({
+    const result = await insertProductWithPhotos(supabase, {
+      product: {
         sticker_id: parsed.data.startSticker ?? null,
         sticker_input_method: parsed.data.startSticker ? "manual" : null,
         working_title: workingTitle ?? null,
         user_id: user.id,
-      })
-      .select()
-      .single();
-    if (productErr || !product) {
-      await supabase.storage.from("product-photos").remove(photo_paths);
+      },
+      photos: photo_paths.map((path, idx) => ({
+        storage_path: path,
+        order_index: idx,
+        photo_type: "general" as const,
+        user_id: user.id,
+      })),
+      cleanupPaths: photo_paths,
+    });
+    if (!result.ok) {
       return NextResponse.json(
-        { error: `Product aanmaken mislukt: ${productErr?.message}` },
+        { error: `Product aanmaken mislukt: ${result.error}` },
         { status: 500 },
       );
     }
-    const photoRows = photo_paths.map((path, idx) => ({
-      product_id: product.id,
-      storage_path: path,
-      order_index: idx,
-      photo_type: "general" as const,
-      user_id: user.id,
-    }));
-    const { error: photosErr } = await supabase.from("photos").insert(photoRows);
-    if (photosErr) {
-      // Rollback: product-rij weg + geüploade bestanden opruimen, zodat we geen
-      // fotoloos product en geen wees-objecten in storage achterlaten.
-      await supabase.from("products").delete().eq("id", product.id);
-      await supabase.storage.from("product-photos").remove(photo_paths);
-      return NextResponse.json(
-        { error: `Foto's koppelen mislukt: ${photosErr.message}` },
-        { status: 500 },
-      );
-    }
-    return NextResponse.json({ created: 1, products: [product] });
+    return NextResponse.json({ created: 1, products: [result.product] });
   }
 
   // Mode: per_photo — reserveer atomisch N sticker-ID's via DB function.
@@ -109,38 +99,28 @@ export async function POST(req: NextRequest) {
   for (let i = 0; i < photo_paths.length; i++) {
     const path = photo_paths[i]!;
     const sticker = stickers[i] ?? null;
-    const { data: product, error: productErr } = await supabase
-      .from("products")
-      .insert({
+    const result = await insertProductWithPhotos(supabase, {
+      product: {
         sticker_id: sticker,
         sticker_input_method: sticker ? "manual_increment" : null,
         working_title: workingTitle ?? null,
         user_id: user.id,
-      })
-      .select()
-      .single();
-    if (productErr || !product) {
-      // Geüploade foto opruimen: er komt geen product/photo-rij die ernaar wijst.
-      await supabase.storage.from("product-photos").remove([path]);
-      errors.push({ photo_path: path, error: productErr?.message ?? "unknown" });
-      continue;
-    }
-    const { error: photoErr } = await supabase.from("photos").insert({
-      product_id: product.id,
-      storage_path: path,
-      order_index: 0,
-      photo_type: "general",
-      user_id: user.id,
+      },
+      photos: [
+        {
+          storage_path: path,
+          order_index: 0,
+          photo_type: "general" as const,
+          user_id: user.id,
+        },
+      ],
+      cleanupPaths: [path],
     });
-    if (photoErr) {
-      // Rollback product rij + storage-object als photo insert faalt — voorkomt
-      // dangling product én wees-object.
-      await supabase.from("products").delete().eq("id", product.id);
-      await supabase.storage.from("product-photos").remove([path]);
-      errors.push({ photo_path: path, error: photoErr.message });
+    if (!result.ok) {
+      errors.push({ photo_path: path, error: result.error });
       continue;
     }
-    created.push({ product_id: product.id, sticker_id: sticker });
+    created.push({ product_id: result.product.id, sticker_id: sticker });
   }
 
   return NextResponse.json({

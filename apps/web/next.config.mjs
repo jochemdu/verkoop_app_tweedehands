@@ -25,9 +25,14 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      // blob: + staticimgly.com in script-src: onnxruntime-web (via @imgly)
-      // laadt zijn WASM-backend met een dynamische import() van een blob:-module.
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://staticimgly.com",
+      // De client-side achtergrond-verwijdering (@imgly + onnxruntime-web) vereist:
+      // - 'wasm-unsafe-eval' + blob: → WASM-backend via dynamische blob-import
+      // - 'unsafe-eval' → de emscripten-glue van onnxruntime gebruikt eval()/new Function()
+      // - staticimgly.com → wasm/model-download
+      // 'unsafe-eval' verzwakt weinig extra bovenop het al aanwezige 'unsafe-inline'.
+      // Per-pad scopen kan niet: een Next SPA hergebruikt de CSP van de eerste lading.
+      // Alternatief voor maximale strictheid: achtergrond-verwijdering server-side draaien.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://staticimgly.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://*.supabase.co",
       "font-src 'self' data:",

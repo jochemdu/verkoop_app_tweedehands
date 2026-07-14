@@ -3,6 +3,7 @@
 // deprecation-warning die de hoofdmodule zou geven.
 import * as FileSystem from "expo-file-system/legacy";
 import { decode } from "base64-arraybuffer";
+import { insertProductWithPhotos } from "@verkoopassistent/shared";
 import { supabase } from "../supabase";
 
 // Gedeelde product-aanmaak-helper (fase 32). Zowel de capture-tab als de
@@ -76,11 +77,11 @@ export async function createProductWithPhotos(
     throw err;
   }
 
-  // 2. Product-rij. user_id expliciet (mobiel draait onder de user-JWT, maar
-  //    expliciet is robuuster en consistent met de web-app).
-  const { data: product, error: productErr } = await supabase
-    .from("products")
-    .insert({
+  // 2+3. Product- + foto-rijen via de gedeelde kern (upload/insert/rollback op
+  //       één plek, consistent met de web-app). user_id expliciet: mobiel draait
+  //       onder de user-JWT maar expliciet is robuuster.
+  const result = await insertProductWithPhotos(supabase, {
+    product: {
       sticker_id: input.stickerId || null,
       sticker_input_method: input.stickerId ? input.stickerInputMethod : null,
       sticker_confidence: input.stickerConfidence ?? null,
@@ -89,21 +90,8 @@ export async function createProductWithPhotos(
       ean: input.ean || null,
       status: "indexed",
       user_id: input.userId,
-    })
-    .select("id")
-    .single();
-  if (productErr || !product) {
-    await supabase.storage
-      .from("product-photos")
-      .remove(uploaded.map((u) => u.path));
-    throw new Error(productErr?.message ?? "Product aanmaken mislukt");
-  }
-
-  // 3. Photo-rijen (incl. afmetingen/grootte). Faalt dit, dan rollen we het
-  //    product én de storage-objecten terug — geen weeskinderen (audit-fix).
-  const { error: photoErr } = await supabase.from("photos").insert(
-    input.photos.map((p, idx) => ({
-      product_id: product.id,
+    },
+    photos: input.photos.map((p, idx) => ({
       storage_path: uploaded[idx]!.path,
       order_index: idx,
       photo_type: (p.photoType ?? "general") as "general",
@@ -116,14 +104,9 @@ export async function createProductWithPhotos(
       size_bytes: uploaded[idx]!.sizeBytes,
       user_id: input.userId,
     })),
-  );
-  if (photoErr) {
-    await supabase.from("products").delete().eq("id", product.id);
-    await supabase.storage
-      .from("product-photos")
-      .remove(uploaded.map((u) => u.path));
-    throw new Error(`Foto's opslaan mislukt: ${photoErr.message}`);
-  }
+    cleanupPaths: uploaded.map((u) => u.path),
+  });
+  if (!result.ok) throw new Error(result.error);
 
-  return { productId: product.id };
+  return { productId: result.product.id };
 }
