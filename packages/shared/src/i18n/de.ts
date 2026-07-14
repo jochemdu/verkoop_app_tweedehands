@@ -490,6 +490,8 @@ export const de: Messages = {
     soldSaved: "Verkaufspreis gespeichert",
     soldFailed: "Speichern fehlgeschlagen",
     marginLabel: "Marge gegenüber Empfehlungspreis:",
+    netLabel: "Netto nach Versand:",
+    afterShipping: "nach €{cost} Versand",
   },
   mobile: {
     appName: "VerkoopAssistent",
@@ -620,6 +622,16 @@ export const de: Messages = {
     active: "aktiv",
     sold: "verkauft",
     avg: "Ø",
+  },
+  shipping: {
+    title: "Versandkosten",
+    subtitle: "Schätzung anhand der Versandklasse (PostNL, Richtwert).",
+    label: "Versandart",
+    classLetterbox: "Briefkastenpaket (bis 2 kg)",
+    classParcel: "Paket (bis 10 kg)",
+    classLarge: "Großes Paket (bis 23 kg)",
+    suggested: "aus Kategorie abgeleitet",
+    saveFailed: "Speichern fehlgeschlagen",
   },
   categoryNames: {
     ram_dimm: "RAM DIMM",

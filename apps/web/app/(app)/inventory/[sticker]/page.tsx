@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations, getLocale } from "next-intl/server";
-import { productIdentifierColumn, localeTag } from "@verkoopassistent/shared";
+import {
+  productIdentifierColumn,
+  localeTag,
+  estimateShipping,
+} from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
@@ -10,6 +14,7 @@ import { AddPhotosButton } from "./add-photos-button";
 import { PhotoTools, type ToolPhoto } from "./photo-tools";
 import { PriceChart } from "./price-chart";
 import { MarketComparables } from "./market-comparables";
+import { ShippingEstimate } from "./shipping-estimate";
 import { SoldPriceForm } from "./sold-price-form";
 
 export default async function ProductDetailPage({
@@ -83,6 +88,11 @@ export default async function ProductDetailPage({
     .eq("product_id", product.id)
     .limit(200);
 
+  const shipping = estimateShipping({
+    shippingClass: product.shipping_class,
+    categorySlug: product.category_slug,
+  });
+
   const t = await getTranslations("product");
   const tc = await getTranslations("categoryNames");
   const categoryLabel =
@@ -142,11 +152,18 @@ export default async function ProductDetailPage({
 
       <MarketComparables comps={comparables ?? []} />
 
+      <ShippingEstimate
+        productId={product.id}
+        categorySlug={product.category_slug}
+        shippingClass={product.shipping_class}
+      />
+
       <SoldPriceForm
         productId={product.id}
         recommendedPrice={product.recommended_price}
         soldPrice={product.sold_price}
         soldAt={product.sold_at}
+        shippingCost={shipping.price}
       />
 
       <EditProductForm product={product} />

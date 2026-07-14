@@ -687,6 +687,8 @@ export const nl = {
     soldSaved: "Verkoopprijs opgeslagen",
     soldFailed: "Opslaan mislukt",
     marginLabel: "Marge t.o.v. adviesprijs:",
+    netLabel: "Netto na verzenden:",
+    afterShipping: "na verzendkosten €{cost}",
   },
   mobile: {
     appName: "VerkoopAssistent",
@@ -821,6 +823,16 @@ export const nl = {
     active: "actief",
     sold: "verkocht",
     avg: "gem.",
+  },
+  shipping: {
+    title: "Verzendkosten",
+    subtitle: "Schatting op basis van de verzendklasse (PostNL, indicatief).",
+    label: "Verzendmethode",
+    classLetterbox: "Brievenbuspakje (tot 2 kg)",
+    classParcel: "Pakket (tot 10 kg)",
+    classLarge: "Groot pakket (tot 23 kg)",
+    suggested: "afgeleid uit categorie",
+    saveFailed: "Opslaan mislukt",
   },
   // Weergavenamen per categorie-slug. De categories-tabel bevat Nederlandse
   // namen; dit vertaalt ze naar de UI-taal. Ontbrekende slugs vallen terug op de

@@ -5,6 +5,7 @@ import {
   PHOTO_TYPES,
   STICKER_INPUT_METHODS,
 } from "./enums";
+import { SHIPPING_CLASSES } from "./shipping";
 
 // 4-cijferig zero-padded sticker nummer: 0001 - 9999
 export const stickerIdSchema = z
@@ -47,6 +48,11 @@ export const productUpdateSchema = z.object({
   estimated_value_min: z.number().nonnegative().optional(),
   estimated_value_max: z.number().nonnegative().optional(),
   recommended_price: z.number().nonnegative().optional(),
+  // Verkoop vastleggen (verkoopprijs-formulier).
+  sold_price: z.number().nonnegative().optional(),
+  sold_at: z.string().datetime().optional(),
+  // Verzendklasse-override (anders afgeleid uit categorie).
+  shipping_class: z.enum(SHIPPING_CLASSES).optional(),
 });
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 
