@@ -9,6 +9,7 @@ import { AnalyzeButton } from "./analyze-button";
 import { AddPhotosButton } from "./add-photos-button";
 import { PhotoTools, type ToolPhoto } from "./photo-tools";
 import { PriceChart } from "./price-chart";
+import { MarketComparables } from "./market-comparables";
 import { SoldPriceForm } from "./sold-price-form";
 
 export default async function ProductDetailPage({
@@ -75,6 +76,13 @@ export default async function ProductDetailPage({
     high: h.price_high,
   }));
 
+  // Multi-source comps (marktplaats, eBay, etc.) uit het MCP-marktonderzoek.
+  const { data: comparables } = await supabase
+    .from("market_comparables")
+    .select("source, price, is_sold")
+    .eq("product_id", product.id)
+    .limit(200);
+
   const t = await getTranslations("product");
   const tc = await getTranslations("categoryNames");
   const categoryLabel =
@@ -131,6 +139,8 @@ export default async function ProductDetailPage({
       )}
 
       <PriceChart data={priceData} />
+
+      <MarketComparables comps={comparables ?? []} />
 
       <SoldPriceForm
         productId={product.id}

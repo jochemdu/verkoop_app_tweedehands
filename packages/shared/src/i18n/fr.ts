@@ -613,6 +613,14 @@ export const fr: Messages = {
     itemCount: "{count} articles",
     bySuggested: "Suggestion IA",
   },
+  comparables: {
+    title: "Comparaison de marché",
+    subtitle: "Annonces comparables provenant de plusieurs sources.",
+    empty: "Pas encore d'annonces comparables.",
+    active: "actif",
+    sold: "vendu",
+    avg: "moy.",
+  },
   categoryNames: {
     ram_dimm: "RAM DIMM",
     ram_sodimm: "RAM SODIMM (portable)",

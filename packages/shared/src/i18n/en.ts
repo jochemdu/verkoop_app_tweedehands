@@ -611,6 +611,14 @@ export const en: Messages = {
     itemCount: "{count} items",
     bySuggested: "AI suggestion",
   },
+  comparables: {
+    title: "Market comparison",
+    subtitle: "Comparable listings from multiple sources.",
+    empty: "No comparable listings yet.",
+    active: "active",
+    sold: "sold",
+    avg: "avg",
+  },
   categoryNames: {
     ram_dimm: "RAM DIMM",
     ram_sodimm: "RAM SODIMM (laptop)",

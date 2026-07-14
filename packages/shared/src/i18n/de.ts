@@ -613,6 +613,14 @@ export const de: Messages = {
     itemCount: "{count} Artikel",
     bySuggested: "KI-Vorschlag",
   },
+  comparables: {
+    title: "Marktvergleich",
+    subtitle: "Vergleichbare Angebote aus mehreren Quellen.",
+    empty: "Noch keine vergleichbaren Angebote.",
+    active: "aktiv",
+    sold: "verkauft",
+    avg: "Ø",
+  },
   categoryNames: {
     ram_dimm: "RAM DIMM",
     ram_sodimm: "RAM SODIMM (Laptop)",

@@ -814,6 +814,14 @@ export const nl = {
     itemCount: "{count} items",
     bySuggested: "AI-suggestie",
   },
+  comparables: {
+    title: "Marktvergelijking",
+    subtitle: "Vergelijkbare advertenties uit meerdere bronnen.",
+    empty: "Nog geen vergelijkbare advertenties.",
+    active: "actief",
+    sold: "verkocht",
+    avg: "gem.",
+  },
   // Weergavenamen per categorie-slug. De categories-tabel bevat Nederlandse
   // namen; dit vertaalt ze naar de UI-taal. Ontbrekende slugs vallen terug op de
   // db-naam of de slug zelf (zie t.has-gebruik in de componenten).
