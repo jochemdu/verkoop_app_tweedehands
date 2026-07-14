@@ -212,6 +212,12 @@ function PhotoEditor({
   const [contrast, setContrast] = useState(100);
   const [square, setSquare] = useState(false);
   const [removingBg, setRemovingBg] = useState(false);
+  const [bgMode, setBgMode] = useState<"white" | "transparent" | "gray">("white");
+  const [hiQuality, setHiQuality] = useState(false);
+  const [bgProgress, setBgProgress] = useState<number | null>(null);
+  // Onthoudt of de huidige bron transparantie bevat (na 'Transparant'-modus),
+  // zodat we bij het opslaan PNG i.p.v. JPEG exporteren.
+  const [hasAlpha, setHasAlpha] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -273,10 +279,11 @@ function PhotoEditor({
   async function removeBg() {
     if (!source) return;
     setRemovingBg(true);
+    setBgProgress(0);
     const tid = toast.loading(t("bgLoading"));
     try {
       const { removeBackground } = await import("@imgly/background-removal");
-      // Huidige bron → PNG met transparantie → composite op wit.
+      // Huidige bron → PNG → model haalt de achtergrond eruf (met alpha).
       const exportCanvas = document.createElement("canvas");
       exportCanvas.width = source.width;
       exportCanvas.height = source.height;
@@ -284,23 +291,34 @@ function PhotoEditor({
       const blob: Blob = await new Promise((res, rej) =>
         exportCanvas.toBlob((b) => (b ? res(b) : rej(new Error("toBlob faalde"))), "image/png"),
       );
-      const cutout = await removeBackground(blob);
+      const cutout = await removeBackground(blob, {
+        // isnet = beste kwaliteit (groter/langzamer), isnet_fp16 = standaard.
+        model: hiQuality ? "isnet" : "isnet_fp16",
+        progress: (_key, current, total) => {
+          if (total > 0) setBgProgress(Math.round((current / total) * 100));
+        },
+      });
       const cutoutBitmap = await createImageBitmap(cutout);
       const composed = document.createElement("canvas");
       composed.width = cutoutBitmap.width;
       composed.height = cutoutBitmap.height;
       const ctx = composed.getContext("2d")!;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, composed.width, composed.height);
+      // Transparant = cutout behouden; anders vullen we een effen achtergrond.
+      if (bgMode !== "transparent") {
+        ctx.fillStyle = bgMode === "gray" ? "#f2f2f2" : "#ffffff";
+        ctx.fillRect(0, 0, composed.width, composed.height);
+      }
       ctx.drawImage(cutoutBitmap, 0, 0);
       const newBitmap = await createImageBitmap(composed);
       setSource(newBitmap);
+      setHasAlpha(bgMode === "transparent");
       toast.success(t("bgDone"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("bgFailed"));
     } finally {
       toast.dismiss(tid);
       setRemovingBg(false);
+      setBgProgress(null);
     }
   }
 
@@ -310,18 +328,21 @@ function PhotoEditor({
     try {
       const exportCanvas = document.createElement("canvas");
       draw(exportCanvas, true);
+      // Transparante uitsnede vereist PNG (JPEG kent geen alpha); anders JPEG.
+      const mime = hasAlpha ? "image/png" : "image/jpeg";
+      const ext = hasAlpha ? "png" : "jpg";
       const blob: Blob = await new Promise((res, rej) =>
         exportCanvas.toBlob(
           (b) => (b ? res(b) : rej(new Error("toBlob faalde"))),
-          "image/jpeg",
+          mime,
           0.9,
         ),
       );
       const supabase = createClient();
-      const path = `${userId}/inbox/${filenameFor(0, "bewerkt.jpg")}`;
+      const path = `${userId}/inbox/${filenameFor(0, `bewerkt.${ext}`)}`;
       const { error: upErr } = await supabase.storage
         .from("product-photos")
-        .upload(path, blob, { contentType: "image/jpeg" });
+        .upload(path, blob, { contentType: mime });
       if (upErr) throw new Error(upErr.message);
       const res = await fetch(`/api/products/${productId}/photos`, {
         method: "POST",
@@ -408,8 +429,50 @@ function PhotoEditor({
             className="btn btn-outline"
           >
             <Eraser className="size-4" aria-hidden />
-            {removingBg ? t("bgBusy") : t("removeBg")}
+            {removingBg
+              ? bgProgress !== null
+                ? t("bgProgress", { pct: bgProgress })
+                : t("bgBusy")
+              : t("removeBg")}
           </button>
+        </div>
+
+        {/* Opties voor achtergrond-verwijdering */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-border bg-muted/30 p-3 text-xs">
+          <span className="font-medium text-muted-foreground">{t("bgLabel")}</span>
+          <div className="flex gap-1">
+            {(["white", "transparent", "gray"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setBgMode(mode)}
+                disabled={removingBg}
+                className={`rounded-md border px-2 py-1 transition-colors ${
+                  bgMode === mode
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border bg-card hover:bg-muted"
+                }`}
+              >
+                {t(
+                  mode === "white"
+                    ? "bgWhite"
+                    : mode === "transparent"
+                      ? "bgTransparent"
+                      : "bgGray",
+                )}
+              </button>
+            ))}
+          </div>
+          <label className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              className="size-3.5"
+              checked={hiQuality}
+              onChange={(e) => setHiQuality(e.target.checked)}
+              disabled={removingBg}
+            />
+            {t("bgHiQuality")}
+          </label>
         </div>
 
         <div className="flex justify-end gap-2">
