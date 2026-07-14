@@ -92,3 +92,12 @@ export {
 } from "./products";
 
 export { padSticker, stickerRange } from "./sticker";
+
+export {
+  SHIPPING_CLASSES,
+  SHIPPING_RATES,
+  suggestShippingClass,
+  estimateShipping,
+  type ShippingClass,
+  type ShippingEstimate,
+} from "./shipping";

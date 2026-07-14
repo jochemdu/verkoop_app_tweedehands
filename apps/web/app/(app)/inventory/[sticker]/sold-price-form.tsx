@@ -9,11 +9,13 @@ export function SoldPriceForm({
   productId,
   recommendedPrice,
   soldPrice,
+  shippingCost,
 }: {
   productId: string;
   recommendedPrice: number | null;
   soldPrice: number | null;
   soldAt: string | null;
+  shippingCost?: number;
 }) {
   const router = useRouter();
   const t = useTranslations("product");
@@ -54,6 +56,8 @@ export function SoldPriceForm({
   const marginPct = showMargin && recommendedPrice !== 0
     ? (marginAbs / recommendedPrice) * 100
     : 0;
+  const net =
+    current != null && shippingCost != null ? current - shippingCost : null;
 
   return (
     <form onSubmit={save} className="card space-y-4 p-5">
@@ -79,6 +83,15 @@ export function SoldPriceForm({
         >
           {t("marginLabel")} €{marginAbs.toFixed(2)} ({marginPct >= 0 ? "+" : ""}
           {marginPct.toFixed(1)}%)
+        </p>
+      )}
+
+      {net != null && (
+        <p className="text-sm text-muted-foreground">
+          {t("netLabel")} €{net.toFixed(2)}{" "}
+          <span className="text-xs">
+            ({t("afterShipping", { cost: shippingCost!.toFixed(2) })})
+          </span>
         </p>
       )}
 

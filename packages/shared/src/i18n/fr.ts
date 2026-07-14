@@ -490,6 +490,8 @@ export const fr: Messages = {
     soldSaved: "Prix de vente enregistré",
     soldFailed: "Échec de l'enregistrement",
     marginLabel: "Marge par rapport au prix conseillé :",
+    netLabel: "Net après expédition :",
+    afterShipping: "après €{cost} de frais de port",
   },
   mobile: {
     appName: "VerkoopAssistent",
@@ -620,6 +622,16 @@ export const fr: Messages = {
     active: "actif",
     sold: "vendu",
     avg: "moy.",
+  },
+  shipping: {
+    title: "Frais de port",
+    subtitle: "Estimation basée sur la classe d'envoi (PostNL, indicatif).",
+    label: "Mode d'expédition",
+    classLetterbox: "Colis boîte aux lettres (jusqu'à 2 kg)",
+    classParcel: "Colis (jusqu'à 10 kg)",
+    classLarge: "Grand colis (jusqu'à 23 kg)",
+    suggested: "déduit de la catégorie",
+    saveFailed: "Échec de l'enregistrement",
   },
   categoryNames: {
     ram_dimm: "RAM DIMM",

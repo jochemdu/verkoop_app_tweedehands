@@ -1044,6 +1044,7 @@ export type Database = {
           provenance_notes: string | null
           recommended_price: number | null
           selling_tier: string | null
+          shipping_class: string | null
           sold_at: string | null
           sold_platform_id: string | null
           sold_price: number | null
@@ -1085,6 +1086,7 @@ export type Database = {
           provenance_notes?: string | null
           recommended_price?: number | null
           selling_tier?: string | null
+          shipping_class?: string | null
           sold_at?: string | null
           sold_platform_id?: string | null
           sold_price?: number | null
@@ -1126,6 +1128,7 @@ export type Database = {
           provenance_notes?: string | null
           recommended_price?: number | null
           selling_tier?: string | null
+          shipping_class?: string | null
           sold_at?: string | null
           sold_platform_id?: string | null
           sold_price?: number | null

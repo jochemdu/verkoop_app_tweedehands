@@ -488,6 +488,8 @@ export const en: Messages = {
     soldSaved: "Sale price saved",
     soldFailed: "Save failed",
     marginLabel: "Margin vs recommended price:",
+    netLabel: "Net after shipping:",
+    afterShipping: "after €{cost} shipping",
   },
   mobile: {
     appName: "VerkoopAssistent",
@@ -618,6 +620,16 @@ export const en: Messages = {
     active: "active",
     sold: "sold",
     avg: "avg",
+  },
+  shipping: {
+    title: "Shipping cost",
+    subtitle: "Estimate based on the shipping class (PostNL, indicative).",
+    label: "Shipping method",
+    classLetterbox: "Letterbox parcel (up to 2 kg)",
+    classParcel: "Parcel (up to 10 kg)",
+    classLarge: "Large parcel (up to 23 kg)",
+    suggested: "derived from category",
+    saveFailed: "Save failed",
   },
   categoryNames: {
     ram_dimm: "RAM DIMM",
