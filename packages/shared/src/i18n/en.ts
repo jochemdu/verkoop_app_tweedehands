@@ -575,6 +575,20 @@ export const en: Messages = {
     lstEmptyPre: "Let Claude Desktop create a draft via the ",
     lstEmptyPost: " MCP tool, and review it in the web app.",
   },
+  alerts: {
+    navTitle: "Alerts",
+    title: "Price alerts",
+    subtitle:
+      "Searches whose lowest price has dropped below your set threshold.",
+    empty: "No price alerts yet.",
+    line: "Lowest €{lowest} — below your threshold of €{threshold}",
+    noQuery: "(no search query)",
+    viewProduct: "View product",
+    markRead: "Read",
+    markAllRead: "Mark all read",
+    unread: "new",
+    markFailed: "Marking failed",
+  },
   categoryNames: {
     ram_dimm: "RAM DIMM",
     ram_sodimm: "RAM SODIMM (laptop)",

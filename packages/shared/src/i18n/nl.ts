@@ -778,6 +778,20 @@ export const nl = {
     lstEmptyPre: "Laat Claude Desktop een concept aanmaken via de ",
     lstEmptyPost: " MCP tool, en review hem op de web-app.",
   },
+  alerts: {
+    navTitle: "Meldingen",
+    title: "Prijsmeldingen",
+    subtitle:
+      "Zoekopdrachten waarvan de laagste prijs onder je ingestelde drempel is gezakt.",
+    empty: "Nog geen prijsmeldingen.",
+    line: "Laagste €{lowest} — onder je drempel van €{threshold}",
+    noQuery: "(zonder zoekopdracht)",
+    viewProduct: "Bekijk product",
+    markRead: "Gelezen",
+    markAllRead: "Alles als gelezen",
+    unread: "nieuw",
+    markFailed: "Markeren mislukt",
+  },
   // Weergavenamen per categorie-slug. De categories-tabel bevat Nederlandse
   // namen; dit vertaalt ze naar de UI-taal. Ontbrekende slugs vallen terug op de
   // db-naam of de slug zelf (zie t.has-gebruik in de componenten).

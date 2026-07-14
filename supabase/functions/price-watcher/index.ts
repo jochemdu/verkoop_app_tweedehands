@@ -85,6 +85,29 @@ Deno.serve(async (_req) => {
         lowest != null &&
         w.alert_on_below != null &&
         lowest < Number(w.alert_on_below);
+      // Alert-rij afleveren (fase 43): eerder werd 'alert' alleen berekend en in
+      // de HTTP-respons teruggegeven, die de cron weggooit. Nu bewaren we hem
+      // zodat de gebruiker hem in de app ziet. Dedupe: alleen een nieuwe alert
+      // als er nog geen ONGELEZEN alert voor deze watch openstaat.
+      if (alert) {
+        const { data: openAlert } = await supabase
+          .from("price_alerts")
+          .select("id")
+          .eq("watch_id", w.id)
+          .is("read_at", null)
+          .limit(1)
+          .maybeSingle();
+        if (!openAlert) {
+          await supabase.from("price_alerts").insert({
+            user_id: w.user_id,
+            product_id: w.product_id,
+            watch_id: w.id,
+            search_query: w.search_query,
+            lowest,
+            threshold: w.alert_on_below,
+          });
+        }
+      }
       results.push({ watch_id: w.id, hits: data?.count ?? 0, lowest, alert });
     } catch {
       results.push({ watch_id: w.id, hits: 0 });
