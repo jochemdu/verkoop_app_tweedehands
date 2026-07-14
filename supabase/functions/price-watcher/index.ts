@@ -22,7 +22,7 @@ Deno.serve(async (_req) => {
   const { data: watches } = await supabase
     .from("price_watches")
     .select(
-      "id, user_id, product_id, search_query, check_interval_hours, last_checked_at, target_price, current_lowest, alert_on_below",
+      "id, user_id, workspace_id, product_id, search_query, check_interval_hours, last_checked_at, target_price, current_lowest, alert_on_below",
     )
     .eq("is_active", true);
 
@@ -67,10 +67,12 @@ Deno.serve(async (_req) => {
         .eq("id", w.id);
 
       if (data?.stats) {
-        // user_id + product_id meesturen: zonder user_id valt de rij buiten de
-        // RLS-policy own_price_history en is de eigenaar hem nooit kan zien.
+        // workspace_id + user_id meesturen: service-role inserts krijgen geen
+        // auto-fill (auth.uid() is NULL), dus workspace_id expliciet zodat de
+        // rij binnen de workspace-RLS valt (fase 48).
         await supabase.from("price_history").insert({
           user_id: w.user_id,
+          workspace_id: w.workspace_id,
           product_id: w.product_id,
           search_query: w.search_query,
           price_low: data.stats.min,
@@ -100,6 +102,7 @@ Deno.serve(async (_req) => {
         if (!openAlert) {
           await supabase.from("price_alerts").insert({
             user_id: w.user_id,
+            workspace_id: w.workspace_id,
             product_id: w.product_id,
             watch_id: w.id,
             search_query: w.search_query,

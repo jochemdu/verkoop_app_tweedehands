@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getSupabase } from "../lib/supabase";
 import { resolveProductIds } from "../lib/resolve";
 import { jsonContent, errorContent } from "../lib/format";
-import { getOwnerId } from "../lib/owner.js";
+import { getOwnerId, getOwnerWorkspaceId } from "../lib/owner.js";
 
 const BUNDLE_TYPES = [
   "ram_kit",
@@ -98,6 +98,7 @@ export async function handleSuggestBundle(input: unknown) {
     0;
 
   const ownerId = await getOwnerId();
+  const workspaceId = await getOwnerWorkspaceId();
   const { data: bundle, error: bundleErr } = await supabase
     .from("bundles")
     .insert({
@@ -110,6 +111,7 @@ export async function handleSuggestBundle(input: unknown) {
       suggested_price: suggested_price ?? null,
       status: "ready_to_list",
       user_id: ownerId,
+      workspace_id: workspaceId,
     })
     .select()
     .single();
@@ -121,6 +123,7 @@ export async function handleSuggestBundle(input: unknown) {
     product_id,
     position: i,
     user_id: ownerId,
+    workspace_id: workspaceId,
   }));
   const { error: itemsErr } = await supabase
     .from("bundle_items")

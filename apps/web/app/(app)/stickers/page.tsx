@@ -1,6 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { localeTag } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveWorkspaceId } from "@/lib/workspace";
 import { StickerForm } from "./sticker-form";
 
 type StickerSheetRow = {
@@ -14,6 +15,7 @@ type StickerSheetRow = {
 
 export default async function StickersPage() {
   const supabase = await createClient();
+  const wsId = await getActiveWorkspaceId(supabase);
 
   const [{ data: sheetsRaw }, { data: settingRaw }] = await Promise.all([
     supabase
@@ -25,6 +27,7 @@ export default async function StickersPage() {
       .from("app_settings")
       .select("value")
       .eq("key", "last_sticker_number")
+      .eq("workspace_id", wsId ?? "")
       .maybeSingle(),
   ]);
   const sheets: StickerSheetRow[] = sheetsRaw ?? [];

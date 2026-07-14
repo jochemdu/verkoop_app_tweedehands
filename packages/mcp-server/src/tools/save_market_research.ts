@@ -3,7 +3,7 @@ import { sanitizeForLLM } from "@verkoopassistent/shared";
 import { getSupabase } from "../lib/supabase.js";
 import { resolveProductId } from "../lib/resolve.js";
 import { errorContent, jsonContent } from "../lib/format.js";
-import { getOwnerId } from "../lib/owner.js";
+import { getOwnerId, getOwnerWorkspaceId } from "../lib/owner.js";
 
 const comparableSchema = z.object({
   source: z
@@ -83,10 +83,12 @@ export async function handleSaveMarketResearch(input: unknown) {
 
   const supabase = getSupabase();
   const ownerId = await getOwnerId();
+  const workspaceId = await getOwnerWorkspaceId();
 
   const rows = parsed.data.comparables.map((c) => ({
     product_id: productId,
     user_id: ownerId,
+    workspace_id: workspaceId,
     source: sanitizeForLLM(c.source),
     url: c.url ?? null,
     title: sanitizeForLLM(c.title),
@@ -130,6 +132,7 @@ export async function handleSaveMarketResearch(input: unknown) {
     subject_products: [productId],
     applied: priceApplied,
     user_id: ownerId,
+    workspace_id: workspaceId,
   });
 
   return jsonContent(

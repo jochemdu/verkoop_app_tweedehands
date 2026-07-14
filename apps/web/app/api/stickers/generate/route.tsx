@@ -7,6 +7,7 @@ import {
   type StickerPreset,
 } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveWorkspaceId } from "@/lib/workspace";
 import { aiRateLimit } from "@/lib/rate-limit";
 import { StickerSheet, type StickerLabel } from "@/lib/pdf/sticker-sheet";
 
@@ -207,12 +208,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Bump de laatst-gebruikte sticker-nummer teller.
-  // Rij is pre-seeded in de initial schema migration dus update is voldoende.
-  await supabase
-    .from("app_settings")
-    .update({ value: endNumber })
-    .eq("key", "last_sticker_number");
+  // Bump de laatst-gebruikte sticker-nummer teller (per workspace; upsert zodat
+  // een workspace zonder teller-rij ook werkt).
+  const wsId = await getActiveWorkspaceId(supabase);
+  if (wsId) {
+    await supabase.from("app_settings").upsert(
+      {
+        key: "last_sticker_number",
+        value: endNumber,
+        user_id: user.id,
+        workspace_id: wsId,
+      },
+      { onConflict: "key,workspace_id" },
+    );
+  }
 
   return NextResponse.json({
     mode: "range",

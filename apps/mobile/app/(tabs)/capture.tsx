@@ -53,6 +53,7 @@ export default function CaptureScreen() {
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [saving, setSaving] = useState(false);
   const [lastUsed, setLastUsed] = useState<number | null>(null);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
   // Phase tracks waar de gebruiker zit in de flow.
   // 'configure' = instellen mode + sticker, 'capture' = foto's maken, 'done' = klaar om op te slaan.
@@ -103,18 +104,27 @@ export default function CaptureScreen() {
   const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
-    supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "last_sticker_number")
-      .maybeSingle()
-      .then(({ data }) => {
-        const n = Number(data?.value ?? 0);
-        if (n > 0) {
-          setLastUsed(n);
-          setStickerId(String(n + 1).padStart(4, "0"));
-        }
-      });
+    (async () => {
+      // Sticker-teller is per workspace (fase 48): eerst de actieve workspace.
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("active_workspace_id")
+        .maybeSingle();
+      const ws = prof?.active_workspace_id ?? null;
+      setWorkspaceId(ws);
+      if (!ws) return;
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "last_sticker_number")
+        .eq("workspace_id", ws)
+        .maybeSingle();
+      const n = Number(data?.value ?? 0);
+      if (n > 0) {
+        setLastUsed(n);
+        setStickerId(String(n + 1).padStart(4, "0"));
+      }
+    })();
   }, []);
 
   async function runOcr(uri: string): Promise<string[]> {
@@ -342,11 +352,16 @@ export default function CaptureScreen() {
       }
 
       if (savedOnline) {
-        if (stickerId) {
-          await supabase
-            .from("app_settings")
-            .update({ value: parseInt(stickerId, 10) })
-            .eq("key", "last_sticker_number");
+        if (stickerId && workspaceId) {
+          await supabase.from("app_settings").upsert(
+            {
+              key: "last_sticker_number",
+              value: parseInt(stickerId, 10),
+              user_id: user.id,
+              workspace_id: workspaceId,
+            },
+            { onConflict: "key,workspace_id" },
+          );
         }
         Alert.alert(
           t("saved"),
