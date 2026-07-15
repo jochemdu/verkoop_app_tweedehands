@@ -55,10 +55,12 @@ export async function insertProductWithPhotos(
       ok: false,
       error: productErr?.message ?? "Product aanmaken mislukt",
       code: productErr?.code,
-      // 23505 = unique_violation; op products is dat de sticker_id-constraint.
+      // 23505 = unique_violation; op products is dat de sticker-uniekheid
+      // (products_workspace_sticker_unique, fase 49 — per workspace). De message
+      // bevat de constraint-naam, dus matchen we op "sticker".
       stickerConflict:
         productErr?.code === "23505" &&
-        Boolean(productErr?.message?.includes("sticker_id")),
+        Boolean(productErr?.message?.toLowerCase().includes("sticker")),
     };
   }
 
