@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { Download, Boxes } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -7,6 +7,7 @@ import {
   sanitizeIlikeQuery,
   type ProductStatus,
 } from "@verkoopassistent/shared";
+import { EmptyState } from "@/components/empty-state";
 import { AddProductButton } from "./add-product-button";
 import { VirtualTable } from "./virtual-table";
 
@@ -89,6 +90,7 @@ export default async function InventoryPage({
 
   const t = await getTranslations("inventory");
   const tc = await getTranslations("categoryNames");
+  const ts = await getTranslations("productStatus");
   const categoryName = (slug: string, fallback: string) =>
     tc.has(slug) ? tc(slug) : fallback;
 
@@ -144,7 +146,7 @@ export default async function InventoryPage({
             <option value="">{t("all")}</option>
             {PRODUCT_STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s}
+                {ts.has(s) ? ts(s) : s}
               </option>
             ))}
           </select>
@@ -196,9 +198,7 @@ export default async function InventoryPage({
       </form>
 
       {!products || products.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          {t("empty")}
-        </div>
+        <EmptyState icon={Boxes} title={t("empty")} />
       ) : (
         <>
           <VirtualTable rows={products} enableActions={!showDeleted} />
