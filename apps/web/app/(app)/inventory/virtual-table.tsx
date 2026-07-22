@@ -229,7 +229,7 @@ export function VirtualTable({
     <div className="space-y-2">
       <div
         ref={parentRef}
-        className="card max-h-[70vh] overflow-auto"
+        className="card hidden max-h-[70vh] overflow-auto sm:block"
       >
         <div
           className={`sticky top-0 z-10 grid ${GRID_COLS} gap-3 border-b bg-muted/80 px-3 py-2 text-xs uppercase text-muted-foreground backdrop-blur`}
@@ -313,6 +313,56 @@ export function VirtualTable({
             );
           })}
         </div>
+      </div>
+
+      {/* Mobiel: gestapelde kaarten i.p.v. de brede tabel (< sm). */}
+      <div className="space-y-2 sm:hidden">
+        {rows.map((row) => {
+          const isSelected = selected.has(row.id);
+          return (
+            <div
+              key={row.id}
+              className={`card flex items-center gap-3 p-3 ${isSelected ? "border-accent" : ""}`}
+            >
+              <input
+                type="checkbox"
+                className="size-4 shrink-0"
+                checked={isSelected}
+                onChange={() => toggle(row.id)}
+                aria-label={t("selectRow", { id: row.sticker_id ?? row.id })}
+              />
+              <Link
+                href={`/inventory/${row.sticker_id ?? row.id}`}
+                className="min-w-0 flex-1"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {row.sticker_id ?? "—"}
+                  </span>
+                  <StatusBadge status={row.status} />
+                </div>
+                <p className="mt-0.5 truncate font-medium">
+                  {row.title ?? row.working_title ?? (
+                    <span className="italic text-muted-foreground">{t("noTitle")}</span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {row.category_slug && tc.has(row.category_slug)
+                    ? tc(row.category_slug)
+                    : row.category_slug}
+                  {row.indexed_at && (
+                    <>
+                      {row.category_slug ? " · " : ""}
+                      {new Date(row.indexed_at).toLocaleDateString(dateTag, {
+                        dateStyle: "short",
+                      })}
+                    </>
+                  )}
+                </p>
+              </Link>
+            </div>
+          );
+        })}
       </div>
 
       {enableActions && selected.size > 0 && (

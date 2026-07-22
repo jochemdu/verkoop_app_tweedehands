@@ -42,6 +42,7 @@ export function PhotoTools({
   const t = useTranslations("product");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<ToolPhoto | null>(null);
+  const [viewing, setViewing] = useState<number | null>(null);
   const sorted = useMemo(
     () => [...photos].sort((a, b) => a.order_index - b.order_index),
     [photos],
@@ -103,11 +104,11 @@ export function PhotoTools({
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {sorted.map((photo, i) => (
           <figure key={photo.id} className="group relative">
-            <a
-              href={photo.url}
-              target="_blank"
-              rel="noreferrer"
-              className="relative block aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+            <button
+              type="button"
+              onClick={() => setViewing(i)}
+              aria-label={t("viewPhoto", { n: i + 1 })}
+              className="relative block aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg border border-border bg-muted"
             >
               <Image src={photo.url} alt="" fill unoptimized className="object-cover" />
               {i === 0 && (
@@ -120,7 +121,7 @@ export function PhotoTools({
                   {photo.photo_type}
                 </span>
               )}
-            </a>
+            </button>
             <figcaption className="mt-1 flex items-center justify-center gap-1 opacity-70 transition-opacity group-hover:opacity-100">
               {i !== 0 && (
                 <IconBtn label={t("makePrimary")} onClick={() => makePrimary(photo)} disabled={busy}>
@@ -156,7 +157,99 @@ export function PhotoTools({
           }}
         />
       )}
+
+      {viewing !== null && sorted[viewing] && (
+        <Lightbox
+          photos={sorted}
+          index={viewing}
+          onClose={() => setViewing(null)}
+          onNavigate={setViewing}
+        />
+      )}
     </>
+  );
+}
+
+/* ============================== Lightbox ============================== */
+
+function Lightbox({
+  photos,
+  index,
+  onClose,
+  onNavigate,
+}: {
+  photos: ToolPhoto[];
+  index: number;
+  onClose: () => void;
+  onNavigate: (i: number) => void;
+}) {
+  const t = useTranslations("product");
+  const photo = photos[index]!;
+  const hasPrev = index > 0;
+  const hasNext = index < photos.length - 1;
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowLeft" && index > 0) onNavigate(index - 1);
+      else if (e.key === "ArrowRight" && index < photos.length - 1)
+        onNavigate(index + 1);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [index, photos.length, onClose, onNavigate]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("viewPhoto", { n: index + 1 })}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+    >
+      <button
+        type="button"
+        aria-label={t("close")}
+        onClick={onClose}
+        className="absolute inset-0"
+      />
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label={t("close")}
+        className="btn-icon absolute right-3 top-3 text-white hover:bg-white/15"
+      >
+        <X className="size-6" aria-hidden />
+      </button>
+      {hasPrev && (
+        <button
+          type="button"
+          onClick={() => onNavigate(index - 1)}
+          aria-label={t("moveLeft")}
+          className="btn-icon absolute left-3 text-white hover:bg-white/15"
+        >
+          <ArrowLeft className="size-7" aria-hidden />
+        </button>
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={photo.url}
+        alt=""
+        className="relative max-h-[88vh] max-w-[92vw] rounded-lg object-contain shadow-lg"
+      />
+      {hasNext && (
+        <button
+          type="button"
+          onClick={() => onNavigate(index + 1)}
+          aria-label={t("moveRight")}
+          className="btn-icon absolute right-3 text-white hover:bg-white/15"
+        >
+          <ArrowRight className="size-7" aria-hidden />
+        </button>
+      )}
+      <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-xs text-white">
+        {index + 1} / {photos.length}
+      </span>
+    </div>
   );
 }
 
