@@ -140,7 +140,11 @@ export async function POST(req: NextRequest) {
   const { data: exportRow, error: exportErr } = await supabase
     .from("taxatie_exports")
     .insert({
-      product_id: bundle_id ? null : products[0] ? product_ids[0]! : null,
+      // Koppel aan het eerste product dat écht bestaat (in aangevraagde
+      // volgorde). product_ids[0] kan een gefilterd/verwijderd id zijn → FK-fout.
+      product_id: bundle_id
+        ? null
+        : (product_ids.find((id) => idToProduct.has(id)) ?? null),
       bundle_id: bundle_id ?? null,
       pdf_storage_path: filename,
       recipient_name: recipient_name ?? null,

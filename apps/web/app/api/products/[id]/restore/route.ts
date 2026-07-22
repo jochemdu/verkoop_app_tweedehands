@@ -22,6 +22,13 @@ export async function POST(
     return NextResponse.json({ error: "Niet gevonden" }, { status: 404 });
   }
 
-  await restoreProducts(supabase, [productId]);
+  try {
+    await restoreProducts(supabase, [productId]);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Herstellen mislukt" },
+      { status: 500 },
+    );
+  }
   return NextResponse.json({ restored: true });
 }

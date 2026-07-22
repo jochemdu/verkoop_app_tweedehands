@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n";
-import { useTheme } from "@/lib/theme";
+import { useTheme, font } from "@/lib/theme";
 
 type ProductRow = {
   id: string;
@@ -30,18 +30,26 @@ export default function InventoryScreen() {
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
-    const { data } = await supabase
+    const { data, error: err } = await supabase
       .from("products")
       .select(
         "id, sticker_id, working_title, title, category_slug, status, indexed_at",
       )
       .order("indexed_at", { ascending: false })
       .limit(100);
-    setProducts(data ?? []);
+    // Onderscheid een echte fout van een lege lijst: anders toont het scherm
+    // "geen producten" terwijl de query faalde (netwerk/RLS).
+    if (err) {
+      setError(true);
+    } else {
+      setError(false);
+      setProducts(data ?? []);
+    }
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -72,14 +80,25 @@ export default function InventoryScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={[styles.emptyCard, { borderColor: c.border }]}>
-              <Text style={[styles.emptyTitle, { color: c.foreground }]}>
-                {t("invEmptyTitle")}
-              </Text>
-              <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
-                {t("invEmptyText")}
-              </Text>
-            </View>
+            error ? (
+              <View style={[styles.emptyCard, { borderColor: c.destructive }]}>
+                <Text style={[styles.emptyTitle, { color: c.foreground }]}>
+                  {t("loadErrorTitle")}
+                </Text>
+                <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
+                  {t("loadErrorText")}
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.emptyCard, { borderColor: c.border }]}>
+                <Text style={[styles.emptyTitle, { color: c.foreground }]}>
+                  {t("invEmptyTitle")}
+                </Text>
+                <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
+                  {t("invEmptyText")}
+                </Text>
+              </View>
+            )
           }
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
@@ -134,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   sticker: {
-    fontFamily: "Courier",
+    fontFamily: font.mono,
     fontWeight: "700",
     width: 50,
     fontSize: 14,

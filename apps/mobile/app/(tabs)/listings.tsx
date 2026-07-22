@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n";
-import { useTheme } from "@/lib/theme";
+import { useTheme, font } from "@/lib/theme";
 
 type ListingRow = {
   id: string;
@@ -35,18 +35,24 @@ export default function ListingsScreen() {
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
-    const { data } = await supabase
+    const { data, error: err } = await supabase
       .from("listings")
       .select(
         "id, status, price, final_title, generated_title, listing_url, created_at, products(sticker_id, working_title, title), platforms(name)",
       )
       .order("created_at", { ascending: false })
       .limit(100);
-    setListings((data ?? []) as ListingRow[]);
+    if (err) {
+      setError(true);
+    } else {
+      setError(false);
+      setListings((data ?? []) as ListingRow[]);
+    }
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -76,16 +82,27 @@ export default function ListingsScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={[styles.emptyCard, { borderColor: c.border }]}>
-              <Text style={[styles.emptyTitle, { color: c.foreground }]}>
-                {t("lstEmptyTitle")}
-              </Text>
-              <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
-                {t("lstEmptyPre")}
-                <Text style={{ fontFamily: "Courier" }}>create_listing</Text>
-                {t("lstEmptyPost")}
-              </Text>
-            </View>
+            error ? (
+              <View style={[styles.emptyCard, { borderColor: c.destructive }]}>
+                <Text style={[styles.emptyTitle, { color: c.foreground }]}>
+                  {t("loadErrorTitle")}
+                </Text>
+                <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
+                  {t("loadErrorText")}
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.emptyCard, { borderColor: c.border }]}>
+                <Text style={[styles.emptyTitle, { color: c.foreground }]}>
+                  {t("lstEmptyTitle")}
+                </Text>
+                <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
+                  {t("lstEmptyPre")}
+                  <Text style={{ fontFamily: font.mono }}>create_listing</Text>
+                  {t("lstEmptyPost")}
+                </Text>
+              </View>
+            )
           }
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {

@@ -613,6 +613,8 @@ export const fr: Messages = {
     importFailed: "Échec de l'importation",
     invEmptyTitle: "Rien d'indexé pour le moment",
     invEmptyText: "Allez dans l'onglet Indexer pour enregistrer votre premier produit.",
+    loadErrorTitle: "Échec du chargement",
+    loadErrorText: "Impossible de récupérer les données. Tirez vers le bas pour réessayer.",
     noTitle: "(sans titre)",
     lstEmptyTitle: "Aucune annonce",
     lstEmptyPre: "Laissez Claude Desktop créer un brouillon via l'outil MCP ",

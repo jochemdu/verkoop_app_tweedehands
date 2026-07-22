@@ -17,7 +17,11 @@ const HEADERS = [
 ];
 
 function escapeField(value: unknown): string {
-  const str = value == null ? "" : String(value);
+  let str = value == null ? "" : String(value);
+  // CSV-injectie: velden die met =, +, -, @, tab of CR beginnen worden door
+  // Excel/Sheets/LibreOffice als formule geïnterpreteerd. Neutraliseer met een
+  // voorafgaande apostrof (spreadsheet toont die niet, maar dwingt tekst af).
+  if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
   return `"${str.replace(/"/g, '""')}"`;
 }
 

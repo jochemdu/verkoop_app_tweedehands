@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native";
+import { Platform, useColorScheme } from "react-native";
 
 // Gedeeld mobiel thema (fase 56) — spiegelt de "Warm Atelier"-tokens van de
 // web-app (globals.css) zodat mobiel en web visueel matchen. Warme inkt +
@@ -38,7 +38,11 @@ export type ThemeColors = typeof light;
 
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 } as const;
 export const radius = { sm: 8, md: 10, lg: 12, xl: 16, pill: 9999 } as const;
-export const font = { mono: "Courier" } as const;
+// "Courier" bestaat alleen op iOS; Android heeft "monospace". Platform.select
+// zorgt dat sticker-ID's/EAN's op beide platforms echt monospaced tonen.
+export const font = {
+  mono: Platform.select({ ios: "Courier", android: "monospace", default: "monospace" }),
+} as const;
 
 export type Theme = {
   colors: ThemeColors;

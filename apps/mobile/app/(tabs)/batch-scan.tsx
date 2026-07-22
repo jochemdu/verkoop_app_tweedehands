@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,7 @@ import NetInfo from "@react-native-community/netinfo";
 import { supabase } from "@/lib/supabase";
 import { createProductStub } from "@/lib/products/createProduct";
 import { useTranslation } from "@/lib/i18n";
+import { font } from "@/lib/theme";
 
 // Fase 47: batch-EAN-scan. Scan meerdere barcodes achter elkaar; elk wordt een
 // fotoloos stub-product (met auto-lookup van titel). Sticker/foto's/analyse doe
@@ -71,6 +72,13 @@ export default function BatchScanScreen() {
     if (flashTimer.current) clearTimeout(flashTimer.current);
     flashTimer.current = setTimeout(() => setFlash(null), 1200);
   }
+
+  // Ruim de lopende flash-timer op bij unmount (voorkomt setState na unmount).
+  useEffect(() => {
+    return () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+    };
+  }, []);
 
   async function onScanned(result: BarcodeScanningResult) {
     const code = result.data?.trim();
@@ -303,7 +311,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   itemMain: { flex: 1, gap: 2 },
-  itemEan: { fontSize: 12, color: "#78716c", fontFamily: "Courier" },
+  itemEan: { fontSize: 12, color: "#78716c", fontFamily: font.mono },
   itemTitle: { fontSize: 14, color: "#292524" },
   itemTitleMuted: { color: "#a8a29e", fontStyle: "italic" },
   removeX: { fontSize: 22, color: "#dc2626", fontWeight: "700", paddingHorizontal: 4 },

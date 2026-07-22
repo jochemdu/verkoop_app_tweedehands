@@ -611,6 +611,8 @@ export const en: Messages = {
     importFailed: "Import failed",
     invEmptyTitle: "Nothing indexed yet",
     invEmptyText: "Go to the Capture tab to record your first product.",
+    loadErrorTitle: "Loading failed",
+    loadErrorText: "Couldn't fetch the data. Pull down to try again.",
     noTitle: "(no title)",
     lstEmptyTitle: "No listings",
     lstEmptyPre: "Let Claude Desktop create a draft via the ",
