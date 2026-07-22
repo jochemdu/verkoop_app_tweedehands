@@ -3,12 +3,16 @@ import {
   ArrowRight,
   Banknote,
   FileText,
+  PackageOpen,
   Tags,
   UploadCloud,
   type LucideIcon,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
+import { localeTag } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
+import { formatEuro } from "@/lib/utils";
+import { EmptyState } from "@/components/empty-state";
 import { DashboardCharts } from "./dashboard-charts";
 
 type CategoryCount = { label: string; value: number };
@@ -114,6 +118,8 @@ export default async function Dashboard() {
       }, 0);
 
   const t = await getTranslations("dashboard");
+  const tc = await getTranslations("categoryNames");
+  const dateTag = localeTag(await getLocale());
 
   return (
     <main className="space-y-8">
@@ -130,8 +136,8 @@ export default async function Dashboard() {
       <section className="card flex items-center justify-between gap-4 p-5">
         <div>
           <p className="text-sm text-muted-foreground">{t("estValue")}</p>
-          <p className="mt-1 font-heading text-4xl font-bold tracking-tight text-accent">
-            € {totalEstValue.toFixed(2).replace(".", ",")}
+          <p className="mt-1 font-heading text-4xl font-bold tracking-tight text-accent [font-variant-numeric:tabular-nums]">
+            {formatEuro(totalEstValue, dateTag)}
           </p>
         </div>
         <span className="hidden rounded-full bg-accent-soft p-3 text-accent sm:flex">
@@ -145,17 +151,16 @@ export default async function Dashboard() {
         weekly={weeklyData}
       />
 
-      <section className="card p-5">
-        <h2 className="section-title mb-3">{t("recent")}</h2>
-        {!recent || recent.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {t("emptyPrefix")}
-            <Link className="font-medium text-accent underline" href="/upload">
-              {t("emptyLink")}
-            </Link>
-            .
-          </p>
-        ) : (
+      {!recent || recent.length === 0 ? (
+        <EmptyState
+          icon={PackageOpen}
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
+          action={{ href: "/upload", label: t("emptyLink") }}
+        />
+      ) : (
+        <section className="card p-5">
+          <h2 className="section-title mb-3">{t("recent")}</h2>
           <ul className="divide-y divide-border text-sm">
             {recent.map((p) => (
               <li key={p.id} className="flex items-center gap-3 py-2.5">
@@ -165,9 +170,11 @@ export default async function Dashboard() {
                 <span className="flex-1 truncate">
                   {p.working_title ?? t("noTitle")}
                 </span>
-                <span className="badge hidden bg-muted text-muted-foreground sm:inline-flex">
-                  {p.category_slug}
-                </span>
+                {p.category_slug && (
+                  <span className="badge badge-neutral hidden sm:inline-flex">
+                    {tc.has(p.category_slug) ? tc(p.category_slug) : p.category_slug}
+                  </span>
+                )}
                 <Link
                   href={`/inventory/${p.sticker_id ?? p.id}`}
                   className="flex items-center gap-1 text-xs font-medium text-accent hover:underline"
@@ -178,8 +185,8 @@ export default async function Dashboard() {
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Action

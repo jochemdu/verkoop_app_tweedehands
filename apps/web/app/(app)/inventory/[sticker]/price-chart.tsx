@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { useChartColors, chartTooltipProps } from "@/lib/chart-theme";
 
 type PricePoint = {
   label: string;
@@ -20,6 +21,8 @@ type PricePoint = {
 
 export function PriceChart({ data }: { data: PricePoint[] }) {
   const t = useTranslations("product");
+  const c = useChartColors();
+  const axisTick = { fontSize: 12, fill: c.axis };
 
   return (
     <section className="card p-5">
@@ -31,14 +34,14 @@ export function PriceChart({ data }: { data: PricePoint[] }) {
         <div className="mt-3">
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
-              <XAxis dataKey="label" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis fontSize={12} tickLine={false} axisLine={false} width={40} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke={c.grid} />
+              <XAxis dataKey="label" tick={axisTick} tickLine={false} axisLine={false} />
+              <YAxis tick={axisTick} tickLine={false} axisLine={false} width={40} />
+              <Tooltip {...chartTooltipProps} />
               <Line
                 type="monotone"
                 dataKey="high"
-                stroke="#c2410c"
+                stroke={c.palette[0]}
                 strokeWidth={2}
                 dot={false}
                 connectNulls
@@ -46,7 +49,7 @@ export function PriceChart({ data }: { data: PricePoint[] }) {
               <Line
                 type="monotone"
                 dataKey="avg"
-                stroke="#a16207"
+                stroke={c.palette[2]}
                 strokeWidth={2}
                 dot={false}
                 connectNulls
@@ -54,7 +57,7 @@ export function PriceChart({ data }: { data: PricePoint[] }) {
               <Line
                 type="monotone"
                 dataKey="low"
-                stroke="#78716c"
+                stroke={c.palette[7]}
                 strokeWidth={2}
                 dot={false}
                 connectNulls

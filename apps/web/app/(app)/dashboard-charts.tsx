@@ -16,31 +16,11 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { useChartColors, chartTooltipProps } from "@/lib/chart-theme";
 
 type CategoryCount = { label: string; value: number };
 type StatusCount = { label: string; value: number };
 type WeeklyPoint = { week: string; count: number };
-
-// Categorie-palet dat onderscheid geeft zonder dat kleurenblinden het in de
-// war raakt. Warm gestemd (fase 27) met terracotta voorop, voldoende
-// luminance-verschil en geen pure-R/pure-G combinaties.
-const PALETTE = [
-  "#c2410c",
-  "#0f766e",
-  "#b45309",
-  "#4338ca",
-  "#be185d",
-  "#4d7c0f",
-  "#0369a1",
-  "#a21caf",
-  "#78716c",
-  "#92400e",
-  "#1d4ed8",
-  "#15803d",
-  "#9f1239",
-  "#57534e",
-  "#7c3aed",
-];
 
 export function DashboardCharts({
   category,
@@ -52,7 +32,9 @@ export function DashboardCharts({
   weekly: WeeklyPoint[];
 }) {
   const t = useTranslations("charts");
+  const c = useChartColors();
   const hasData = category.length > 0 || status.length > 0;
+  const axisTick = { fontSize: 10, fill: c.axis };
 
   return (
     <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -69,15 +51,18 @@ export function DashboardCharts({
                 cx="50%"
                 cy="50%"
                 outerRadius={80}
+                innerRadius={45}
+                paddingAngle={2}
+                stroke="var(--color-card)"
                 label={(entry: { label?: string; value?: number }) =>
                   `${entry.label ?? ""} (${entry.value ?? 0})`
                 }
               >
                 {category.map((_, i) => (
-                  <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                  <Cell key={i} fill={c.palette[i % c.palette.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip {...chartTooltipProps} />
             </PieChart>
           </ResponsiveContainer>
         )}
@@ -89,11 +74,11 @@ export function DashboardCharts({
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={status}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-15} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-              <Tooltip />
-              <Bar dataKey="value" fill="#c2410c" radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={c.grid} />
+              <XAxis dataKey="label" tick={axisTick} angle={-15} stroke={c.grid} />
+              <YAxis allowDecimals={false} tick={axisTick} stroke={c.grid} />
+              <Tooltip {...chartTooltipProps} />
+              <Bar dataKey="value" fill={c.accent} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -105,16 +90,17 @@ export function DashboardCharts({
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={weekly}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="week" tick={{ fontSize: 10 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={c.grid} />
+              <XAxis dataKey="week" tick={axisTick} stroke={c.grid} />
+              <YAxis allowDecimals={false} tick={axisTick} stroke={c.grid} />
+              <Tooltip {...chartTooltipProps} />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#0f766e"
+                stroke={c.teal}
                 strokeWidth={2}
-                dot={{ r: 3 }}
+                dot={{ r: 3, fill: c.teal }}
+                activeDot={{ r: 5 }}
               />
             </LineChart>
           </ResponsiveContainer>
