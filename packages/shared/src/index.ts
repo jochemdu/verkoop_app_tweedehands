@@ -105,5 +105,7 @@ export {
 export {
   PRODUCT_STATUS_TONE,
   productStatusTone,
+  LISTING_STATUS_TONE,
+  listingStatusTone,
   type StatusTone,
 } from "./status";

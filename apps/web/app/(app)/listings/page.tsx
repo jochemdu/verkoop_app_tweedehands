@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { Megaphone } from "lucide-react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { LISTING_STATUSES, localeTag, type ListingStatus } from "@verkoopassistent/shared";
+import { formatEuro } from "@/lib/utils";
+import { EmptyState } from "@/components/empty-state";
+import { ListingStatusBadge } from "@/components/status-badge";
 
 type Search = {
   status?: string;
@@ -54,11 +58,7 @@ export default async function ListingsPage({
       <div className="flex flex-wrap gap-2">
         <Link
           href="/listings"
-          className={`badge border ${
-            !params.status
-              ? "border-accent bg-accent text-accent-foreground"
-              : "border-border bg-card text-muted-foreground hover:bg-muted"
-          }`}
+          className={`chip ${!params.status ? "chip-active" : ""}`}
         >
           {t("all", { count: counts?.length ?? 0 })}
         </Link>
@@ -66,11 +66,7 @@ export default async function ListingsPage({
           <Link
             key={s}
             href={`/listings?status=${s}`}
-            className={`badge border ${
-              params.status === s
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-border bg-card text-muted-foreground hover:bg-muted"
-            }`}
+            className={`chip ${params.status === s ? "chip-active" : ""}`}
           >
             {statusLabel(s)} ({statusCounts[s] ?? 0})
           </Link>
@@ -78,11 +74,11 @@ export default async function ListingsPage({
       </div>
 
       {!listings || listings.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          {t("emptyPre")}
-          <code>create_listing</code>
-          {t("emptyPost")}
-        </div>
+        <EmptyState
+          icon={Megaphone}
+          title={t("emptyTitle")}
+          description={t("emptyDesc")}
+        />
       ) : (
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
@@ -114,13 +110,11 @@ export default async function ListingsPage({
                       )}
                     </td>
                     <td className="p-3 text-xs">{platform?.name}</td>
-                    <td className="p-3 text-xs font-mono">
-                      €{Number(l.price).toFixed(2)}
+                    <td className="p-3 font-mono text-xs [font-variant-numeric:tabular-nums]">
+                      {formatEuro(l.price, dateTag)}
                     </td>
                     <td className="p-3">
-                      <span className="badge bg-muted text-muted-foreground">
-                        {statusLabel(l.status)}
-                      </span>
+                      <ListingStatusBadge status={l.status} />
                     </td>
                     <td className="p-3 text-xs text-muted-foreground">
                       {l.created_at

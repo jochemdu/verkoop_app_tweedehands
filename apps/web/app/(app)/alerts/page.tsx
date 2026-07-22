@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { BellOff } from "lucide-react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { localeTag } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
+import { EmptyState } from "@/components/empty-state";
 import { MarkAllReadButton, MarkReadButton } from "./mark-read";
 
 export default async function AlertsPage() {
@@ -29,16 +31,16 @@ export default async function AlertsPage() {
       </div>
 
       {!alerts || alerts.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          {t("empty")}
-        </div>
+        <EmptyState icon={BellOff} title={t("empty")} />
       ) : (
         <ul className="card divide-y divide-border">
           {alerts.map((a) => (
             <li
               key={a.id}
               className={`flex items-center justify-between gap-3 p-4 ${
-                a.read_at ? "opacity-60" : ""
+                a.read_at
+                  ? "opacity-60"
+                  : "border-l-2 border-accent bg-accent-soft/30"
               }`}
             >
               <div className="min-w-0">
