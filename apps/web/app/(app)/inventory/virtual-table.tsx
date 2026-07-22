@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useTranslations, useLocale } from "next-intl";
 import { STICKER_PRESETS, localeTag, type StickerPreset } from "@verkoopassistent/shared";
 import { PRESET_LABEL_KEYS } from "../stickers/sticker-form";
+import { StatusBadge } from "@/components/status-badge";
 import { Sparkles } from "lucide-react";
 
 type Row = {
@@ -117,24 +118,6 @@ function PrintDialog({
       </div>
     </div>
   );
-}
-
-// Statuskleur-mapping op design-tokens (fase 27).
-function statusBadgeClass(status: string | null): string {
-  switch (status) {
-    case "sold":
-      return "bg-accent text-accent-foreground";
-    case "listed":
-      return "bg-accent-soft text-accent";
-    case "analyzing":
-    case "pending_review":
-      return "bg-warning-soft text-warning";
-    case "ready_to_list":
-    case "approved":
-      return "bg-muted text-foreground";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
 }
 
 export function VirtualTable({
@@ -311,9 +294,7 @@ export function VirtualTable({
                     : row.category_slug}
                 </span>
                 <span>
-                  <span className={`badge ${statusBadgeClass(row.status)}`}>
-                    {row.status}
-                  </span>
+                  <StatusBadge status={row.status} />
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {row.indexed_at

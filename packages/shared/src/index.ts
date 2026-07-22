@@ -101,3 +101,9 @@ export {
   type ShippingClass,
   type ShippingEstimate,
 } from "./shipping";
+
+export {
+  PRODUCT_STATUS_TONE,
+  productStatusTone,
+  type StatusTone,
+} from "./status";

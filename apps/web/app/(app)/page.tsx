@@ -245,7 +245,7 @@ function Action({
   return (
     <Link
       href={href}
-      className="card group flex items-start gap-3 p-5 transition-colors hover:border-accent"
+      className="card card-hover group flex items-start gap-3 p-5"
     >
       <span className="rounded-md bg-accent-soft p-2 text-accent">
         <Icon className="size-5" aria-hidden />

@@ -28,6 +28,10 @@
   --color-destructive-foreground: #fef2f2;
   --color-warning: #b45309;
   --color-warning-soft: #fef8ec;
+  --color-success: #15803d;
+  --color-success-soft: #eaf6ed;
+  --color-info: #1d4ed8;
+  --color-info-soft: #eaf0fd;
   --color-ring: #c2410c;
 
   --radius-sm: 0.375rem;
@@ -37,6 +41,13 @@
 
   --shadow-xs: 0 1px 2px 0 rgb(41 37 36 / 0.05);
   --shadow-sm: 0 1px 3px 0 rgb(41 37 36 / 0.07), 0 1px 2px -1px rgb(41 37 36 / 0.07);
+  --shadow-md: 0 4px 6px -1px rgb(41 37 36 / 0.08), 0 2px 4px -2px rgb(41 37 36 / 0.08);
+  --shadow-lg: 0 12px 20px -6px rgb(41 37 36 / 0.12), 0 6px 8px -6px rgb(41 37 36 / 0.10);
+
+  /* Motion — één ritme voor de hele app; utilities lezen deze uit. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 130ms;
+  --dur-base: 200ms;
 }
 
 /* Donkere modus: géén genest @theme (Tailwind v4 merget dat de hoofdtheme
@@ -60,10 +71,16 @@
     --color-destructive-foreground: #1b0a0a;
     --color-warning: #fbbf24;
     --color-warning-soft: #271c05;
+    --color-success: #4ade80;
+    --color-success-soft: #10261a;
+    --color-info: #60a5fa;
+    --color-info-soft: #101d33;
     --color-ring: #fb923c;
 
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.55), 0 2px 4px -2px rgb(0 0 0 / 0.55);
+    --shadow-lg: 0 12px 20px -6px rgb(0 0 0 / 0.6), 0 6px 8px -6px rgb(0 0 0 / 0.55);
   }
 }
 
@@ -208,4 +225,99 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-muted-foreground);
+}
+
+/* Klikbare kaart: subtiele lift + accent-rand op hover. Geeft diepte aan
+   dashboard-acties, product-links, etc. Respecteert reduced-motion via de
+   globale regel in @layer base. */
+@utility card-hover {
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+  &:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* Skeleton-placeholder tijdens laden. */
+@utility skeleton {
+  background-color: var(--color-muted);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.06),
+      transparent
+    );
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+}
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Pill-toggle voor filters/segmenten. */
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-card);
+  color: var(--color-muted-foreground);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+  &:hover {
+    color: var(--color-foreground);
+    border-color: var(--color-muted-foreground);
+  }
+}
+@utility chip-active {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* Status/tone-badges — één taal voor status-kleuren over alle schermen. */
+@utility badge-neutral {
+  background-color: var(--color-muted);
+  color: var(--color-muted-foreground);
+}
+@utility badge-accent {
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+@utility badge-info {
+  background-color: var(--color-info-soft);
+  color: var(--color-info);
+}
+@utility badge-warn {
+  background-color: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+@utility badge-success {
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
 }

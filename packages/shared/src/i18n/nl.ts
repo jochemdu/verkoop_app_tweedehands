@@ -888,6 +888,24 @@ export const nl = {
     errEmail: "Log in met het uitgenodigde e-mailadres om te accepteren.",
     errAuth: "Log eerst in om de uitnodiging te accepteren.",
   },
+  productStatus: {
+    indexed: "Geïndexeerd",
+    analyzing: "Analyseren…",
+    ready_to_list: "Klaar om te plaatsen",
+    pending_review: "Wacht op review",
+    approved: "Goedgekeurd",
+    listed: "Geplaatst",
+    sold: "Verkocht",
+    archived: "Gearchiveerd",
+  },
+  errors: {
+    title: "Er ging iets mis",
+    description: "Er is een onverwachte fout opgetreden. Probeer het opnieuw.",
+    retry: "Opnieuw proberen",
+    home: "Naar dashboard",
+    nfTitle: "Pagina niet gevonden",
+    nfDesc: "Deze pagina bestaat niet (meer).",
+  },
   // Weergavenamen per categorie-slug. De categories-tabel bevat Nederlandse
   // namen; dit vertaalt ze naar de UI-taal. Ontbrekende slugs vallen terug op de
   // db-naam of de slug zelf (zie t.has-gebruik in de componenten).
