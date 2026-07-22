@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { LOCALES, type Locale } from "@verkoopassistent/shared";
 import { supabase } from "@/lib/supabase";
 import { useLocale, useSetLocale, useTranslation } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 
 // Taalkiezer (fase 38). Zet de lokale taal direct én spiegelt de keuze naar
 // profiles.display_language, zodat web en mobiel gesynchroniseerd blijven.
@@ -10,6 +11,7 @@ export function LanguagePicker() {
   const setLocale = useSetLocale();
   const tm = useTranslation("mobile");
   const tl = useTranslation("langName");
+  const c = useTheme().colors;
 
   async function choose(next: Locale) {
     if (next === locale) return;
@@ -27,7 +29,9 @@ export function LanguagePicker() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>{tm("language")}</Text>
+      <Text style={[styles.label, { color: c.mutedForeground }]}>
+        {tm("language")}
+      </Text>
       <View style={styles.row}>
         {LOCALES.map((l) => {
           const active = l === locale;
@@ -38,9 +42,18 @@ export function LanguagePicker() {
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               accessibilityLabel={tl(l)}
-              style={[styles.chip, active && styles.chipActive]}
+              style={[
+                styles.chip,
+                { borderColor: c.border },
+                active && { backgroundColor: c.accent, borderColor: c.accent },
+              ]}
             >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: active ? c.accentForeground : c.foreground },
+                ]}
+              >
                 {l.toUpperCase()}
               </Text>
             </Pressable>
@@ -53,17 +66,14 @@ export function LanguagePicker() {
 
 const styles = StyleSheet.create({
   wrap: { gap: 6 },
-  label: { fontSize: 12, color: "#71717a" },
+  label: { fontSize: 12 },
   row: { flexDirection: "row", gap: 6 },
   chip: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#e4e4e7",
     borderRadius: 8,
     paddingVertical: 8,
     alignItems: "center",
   },
-  chipActive: { backgroundColor: "#18181b", borderColor: "#18181b" },
-  chipText: { fontSize: 13, fontWeight: "600", color: "#18181b" },
-  chipTextActive: { color: "#fff" },
+  chipText: { fontSize: 13, fontWeight: "600" },
 });

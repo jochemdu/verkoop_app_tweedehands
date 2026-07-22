@@ -12,11 +12,14 @@ import * as Linking from "expo-linking";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 
 const REDIRECT_URL = Linking.createURL("/auth/callback");
 
 export default function LoginScreen() {
   const t = useTranslation("mobile");
+  const theme = useTheme();
+  const c = theme.colors;
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -61,19 +64,34 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{t("appName")}</Text>
-        <Text style={styles.subtitle}>{t("loginSubtitle")}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: c.card, borderColor: c.border },
+          theme.shadow,
+        ]}
+      >
+        <View style={[styles.brand, { backgroundColor: c.accent }]}>
+          <Text style={[styles.brandText, { color: c.accentForeground }]}>VA</Text>
+        </View>
+        <Text style={[styles.title, { color: c.foreground }]}>{t("appName")}</Text>
+        <Text style={[styles.subtitle, { color: c.mutedForeground }]}>
+          {t("loginSubtitle")}
+        </Text>
 
         {sent ? (
-          <View style={styles.sentBox}>
-            <Text>{t("loginCheckInbox")}</Text>
+          <View style={[styles.sentBox, { backgroundColor: c.accentSoft }]}>
+            <Text style={{ color: c.foreground }}>{t("loginCheckInbox")}</Text>
           </View>
         ) : (
           <>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { borderColor: c.border, color: c.foreground, backgroundColor: c.background },
+              ]}
+              placeholderTextColor={c.mutedForeground}
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect={false}
@@ -84,14 +102,20 @@ export default function LoginScreen() {
               editable={!sending}
             />
             <Pressable
-              style={[styles.button, sending && { opacity: 0.5 }]}
+              style={[
+                styles.button,
+                { backgroundColor: c.accent },
+                sending && { opacity: 0.5 },
+              ]}
               disabled={sending || !email}
               onPress={sendMagicLink}
             >
               {sending ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={c.accentForeground} />
               ) : (
-                <Text style={styles.buttonText}>{t("sendMagicLink")}</Text>
+                <Text style={[styles.buttonText, { color: c.accentForeground }]}>
+                  {t("sendMagicLink")}
+                </Text>
               )}
             </Pressable>
           </>
@@ -105,30 +129,36 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 20 },
   card: {
     borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 24,
     gap: 12,
   },
-  title: { fontSize: 24, fontWeight: "600", textAlign: "center" },
-  subtitle: { color: "#71717a", textAlign: "center", marginBottom: 12 },
+  brand: {
+    alignSelf: "center",
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  brandText: { fontSize: 18, fontWeight: "800" },
+  title: { fontSize: 24, fontWeight: "700", textAlign: "center" },
+  subtitle: { textAlign: "center", marginBottom: 12 },
   input: {
     borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#18181b",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 14,
     alignItems: "center",
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "500" },
+  buttonText: { fontSize: 16, fontWeight: "600" },
   sentBox: {
-    backgroundColor: "#f4f4f5",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 16,
   },
 });
