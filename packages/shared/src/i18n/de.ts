@@ -18,6 +18,8 @@ export const de: Messages = {
     bundles: "Bündel",
     settings: "Einstellungen",
     logout: "Abmelden",
+    more: "Mehr",
+    skipToContent: "Zum Inhalt",
   },
   common: {
     save: "Speichern",

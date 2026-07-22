@@ -19,6 +19,8 @@ export const nl = {
     bundles: "Bundels",
     settings: "Instellingen",
     logout: "Uitloggen",
+    more: "Meer",
+    skipToContent: "Naar inhoud",
   },
   common: {
     save: "Opslaan",
