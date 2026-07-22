@@ -5,6 +5,7 @@ import {
   FileText,
   PackageOpen,
   Tags,
+  TrendingUp,
   UploadCloud,
   type LucideIcon,
 } from "lucide-react";
@@ -117,41 +118,56 @@ export default async function Dashboard() {
         return sum + Number(v || 0);
       }, 0);
 
+  // Splits de waarde in gerealiseerd (verkocht) vs voorraad-potentieel.
+  let realizedValue = 0;
+  let potentialValue = 0;
+  (allProducts ?? []).forEach((p) => {
+    if (p.status === "sold") realizedValue += Number(p.sold_price ?? 0);
+    else potentialValue += Number(p.recommended_price ?? 0);
+  });
+
+  // Trend: geïndexeerd deze week vs vorige week.
+  const wLen = weeklyData.length;
+  const thisWeek = wLen > 0 ? weeklyData[wLen - 1]!.count : 0;
+  const prevWeek = wLen > 1 ? weeklyData[wLen - 2]!.count : 0;
+  const weekDelta = thisWeek - prevWeek;
+
   const t = await getTranslations("dashboard");
   const tc = await getTranslations("categoryNames");
+  const tps = await getTranslations("productStatus");
   const dateTag = localeTag(await getLocale());
+
+  // Gelokaliseerde chart-labels (i.p.v. rauwe slugs/enums).
+  const categoryChart = categoryData.map((d) => ({
+    label: tc.has(d.label) ? tc(d.label) : d.label,
+    value: d.value,
+  }));
+  const statusChart = statusData.map((d) => ({
+    label: tps.has(d.label) ? tps(d.label) : d.label,
+    value: d.value,
+  }));
+
+  const hasProducts = totalProducts > 0;
+
+  const statTiles: Array<{
+    label: string;
+    value: number;
+    href: string;
+    hint?: string;
+    accent?: boolean;
+  }> = [
+    { label: t("statTotal"), value: totalProducts, href: "/inventory" },
+    { label: t("statIndexed"), value: indexedCount, href: "/inventory?status=indexed", hint: t("hintIndexed") },
+    { label: t("statReady"), value: readyCount, href: "/inventory?status=ready_to_list", hint: t("hintReady") },
+    { label: t("statListed"), value: listedCount, href: "/inventory?status=listed", hint: t("hintListed") },
+    { label: t("statSold"), value: soldCount, href: "/inventory?status=sold", accent: true },
+  ];
 
   return (
     <main className="space-y-8">
       <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Stat label={t("statTotal")} value={totalProducts ?? 0} />
-        <Stat label={t("statIndexed")} value={indexedCount ?? 0} hint={t("hintIndexed")} />
-        <Stat label={t("statReady")} value={readyCount ?? 0} hint={t("hintReady")} />
-        <Stat label={t("statListed")} value={listedCount ?? 0} hint={t("hintListed")} />
-        <Stat label={t("statSold")} value={soldCount ?? 0} accent />
-      </section>
-
-      <section className="card flex items-center justify-between gap-4 p-5">
-        <div>
-          <p className="text-sm text-muted-foreground">{t("estValue")}</p>
-          <p className="mt-1 font-heading text-4xl font-bold tracking-tight text-accent [font-variant-numeric:tabular-nums]">
-            {formatEuro(totalEstValue, dateTag)}
-          </p>
-        </div>
-        <span className="hidden rounded-full bg-accent-soft p-3 text-accent sm:flex">
-          <Banknote className="size-6" aria-hidden />
-        </span>
-      </section>
-
-      <DashboardCharts
-        category={categoryData}
-        status={statusData}
-        weekly={weeklyData}
-      />
-
-      {!recent || recent.length === 0 ? (
+      {!hasProducts ? (
         <EmptyState
           icon={PackageOpen}
           title={t("emptyTitle")}
@@ -159,33 +175,103 @@ export default async function Dashboard() {
           action={{ href: "/upload", label: t("emptyLink") }}
         />
       ) : (
-        <section className="card p-5">
-          <h2 className="section-title mb-3">{t("recent")}</h2>
-          <ul className="divide-y divide-border text-sm">
-            {recent.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 py-2.5">
-                <span className="w-16 font-mono text-xs text-muted-foreground">
-                  {p.sticker_id ?? "—"}
+        <>
+          {/* Waarde-hero */}
+          <section className="card flex flex-col gap-4 border-l-4 border-accent p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">{t("estValue")}</p>
+              <p className="font-heading text-4xl font-bold tracking-tight text-accent [font-variant-numeric:tabular-nums] sm:text-5xl">
+                {formatEuro(totalEstValue, dateTag)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("heroRealized")}:{" "}
+                <span className="font-medium text-foreground">
+                  {formatEuro(realizedValue, dateTag)}
                 </span>
-                <span className="flex-1 truncate">
-                  {p.working_title ?? t("noTitle")}
+                {"  ·  "}
+                {t("heroPotential")}:{" "}
+                <span className="font-medium text-foreground">
+                  {formatEuro(potentialValue, dateTag)}
                 </span>
-                {p.category_slug && (
-                  <span className="badge badge-neutral hidden sm:inline-flex">
-                    {tc.has(p.category_slug) ? tc(p.category_slug) : p.category_slug}
-                  </span>
-                )}
-                <Link
-                  href={`/inventory/${p.sticker_id ?? p.id}`}
-                  className="flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {weekDelta > 0 && (
+                <span className="badge badge-success inline-flex items-center gap-1">
+                  <TrendingUp className="size-3.5" aria-hidden />
+                  +{weekDelta} {t("thisWeekLabel")}
+                </span>
+              )}
+              <span className="hidden rounded-full bg-accent-soft p-3 text-accent sm:flex">
+                <Banknote className="size-6" aria-hidden />
+              </span>
+            </div>
+          </section>
+
+          {/* Klikbare KPI-tegels → gefilterde inventaris */}
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {statTiles.map((tile) => (
+              <Link
+                key={tile.href}
+                href={tile.href}
+                className="stat-card card-hover block"
+              >
+                <p className="stat-label">{tile.label}</p>
+                <p
+                  className={`stat-value mt-1 text-3xl ${tile.accent ? "text-accent" : ""}`}
                 >
-                  {t("view")}
-                  <ArrowRight className="size-3" aria-hidden />
-                </Link>
-              </li>
+                  {tile.value}
+                </p>
+                {tile.hint && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">{tile.hint}</p>
+                )}
+              </Link>
             ))}
-          </ul>
-        </section>
+          </section>
+
+          <DashboardCharts
+            category={categoryChart}
+            status={statusChart}
+            weekly={weeklyData}
+          />
+
+          {recent && recent.length > 0 && (
+            <section className="card p-5">
+              <h2 className="section-title mb-3">{t("recent")}</h2>
+              <ul className="-mx-2 text-sm">
+                {recent.map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/inventory/${p.sticker_id ?? p.id}`}
+                      className="group flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted"
+                    >
+                      <span className="w-16 font-mono text-xs text-muted-foreground">
+                        {p.sticker_id ?? "—"}
+                      </span>
+                      <span className="flex-1 truncate font-medium">
+                        {p.working_title ?? t("noTitle")}
+                      </span>
+                      {p.category_slug && (
+                        <span className="badge badge-neutral hidden sm:inline-flex">
+                          {tc.has(p.category_slug) ? tc(p.category_slug) : p.category_slug}
+                        </span>
+                      )}
+                      {p.indexed_at && (
+                        <span className="hidden w-24 text-right text-xs text-muted-foreground md:inline">
+                          {relativeTime(p.indexed_at, dateTag)}
+                        </span>
+                      )}
+                      <ArrowRight
+                        className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                        aria-hidden
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </>
       )}
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -209,32 +295,6 @@ export default async function Dashboard() {
         />
       </section>
     </main>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  hint,
-  accent,
-}: {
-  label: string;
-  value: number;
-  hint?: string;
-  accent?: boolean;
-}) {
-  return (
-    <div className="card p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={`mt-1 font-heading text-3xl font-bold tracking-tight ${accent ? "text-accent" : ""}`}
-      >
-        {value}
-      </p>
-      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
-    </div>
   );
 }
 
@@ -269,6 +329,21 @@ function Action({
       </span>
     </Link>
   );
+}
+
+// Relatieve tijd ("2 dagen geleden") gelokaliseerd via Intl.
+function relativeTime(iso: string, tag: string): string {
+  const rtf = new Intl.RelativeTimeFormat(tag, { numeric: "auto" });
+  const diffMs = new Date(iso).getTime() - Date.now();
+  const mins = Math.round(diffMs / 60000);
+  if (Math.abs(mins) < 60) return rtf.format(mins, "minute");
+  const hours = Math.round(mins / 60);
+  if (Math.abs(hours) < 24) return rtf.format(hours, "hour");
+  const days = Math.round(hours / 24);
+  if (Math.abs(days) < 30) return rtf.format(days, "day");
+  const weeks = Math.round(days / 7);
+  if (Math.abs(weeks) < 5) return rtf.format(weeks, "week");
+  return rtf.format(Math.round(days / 30), "month");
 }
 
 // ISO week: "2026-W16"
