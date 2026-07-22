@@ -453,6 +453,7 @@ export const fr: Messages = {
     uploading: "Téléversement…",
     addPhotos: "Ajouter des photos",
     primaryBadge: "photo principale",
+    viewPhoto: "Voir la photo {n}",
     makePrimary: "Définir comme photo principale",
     moveLeft: "Vers la gauche",
     moveRight: "Vers la droite",

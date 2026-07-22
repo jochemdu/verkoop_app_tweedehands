@@ -453,6 +453,7 @@ export const de: Messages = {
     uploading: "Hochladen…",
     addPhotos: "Fotos hinzufügen",
     primaryBadge: "Hauptfoto",
+    viewPhoto: "Foto {n} ansehen",
     makePrimary: "Als Hauptfoto festlegen",
     moveLeft: "Nach links",
     moveRight: "Nach rechts",

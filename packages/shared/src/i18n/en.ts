@@ -451,6 +451,7 @@ export const en: Messages = {
     uploading: "Uploading…",
     addPhotos: "Add photos",
     primaryBadge: "main photo",
+    viewPhoto: "View photo {n}",
     makePrimary: "Set as main photo",
     moveLeft: "Move left",
     moveRight: "Move right",

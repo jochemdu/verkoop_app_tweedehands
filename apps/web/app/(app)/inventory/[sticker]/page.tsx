@@ -7,6 +7,7 @@ import {
   estimateShipping,
 } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
+import { StatusBadge } from "@/components/status-badge";
 import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
 import { AnalyzeButton } from "./analyze-button";
@@ -102,8 +103,8 @@ export default async function ProductDetailPage({
 
   return (
     <main className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <Link
             href="/inventory"
             className="text-sm text-muted-foreground hover:underline"
@@ -113,10 +114,18 @@ export default async function ProductDetailPage({
           <h1 className="mt-1 text-3xl font-bold tracking-tight">
             {product.title ?? product.working_title ?? t("unnamed")}
           </h1>
-          <p className="font-mono text-sm text-muted-foreground">
-            {product.sticker_id ?? t("noSticker")} · {categoryLabel} ·{" "}
-            {product.status}
-          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span className="font-mono">
+              {product.sticker_id ?? t("noSticker")}
+            </span>
+            {categoryLabel && (
+              <>
+                <span aria-hidden>·</span>
+                <span>{categoryLabel}</span>
+              </>
+            )}
+            <StatusBadge status={product.status} />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <AddPhotosButton productId={product.id} userId={user!.id} />
@@ -125,48 +134,56 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      {signedPhotos.length > 0 ? (
-        <PhotoTools
-          productId={product.id}
-          userId={user!.id}
-          photos={signedPhotos}
-        />
-      ) : (
-        <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          {t("noPhotos")}
+      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+        {/* Links: foto's, foto-tips, bewerken */}
+        <div className="space-y-6">
+          {signedPhotos.length > 0 ? (
+            <PhotoTools
+              productId={product.id}
+              userId={user!.id}
+              photos={signedPhotos}
+            />
+          ) : (
+            <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+              {t("noPhotos")}
+            </div>
+          )}
+
+          {Array.isArray(product.photo_advice) &&
+            product.photo_advice.length > 0 && (
+              <section className="rounded-xl border border-warning bg-warning-soft p-4">
+                <h2 className="section-title text-warning">
+                  {t("photoTipsTitle")}
+                </h2>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+                  {product.photo_advice.map((tip: string, i: number) => (
+                    <li key={i}>{tip}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+          <EditProductForm product={product} />
         </div>
-      )}
 
-      {Array.isArray(product.photo_advice) && product.photo_advice.length > 0 && (
-        <section className="rounded-xl border border-warning bg-warning-soft p-4">
-          <h2 className="section-title text-warning">{t("photoTipsTitle")}</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-            {product.photo_advice.map((tip: string, i: number) => (
-              <li key={i}>{tip}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <PriceChart data={priceData} />
-
-      <MarketComparables comps={comparables ?? []} />
-
-      <ShippingEstimate
-        productId={product.id}
-        categorySlug={product.category_slug}
-        shippingClass={product.shipping_class}
-      />
-
-      <SoldPriceForm
-        productId={product.id}
-        recommendedPrice={product.recommended_price}
-        soldPrice={product.sold_price}
-        soldAt={product.sold_at}
-        shippingCost={shipping.price}
-      />
-
-      <EditProductForm product={product} />
+        {/* Rechts: markt & prijs — sticky op lg */}
+        <aside className="space-y-6 lg:sticky lg:top-20">
+          <PriceChart data={priceData} />
+          <MarketComparables comps={comparables ?? []} />
+          <ShippingEstimate
+            productId={product.id}
+            categorySlug={product.category_slug}
+            shippingClass={product.shipping_class}
+          />
+          <SoldPriceForm
+            productId={product.id}
+            recommendedPrice={product.recommended_price}
+            soldPrice={product.sold_price}
+            soldAt={product.sold_at}
+            shippingCost={shipping.price}
+          />
+        </aside>
+      </div>
     </main>
   );
 }

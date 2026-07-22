@@ -649,6 +649,7 @@ export const nl = {
     uploading: "Uploaden…",
     addPhotos: "Foto's toevoegen",
     primaryBadge: "hoofdfoto",
+    viewPhoto: "Foto {n} bekijken",
     makePrimary: "Maak hoofdfoto",
     moveLeft: "Naar links",
     moveRight: "Naar rechts",
