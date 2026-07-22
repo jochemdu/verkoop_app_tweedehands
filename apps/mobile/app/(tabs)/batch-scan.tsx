@@ -255,9 +255,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
   center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
   permTitle: { fontSize: 18, fontWeight: "600", marginBottom: 8 },
-  permText: { fontSize: 14, color: "#71717a", textAlign: "center", marginBottom: 16 },
+  permText: { fontSize: 14, color: "#78716c", textAlign: "center", marginBottom: 16 },
   primaryBtn: {
-    backgroundColor: "#18181b",
+    backgroundColor: "#c2410c",
     borderRadius: 10,
     padding: 16,
     alignItems: "center",

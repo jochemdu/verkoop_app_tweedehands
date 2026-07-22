@@ -29,6 +29,7 @@ import { enqueueCapture } from "@/lib/outbox/sync";
 import { stickerIdSchema, localeTag } from "@verkoopassistent/shared";
 import { parseClothingLabel } from "@/lib/clothing-parser";
 import { useTranslation, useLocale } from "@/lib/i18n";
+import { useTheme, type ThemeColors } from "@/lib/theme";
 
 type CapturedPhoto = {
   uri: string;
@@ -42,6 +43,8 @@ type Mode = "ocr_separate" | "ocr_inline" | "manual";
 export default function CaptureScreen() {
   const t = useTranslation("mobile");
   const locale = useLocale();
+  const theme = useTheme();
+  const c = theme.colors;
   const [permission, requestPermission] = useCameraPermissions();
 
   const [mode, setMode] = useState<Mode>("ocr_separate");
@@ -398,18 +401,27 @@ export default function CaptureScreen() {
   // Permission handling
   if (!permission) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
-        <ActivityIndicator />
+      <SafeAreaView style={[styles.centerContainer, { backgroundColor: c.background }]}>
+        <ActivityIndicator color={c.accent} />
       </SafeAreaView>
     );
   }
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
-        <Text style={styles.permissionTitle}>{t("cameraPermTitle")}</Text>
-        <Text style={styles.permissionText}>{t("cameraPermMsg")}</Text>
-        <Pressable style={styles.primaryButton} onPress={requestPermission}>
-          <Text style={styles.primaryButtonText}>{t("allowAccess")}</Text>
+      <SafeAreaView style={[styles.centerContainer, { backgroundColor: c.background }]}>
+        <Text style={[styles.permissionTitle, { color: c.foreground }]}>
+          {t("cameraPermTitle")}
+        </Text>
+        <Text style={[styles.permissionText, { color: c.mutedForeground }]}>
+          {t("cameraPermMsg")}
+        </Text>
+        <Pressable
+          style={[styles.primaryButton, { backgroundColor: c.accent }]}
+          onPress={requestPermission}
+        >
+          <Text style={[styles.primaryButtonText, { color: c.accentForeground }]}>
+            {t("allowAccess")}
+          </Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -417,25 +429,31 @@ export default function CaptureScreen() {
 
   // Configure phase: mode, sticker, context invullen
   if (phase === "configure") {
+    const cardStyle = [styles.card, { backgroundColor: c.card, borderColor: c.border }];
+    const labelStyle = [styles.label, { color: c.mutedForeground }];
+    const inputStyle = { borderColor: c.border, color: c.foreground, backgroundColor: c.background };
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.card}>
-            <Text style={styles.label}>{t("stickerMode")}</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+        <ScrollView contentContainerStyle={[styles.scroll, { backgroundColor: c.background }]}>
+          <View style={cardStyle}>
+            <Text style={labelStyle}>{t("stickerMode")}</Text>
             <View style={styles.modeRow}>
               <ModeChip
+                colors={c}
                 active={mode === "ocr_separate"}
                 onPress={() => setMode("ocr_separate")}
                 label={t("modeFirstSticker")}
                 hint={t("modeFirstStickerHint")}
               />
               <ModeChip
+                colors={c}
                 active={mode === "ocr_inline"}
                 onPress={() => setMode("ocr_inline")}
                 label={t("modeOcrInline")}
                 hint={t("modeOcrInlineHint")}
               />
               <ModeChip
+                colors={c}
                 active={mode === "manual"}
                 onPress={() => setMode("manual")}
                 label={t("modeManual")}
@@ -444,8 +462,8 @@ export default function CaptureScreen() {
             </View>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.label}>{t("stickerIdLabel")}</Text>
+          <View style={cardStyle}>
+            <Text style={labelStyle}>{t("stickerIdLabel")}</Text>
             <TextInput
               value={stickerId}
               onChangeText={(v) => {
@@ -453,35 +471,41 @@ export default function CaptureScreen() {
                 setStickerConfidence(null);
               }}
               placeholder={t("stickerIdPlaceholder")}
+              placeholderTextColor={c.mutedForeground}
               keyboardType="number-pad"
               maxLength={4}
-              style={styles.inputMono}
+              style={[styles.inputMono, inputStyle]}
             />
             {lastUsed !== null && (
-              <Text style={styles.hint}>
+              <Text style={[styles.hint, { color: c.mutedForeground }]}>
                 {t("lastUsedLabel", { value: String(lastUsed).padStart(4, "0") })}
               </Text>
             )}
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.label}>{t("workingTitleLabel")}</Text>
+          <View style={cardStyle}>
+            <Text style={labelStyle}>{t("workingTitleLabel")}</Text>
             <TextInput
               value={workingTitle}
               onChangeText={setWorkingTitle}
               placeholder={t("workingTitlePlaceholder")}
-              style={styles.input}
+              placeholderTextColor={c.mutedForeground}
+              style={[styles.input, inputStyle]}
             />
           </View>
 
-          <View style={styles.card}>
+          <View style={cardStyle}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>{t("noteLabel")}</Text>
+              <Text style={labelStyle}>{t("noteLabel")}</Text>
               <Pressable
                 onPress={recording ? stopVoice : startVoice}
-                style={[styles.micButton, recording && styles.micButtonActive]}
+                style={[
+                  styles.micButton,
+                  { borderColor: c.border },
+                  recording && { backgroundColor: c.destructive, borderColor: c.destructive },
+                ]}
               >
-                <Text style={recording ? styles.micTextActive : styles.micText}>
+                <Text style={{ fontSize: 12, fontWeight: recording ? "600" : "400", color: recording ? "#fff" : c.foreground }}>
                   {recording ? t("micStop") : t("micSpeak")}
                 </Text>
               </Pressable>
@@ -490,20 +514,23 @@ export default function CaptureScreen() {
               value={notes}
               onChangeText={setNotes}
               placeholder={t("notePlaceholder")}
+              placeholderTextColor={c.mutedForeground}
               multiline
-              style={[styles.input, { minHeight: 60 }]}
+              style={[styles.input, inputStyle, { minHeight: 60 }]}
             />
           </View>
 
           <Pressable
-            style={styles.primaryButton}
+            style={[styles.primaryButton, { backgroundColor: c.accent }]}
             onPress={() => {
               setPhase("capture");
               if (mode === "manual" || stickerId) setCameraMode("product");
               else setCameraMode("sticker");
             }}
           >
-            <Text style={styles.primaryButtonText}>{t("toCamera")}</Text>
+            <Text style={[styles.primaryButtonText, { color: c.accentForeground }]}>
+              {t("toCamera")}
+            </Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
@@ -635,21 +662,37 @@ function ModeChip({
   onPress,
   label,
   hint,
+  colors,
 }: {
   active: boolean;
   onPress: () => void;
   label: string;
   hint: string;
+  colors: ThemeColors;
 }) {
   return (
     <Pressable
-      style={[styles.modeChip, active && styles.modeChipActive]}
+      style={[
+        styles.modeChip,
+        { borderColor: colors.border },
+        active && { backgroundColor: colors.accent, borderColor: colors.accent },
+      ]}
       onPress={onPress}
     >
-      <Text style={[styles.modeChipLabel, active && styles.modeChipLabelActive]}>
+      <Text
+        style={[
+          styles.modeChipLabel,
+          { color: active ? colors.accentForeground : colors.foreground },
+        ]}
+      >
         {label}
       </Text>
-      <Text style={[styles.modeChipHint, active && styles.modeChipHintActive]}>
+      <Text
+        style={[
+          styles.modeChipHint,
+          { color: active ? colors.accentForeground : colors.mutedForeground, opacity: active ? 0.85 : 1 },
+        ]}
+      >
         {hint}
       </Text>
     </Pressable>
@@ -688,18 +731,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
   centerContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
   scroll: { padding: 16, gap: 12, paddingBottom: 40, backgroundColor: "#fff", flexGrow: 1 },
-  card: { borderWidth: 1, borderColor: "#e4e4e7", borderRadius: 10, padding: 12 },
-  label: { fontSize: 12, color: "#71717a", marginBottom: 6 },
+  card: { borderWidth: 1, borderColor: "#e7e2dc", borderRadius: 10, padding: 12 },
+  label: { fontSize: 12, color: "#78716c", marginBottom: 6 },
   input: {
     borderWidth: 1,
-    borderColor: "#e4e4e7",
+    borderColor: "#e7e2dc",
     borderRadius: 8,
     padding: 10,
     fontSize: 15,
   },
   inputMono: {
     borderWidth: 1,
-    borderColor: "#e4e4e7",
+    borderColor: "#e7e2dc",
     borderRadius: 8,
     padding: 10,
     fontSize: 18,
@@ -715,32 +758,32 @@ const styles = StyleSheet.create({
   },
   micButton: {
     borderWidth: 1,
-    borderColor: "#e4e4e7",
+    borderColor: "#e7e2dc",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   micButtonActive: { backgroundColor: "#dc2626", borderColor: "#dc2626" },
-  micText: { fontSize: 12, color: "#18181b" },
+  micText: { fontSize: 12, color: "#292524" },
   micTextActive: { fontSize: 12, color: "#fff", fontWeight: "600" },
 
   modeRow: { flexDirection: "row", gap: 6 },
   modeChip: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#e4e4e7",
+    borderColor: "#e7e2dc",
     borderRadius: 8,
     padding: 8,
     alignItems: "center",
   },
-  modeChipActive: { backgroundColor: "#18181b", borderColor: "#18181b" },
-  modeChipLabel: { fontSize: 12, fontWeight: "600", color: "#18181b" },
+  modeChipActive: { backgroundColor: "#292524", borderColor: "#292524" },
+  modeChipLabel: { fontSize: 12, fontWeight: "600", color: "#292524" },
   modeChipLabelActive: { color: "#fff" },
-  modeChipHint: { fontSize: 10, color: "#71717a", marginTop: 2 },
+  modeChipHint: { fontSize: 10, color: "#78716c", marginTop: 2 },
   modeChipHintActive: { color: "#a1a1aa" },
 
   primaryButton: {
-    backgroundColor: "#18181b",
+    backgroundColor: "#292524",
     borderRadius: 10,
     padding: 16,
     alignItems: "center",
@@ -749,7 +792,7 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: "#fff", fontSize: 15, fontWeight: "500" },
 
   permissionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 8 },
-  permissionText: { fontSize: 14, color: "#71717a", textAlign: "center", marginBottom: 16 },
+  permissionText: { fontSize: 14, color: "#78716c", textAlign: "center", marginBottom: 16 },
 
   topBar: {
     flexDirection: "row",
