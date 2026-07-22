@@ -199,21 +199,31 @@ export function HouseholdManager({
               key={m.user_id}
               className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
             >
-              <span>
-                {m.email}
-                {m.user_id === userId && (
-                  <span className="text-muted-foreground"> ({t("you")})</span>
-                )}
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold uppercase text-accent"
+                  aria-hidden
+                >
+                  {m.email.slice(0, 2)}
+                </span>
+                <span className="truncate">
+                  {m.email}
+                  {m.user_id === userId && (
+                    <span className="text-muted-foreground"> ({t("you")})</span>
+                  )}
+                </span>
               </span>
-              <span className="flex items-center gap-3">
-                <span className="badge">
+              <span className="flex shrink-0 items-center gap-3">
+                <span
+                  className={`badge ${m.role === "owner" ? "badge-accent" : "badge-neutral"}`}
+                >
                   {m.role === "owner" ? t("roleOwner") : t("roleMember")}
                 </span>
                 {isOwner && m.user_id !== userId && (
                   <button
                     onClick={() => removeMember(m.user_id)}
                     disabled={busy}
-                    className="text-xs text-red-600 hover:underline"
+                    className="text-xs text-destructive hover:underline"
                   >
                     {t("remove")}
                   </button>
@@ -226,7 +236,7 @@ export function HouseholdManager({
           <button
             onClick={leave}
             disabled={busy}
-            className="text-sm text-red-600 hover:underline"
+            className="text-sm text-destructive hover:underline"
           >
             {t("leave")}
           </button>
@@ -279,7 +289,7 @@ export function HouseholdManager({
                   <button
                     onClick={() => revoke(inv.id)}
                     disabled={busy}
-                    className="text-red-600 hover:underline"
+                    className="text-destructive hover:underline"
                   >
                     {t("revoke")}
                   </button>

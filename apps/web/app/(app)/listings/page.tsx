@@ -80,7 +80,8 @@ export default async function ListingsPage({
           description={t("emptyDesc")}
         />
       ) : (
-        <div className="card overflow-x-auto">
+        <>
+        <div className="card hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="border-b text-left text-xs uppercase text-muted-foreground">
@@ -134,6 +135,41 @@ export default async function ListingsPage({
             </tbody>
           </table>
         </div>
+
+        {/* Mobiel: kaarten i.p.v. de brede tabel (< sm). */}
+        <div className="space-y-2 sm:hidden">
+          {listings.map((l) => {
+            const product = Array.isArray(l.products) ? l.products[0] : l.products;
+            const platform = Array.isArray(l.platforms) ? l.platforms[0] : l.platforms;
+            return (
+              <Link
+                key={l.id}
+                href={`/listings/${l.id}`}
+                className="card card-hover block p-4"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {product?.sticker_id ?? "—"}
+                  </span>
+                  <ListingStatusBadge status={l.status} />
+                </div>
+                <p className="mt-1 truncate font-medium">
+                  {l.final_title ?? l.generated_title ?? (
+                    <span className="italic text-muted-foreground">{t("noTitle")}</span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {platform?.name}
+                  {" · "}
+                  <span className="font-mono [font-variant-numeric:tabular-nums]">
+                    {formatEuro(l.price, dateTag)}
+                  </span>
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+        </>
       )}
     </main>
   );

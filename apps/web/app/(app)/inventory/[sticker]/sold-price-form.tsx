@@ -78,7 +78,7 @@ export function SoldPriceForm({
       {showMargin && (
         <p
           className={`text-sm font-medium ${
-            marginAbs >= 0 ? "text-green-600" : "text-red-600"
+            marginAbs >= 0 ? "text-success" : "text-destructive"
           }`}
         >
           {t("marginLabel")} €{marginAbs.toFixed(2)} ({marginPct >= 0 ? "+" : ""}

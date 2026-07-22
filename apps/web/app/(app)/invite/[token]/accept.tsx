@@ -41,7 +41,7 @@ export function InviteAccept({ token }: { token: string }) {
   if (state === "done") {
     return (
       <div className="space-y-4">
-        <p className="text-green-600">{t("accepted")}</p>
+        <p className="text-success">{t("accepted")}</p>
         <button
           onClick={() => router.push("/inventory")}
           className="btn btn-accent"
@@ -54,7 +54,7 @@ export function InviteAccept({ token }: { token: string }) {
 
   return (
     <div className="space-y-4">
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
       <button
         onClick={accept}
         disabled={state === "busy"}
