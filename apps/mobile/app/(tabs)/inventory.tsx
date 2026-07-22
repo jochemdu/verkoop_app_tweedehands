@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 
 type ProductRow = {
   id: string;
@@ -24,6 +25,8 @@ type ProductRow = {
 
 export default function InventoryScreen() {
   const t = useTranslation("mobile");
+  const theme = useTheme();
+  const c = theme.colors;
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,10 +54,10 @@ export default function InventoryScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       {loading && products.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={c.accent} />
         </View>
       ) : (
         <FlatList
@@ -65,25 +68,36 @@ export default function InventoryScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => load(true)}
+              tintColor={c.accent}
             />
           }
           ListEmptyComponent={
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>{t("invEmptyTitle")}</Text>
-              <Text style={styles.emptyText}>{t("invEmptyText")}</Text>
+            <View style={[styles.emptyCard, { borderColor: c.border }]}>
+              <Text style={[styles.emptyTitle, { color: c.foreground }]}>
+                {t("invEmptyTitle")}
+              </Text>
+              <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
+                {t("invEmptyText")}
+              </Text>
             </View>
           }
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <View style={styles.row}>
-              <Text style={styles.sticker}>
+            <View
+              style={[
+                styles.row,
+                { backgroundColor: c.card, borderColor: c.border },
+                theme.shadow,
+              ]}
+            >
+              <Text style={[styles.sticker, { color: c.accent }]}>
                 {item.sticker_id ?? "—"}
               </Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.title}>
+                <Text style={[styles.title, { color: c.foreground }]}>
                   {item.title ?? item.working_title ?? t("noTitle")}
                 </Text>
-                <Text style={styles.meta}>
+                <Text style={[styles.meta, { color: c.mutedForeground }]}>
                   {item.category_slug} · {item.status}
                 </Text>
               </View>
