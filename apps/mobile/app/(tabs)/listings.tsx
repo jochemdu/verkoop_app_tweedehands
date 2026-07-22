@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 
 type ListingRow = {
   id: string;
@@ -29,6 +30,8 @@ type ListingRow = {
 
 export default function ListingsScreen() {
   const t = useTranslation("mobile");
+  const theme = useTheme();
+  const c = theme.colors;
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,10 +58,10 @@ export default function ListingsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
       {loading && listings.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={c.accent} />
         </View>
       ) : (
         <FlatList
@@ -66,12 +69,18 @@ export default function ListingsScreen() {
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => load(true)}
+              tintColor={c.accent}
+            />
           }
           ListEmptyComponent={
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>{t("lstEmptyTitle")}</Text>
-              <Text style={styles.emptyText}>
+            <View style={[styles.emptyCard, { borderColor: c.border }]}>
+              <Text style={[styles.emptyTitle, { color: c.foreground }]}>
+                {t("lstEmptyTitle")}
+              </Text>
+              <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
                 {t("lstEmptyPre")}
                 <Text style={{ fontFamily: "Courier" }}>create_listing</Text>
                 {t("lstEmptyPost")}
@@ -87,12 +96,18 @@ export default function ListingsScreen() {
               ? item.platforms[0]
               : item.platforms;
             return (
-              <View style={styles.row}>
+              <View
+                style={[
+                  styles.row,
+                  { backgroundColor: c.card, borderColor: c.border },
+                  theme.shadow,
+                ]}
+              >
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.title}>
+                  <Text style={[styles.title, { color: c.foreground }]}>
                     {item.final_title ?? item.generated_title ?? t("noTitle")}
                   </Text>
-                  <Text style={styles.meta}>
+                  <Text style={[styles.meta, { color: c.mutedForeground }]}>
                     {product?.sticker_id ?? "—"} · {platform?.name} · €
                     {Number(item.price).toFixed(2)}
                   </Text>
@@ -130,18 +145,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyTitle: { fontSize: 15, fontWeight: "600", marginBottom: 4 },
-  emptyText: { fontSize: 13, color: "#71717a" },
+  emptyText: { fontSize: 13, color: "#78716c" },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#e4e4e7",
+    borderColor: "#e7e2dc",
     borderRadius: 10,
   },
   title: { fontSize: 14, fontWeight: "500" },
-  meta: { fontSize: 11, color: "#71717a", marginTop: 2 },
+  meta: { fontSize: 11, color: "#78716c", marginTop: 2 },
   badgeWrap: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   badgeGray: {
     fontSize: 10,

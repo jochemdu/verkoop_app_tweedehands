@@ -123,14 +123,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyTitle: { fontSize: 15, fontWeight: "600", marginBottom: 4 },
-  emptyText: { fontSize: 13, color: "#71717a" },
+  emptyText: { fontSize: 13, color: "#78716c" },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#e4e4e7",
+    borderColor: "#e7e2dc",
     borderRadius: 10,
   },
   sticker: {
@@ -140,5 +140,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   title: { fontSize: 14, fontWeight: "500" },
-  meta: { fontSize: 11, color: "#71717a", marginTop: 2 },
+  meta: { fontSize: 11, color: "#78716c", marginTop: 2 },
 });
