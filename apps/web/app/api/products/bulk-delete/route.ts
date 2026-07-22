@@ -27,12 +27,11 @@ export async function POST(req: NextRequest) {
 
   const { product_ids, hard } = parsed.data;
 
-  if (!hard) {
-    const result = await softDeleteProducts(supabase, product_ids);
-    return NextResponse.json({ soft_deleted: result.soft_deleted });
-  }
-
   try {
+    if (!hard) {
+      const result = await softDeleteProducts(supabase, product_ids);
+      return NextResponse.json({ soft_deleted: result.soft_deleted });
+    }
     const result = await hardDeleteProducts(supabase, product_ids);
     return NextResponse.json({ hard_deleted: result.hard_deleted });
   } catch (err) {

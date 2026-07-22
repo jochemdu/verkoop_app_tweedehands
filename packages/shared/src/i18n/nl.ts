@@ -814,6 +814,8 @@ export const nl = {
     importFailed: "Import mislukt",
     invEmptyTitle: "Nog niks geïndexeerd",
     invEmptyText: "Ga naar de Indexeren-tab om je eerste product vast te leggen.",
+    loadErrorTitle: "Laden mislukt",
+    loadErrorText: "Kon de gegevens niet ophalen. Trek omlaag om opnieuw te proberen.",
     noTitle: "(geen titel)",
     lstEmptyTitle: "Geen advertenties",
     lstEmptyPre: "Laat Claude Desktop een concept aanmaken via de ",

@@ -29,7 +29,7 @@ import { enqueueCapture } from "@/lib/outbox/sync";
 import { stickerIdSchema, localeTag } from "@verkoopassistent/shared";
 import { parseClothingLabel } from "@/lib/clothing-parser";
 import { useTranslation, useLocale } from "@/lib/i18n";
-import { useTheme, type ThemeColors } from "@/lib/theme";
+import { useTheme, font, type ThemeColors } from "@/lib/theme";
 
 type CapturedPhoto = {
   uri: string;
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     fontSize: 18,
-    fontFamily: "Courier",
+    fontFamily: font.mono,
     letterSpacing: 2,
   },
   hint: { fontSize: 11, color: "#a1a1aa", marginTop: 4 },
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   backText: { color: "#fff", fontSize: 15 },
-  topBarTitle: { color: "#fff", fontSize: 15, fontFamily: "Courier", fontWeight: "700" },
+  topBarTitle: { color: "#fff", fontSize: 15, fontFamily: font.mono, fontWeight: "700" },
 
   cameraModeRow: {
     flexDirection: "row",
@@ -896,6 +896,6 @@ const styles = StyleSheet.create({
     color: "#a1a1aa",
     fontSize: 11,
     textAlign: "center",
-    fontFamily: "Courier",
+    fontFamily: font.mono,
   },
 });

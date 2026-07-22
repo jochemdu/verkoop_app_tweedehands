@@ -613,6 +613,8 @@ export const de: Messages = {
     importFailed: "Import fehlgeschlagen",
     invEmptyTitle: "Noch nichts erfasst",
     invEmptyText: "Gehe zum Tab Erfassen, um dein erstes Produkt aufzunehmen.",
+    loadErrorTitle: "Laden fehlgeschlagen",
+    loadErrorText: "Daten konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen.",
     noTitle: "(kein Titel)",
     lstEmptyTitle: "Keine Anzeigen",
     lstEmptyPre: "Lass Claude Desktop einen Entwurf über das ",

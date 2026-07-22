@@ -54,17 +54,44 @@ export async function resolveProductIds(
 // Omkeerbaar via restoreProducts.
 export async function softDeleteProducts(db: Db, productIds: string[]) {
   const now = new Date().toISOString();
-  await db.from("products").update({ deleted_at: now }).in("id", productIds);
-  await db.from("photos").update({ deleted_at: now }).in("product_id", productIds);
-  await db.from("listings").update({ deleted_at: now }).in("product_id", productIds);
-  return { soft_deleted: productIds.length, deleted_at: now };
+  // count:'exact' geeft het werkelijk gewijzigde aantal terug i.p.v. blind de
+  // input-lengte; error's mogen niet stil geslikt worden (anders HTTP 200 met
+  // een opgeblazen count terwijl RLS/DB de update tegenhield).
+  const { error, count } = await db
+    .from("products")
+    .update({ deleted_at: now }, { count: "exact" })
+    .in("id", productIds);
+  if (error) throw new Error(`Soft-delete faalde: ${error.message}`);
+  const { error: photoErr } = await db
+    .from("photos")
+    .update({ deleted_at: now })
+    .in("product_id", productIds);
+  if (photoErr) throw new Error(`Soft-delete foto's faalde: ${photoErr.message}`);
+  const { error: listErr } = await db
+    .from("listings")
+    .update({ deleted_at: now })
+    .in("product_id", productIds);
+  if (listErr) throw new Error(`Soft-delete listings faalde: ${listErr.message}`);
+  return { soft_deleted: count ?? 0, deleted_at: now };
 }
 
 export async function restoreProducts(db: Db, productIds: string[]) {
-  await db.from("products").update({ deleted_at: null }).in("id", productIds);
-  await db.from("photos").update({ deleted_at: null }).in("product_id", productIds);
-  await db.from("listings").update({ deleted_at: null }).in("product_id", productIds);
-  return { restored: productIds.length };
+  const { error, count } = await db
+    .from("products")
+    .update({ deleted_at: null }, { count: "exact" })
+    .in("id", productIds);
+  if (error) throw new Error(`Herstellen faalde: ${error.message}`);
+  const { error: photoErr } = await db
+    .from("photos")
+    .update({ deleted_at: null })
+    .in("product_id", productIds);
+  if (photoErr) throw new Error(`Herstellen foto's faalde: ${photoErr.message}`);
+  const { error: listErr } = await db
+    .from("listings")
+    .update({ deleted_at: null })
+    .in("product_id", productIds);
+  if (listErr) throw new Error(`Herstellen listings faalde: ${listErr.message}`);
+  return { restored: count ?? 0 };
 }
 
 // Hard delete incl. storage-cleanup van de productfoto's.

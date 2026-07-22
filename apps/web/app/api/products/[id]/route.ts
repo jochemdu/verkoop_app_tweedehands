@@ -78,15 +78,14 @@ export async function DELETE(
     return NextResponse.json({ error: "Niet gevonden" }, { status: 404 });
   }
 
-  if (!hard) {
-    await softDeleteProducts(supabase, [productId]);
-    return NextResponse.json({
-      soft_deleted: true,
-      restore_url: `/api/products/${id}/restore`,
-    });
-  }
-
   try {
+    if (!hard) {
+      await softDeleteProducts(supabase, [productId]);
+      return NextResponse.json({
+        soft_deleted: true,
+        restore_url: `/api/products/${id}/restore`,
+      });
+    }
     await hardDeleteProducts(supabase, [productId]);
   } catch (err) {
     return NextResponse.json(
