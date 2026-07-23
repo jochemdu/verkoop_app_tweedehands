@@ -20,18 +20,24 @@ export async function POST(_req: NextRequest) {
     );
   }
 
-  const [{ data: products }, { data: categories }, { data: profile }] =
+  // Twee gerichte queries i.p.v. de volledige productset: (1) alleen
+  // category_slug voor de telling, (2) de 30 meest recente titels. Scheelt fors
+  // geheugen/payload bij een grote inventaris.
+  const [{ data: catRows }, { data: recent }, { data: categories }, { data: profile }] =
     await Promise.all([
+      supabase.from("products").select("category_slug").is("deleted_at", null),
       supabase
         .from("products")
-        .select("category_slug, title, working_title")
-        .is("deleted_at", null),
+        .select("title, working_title")
+        .is("deleted_at", null)
+        .order("indexed_at", { ascending: false })
+        .limit(30),
       supabase.from("categories").select("slug, name"),
       supabase.from("profiles").select("household").eq("id", user.id).maybeSingle(),
     ]);
 
   const counts = new Map<string, number>();
-  for (const p of products ?? []) {
+  for (const p of catRows ?? []) {
     const k = p.category_slug ?? "unknown";
     counts.set(k, (counts.get(k) ?? 0) + 1);
   }
@@ -40,10 +46,9 @@ export async function POST(_req: NextRequest) {
     name: c.name,
     count: counts.get(c.slug) ?? 0,
   }));
-  const recentTitles = (products ?? [])
+  const recentTitles = (recent ?? [])
     .map((p) => p.title ?? p.working_title)
-    .filter((t): t is string => Boolean(t))
-    .slice(-30);
+    .filter((t): t is string => Boolean(t));
 
   try {
     const { audit, model, usage } = await runBlindSpotAudit({
@@ -56,7 +61,7 @@ export async function POST(_req: NextRequest) {
     await supabase.from("claude_analyses").insert({
       analysis_type: "blind_spot_audit",
       claude_source: "web_pipeline",
-      user_prompt: `Blinde-vlekken-audit (${products?.length ?? 0} producten, model ${model})`,
+      user_prompt: `Blinde-vlekken-audit (${catRows?.length ?? 0} producten, model ${model})`,
       claude_response: { audit, usage } as never,
       applied: false,
       user_id: user.id,
