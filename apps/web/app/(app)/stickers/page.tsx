@@ -3,6 +3,7 @@ import { localeTag } from "@verkoopassistent/shared";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveWorkspaceId } from "@/lib/workspace";
 import { StickerForm } from "./sticker-form";
+import { CategoryPrefixEditor } from "./category-prefix-editor";
 
 type StickerSheetRow = {
   id: string;
@@ -74,6 +75,11 @@ export default async function StickersPage() {
           {lastUsed > 0 ? String(lastUsed).padStart(4, "0") : t("none")}
         </p>
       </section>
+
+      <CategoryPrefixEditor
+        categories={categories}
+        initialPrefixes={categoryPrefixes}
+      />
 
       <StickerForm
         suggestedStart={suggestedStart}

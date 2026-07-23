@@ -539,6 +539,11 @@ export const nl = {
     prefixPlaceholder: "bijv. MEM",
     prefixHelp: "Optioneel: hoofdletters vóór het nummer (per categorie).",
     prefixPreview: "Eerste sticker wordt {example}",
+    categoryPrefixesTitle: "Categorie-prefixes",
+    categoryPrefixesHelp:
+      "Geef elke categorie een eigen prefix (bijv. MEM voor geheugen). De generator gebruikt 'm automatisch, zodat elke categorie een unieke code-reeks krijgt.",
+    savePrefixes: "Prefixes opslaan",
+    prefixesSaved: "{count} prefix(es) opgeslagen",
     startNumber: "Startnummer",
     count: "Aantal stickers",
     format: "Formaat",

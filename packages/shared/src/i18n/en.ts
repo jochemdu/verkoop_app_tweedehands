@@ -350,6 +350,11 @@ export const en: Messages = {
     prefixPlaceholder: "e.g. MEM",
     prefixHelp: "Optional: uppercase letters before the number (per category).",
     prefixPreview: "First sticker becomes {example}",
+    categoryPrefixesTitle: "Category prefixes",
+    categoryPrefixesHelp:
+      "Give each category its own prefix (e.g. MEM for memory). The generator uses it automatically, so every category gets a unique code sequence.",
+    savePrefixes: "Save prefixes",
+    prefixesSaved: "{count} prefix(es) saved",
     startNumber: "Start number",
     count: "Number of stickers",
     format: "Format",

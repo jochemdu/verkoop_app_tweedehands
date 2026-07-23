@@ -352,6 +352,11 @@ export const fr: Messages = {
     prefixPlaceholder: "p. ex. MEM",
     prefixHelp: "Facultatif : lettres majuscules avant le numéro (par catégorie).",
     prefixPreview: "Le premier autocollant devient {example}",
+    categoryPrefixesTitle: "Préfixes par catégorie",
+    categoryPrefixesHelp:
+      "Donnez à chaque catégorie son propre préfixe (p. ex. MEM pour la mémoire). Le générateur l'utilise automatiquement, pour que chaque catégorie ait une série de codes unique.",
+    savePrefixes: "Enregistrer les préfixes",
+    prefixesSaved: "{count} préfixe(s) enregistré(s)",
     startNumber: "Numéro de départ",
     count: "Nombre d'étiquettes",
     format: "Format",
