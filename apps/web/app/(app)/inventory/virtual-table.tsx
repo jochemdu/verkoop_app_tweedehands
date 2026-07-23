@@ -137,6 +137,9 @@ export function VirtualTable({
   const [deleting, setDeleting] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
 
+  // useVirtualizer geeft niet-memoiseerbare functies terug; React Compiler slaat
+  // dit component sowieso over, dus de incompatible-library-hint is hier ruis.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
