@@ -129,10 +129,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { startNumber, count, preset, withQr } = parsed.data;
+  const { startNumber, count, preset, withQr, prefix, categorySlug } = parsed.data;
+  const pre = prefix ?? "";
   const endNumber = startNumber + count - 1;
+  // Sticker-ID = optionele prefix + 4-cijferig nummer (MEM0001). Zonder prefix
+  // exact zoals voorheen (0001).
+  const label = (n: number) => `${pre}${pad(n)}`;
 
-  // Guardrail: 4-cijferig sticker-ID domein is 0001–9999.
+  // Guardrail: 4-cijferig nummerdomein is 0001–9999 (los van de prefix).
   if (endNumber > 9999) {
     return NextResponse.json(
       {
@@ -147,9 +151,11 @@ export async function POST(req: NextRequest) {
   // Gedrag: blokkeren met 409 zodat je niet per ongeluk dubbele sticker-ID's
   // uitprint die al op producten zitten. Herprinten van bestaande nummers kan
   // via de selectie-print op /inventory.
+  // Overlap-check per prefix: MEM-ranges botsen niet met de kale reeks.
   const { data: conflict } = await supabase
     .from("sticker_sheets")
     .select("id, start_number, end_number")
+    .eq("prefix", pre)
     .lte("start_number", endNumber)
     .gte("end_number", startNumber)
     .limit(1)
@@ -157,21 +163,21 @@ export async function POST(req: NextRequest) {
   if (conflict) {
     return NextResponse.json(
       {
-        error: `Bereik ${pad(startNumber)}–${pad(endNumber)} overlapt met bestaand vel ${pad(conflict.start_number)}–${pad(conflict.end_number)}. Gebruik de selectie-print op /inventory om te herprinten.`,
+        error: `Bereik ${label(startNumber)}–${label(endNumber)} overlapt met bestaand vel ${label(conflict.start_number)}–${label(conflict.end_number)}. Gebruik de selectie-print op /inventory om te herprinten.`,
         conflictingSheet: conflict,
       },
       { status: 409 },
     );
   }
 
-  const ids = Array.from({ length: count }, (_, i) => pad(startNumber + i));
+  const ids = Array.from({ length: count }, (_, i) => label(startNumber + i));
   const result = await renderAndUpload(
     supabase,
     req,
     ids,
     preset,
     withQr,
-    `${user.id}/${pad(startNumber)}-${pad(endNumber)}-${timestamp}.pdf`,
+    `${user.id}/${label(startNumber)}-${label(endNumber)}-${timestamp}.pdf`,
   );
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 500 });
@@ -183,8 +189,9 @@ export async function POST(req: NextRequest) {
     .insert({
       start_number: startNumber,
       end_number: endNumber,
+      prefix: pre,
       pdf_storage_path: result.storagePath,
-      notes: `${preset}${withQr ? " + QR" : ""}`,
+      notes: `${pre ? `${pre} · ` : ""}${preset}${withQr ? " + QR" : ""}`,
       user_id: user.id,
     })
     .select()
@@ -208,19 +215,44 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Bump de laatst-gebruikte sticker-nummer teller (per workspace; upsert zodat
-  // een workspace zonder teller-rij ook werkt).
+  // Bump de laatst-gebruikte teller (per workspace én per prefix; upsert zodat
+  // een workspace zonder teller-rij ook werkt). Zonder prefix = de kale reeks.
   const wsId = await getActiveWorkspaceId(supabase);
   if (wsId) {
+    const counterKey = pre ? `last_sticker_number:${pre}` : "last_sticker_number";
     await supabase.from("app_settings").upsert(
       {
-        key: "last_sticker_number",
+        key: counterKey,
         value: endNumber,
         user_id: user.id,
         workspace_id: wsId,
       },
       { onConflict: "key,workspace_id" },
     );
+
+    // Onthoud de categorie→prefix-koppeling zodat de generator hem later
+    // voorstelt. Opgeslagen als één jsonb-map per workspace.
+    if (categorySlug && pre) {
+      const { data: existing } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "category_prefixes")
+        .eq("workspace_id", wsId)
+        .maybeSingle();
+      const map = {
+        ...((existing?.value as Record<string, string> | null) ?? {}),
+        [categorySlug]: pre,
+      };
+      await supabase.from("app_settings").upsert(
+        {
+          key: "category_prefixes",
+          value: map,
+          user_id: user.id,
+          workspace_id: wsId,
+        },
+        { onConflict: "key,workspace_id" },
+      );
+    }
   }
 
   return NextResponse.json({

@@ -8,31 +8,55 @@ type StickerSheetRow = {
   id: string;
   start_number: number;
   end_number: number;
+  prefix: string | null;
   pdf_storage_path: string | null;
   created_at: string | null;
   printed_at: string | null;
 };
 
+// Sticker-label = optionele prefix + 4-cijferig nummer.
+function stickerLabel(prefix: string | null, n: number) {
+  return `${prefix ?? ""}${String(n).padStart(4, "0")}`;
+}
+
 export default async function StickersPage() {
   const supabase = await createClient();
   const wsId = await getActiveWorkspaceId(supabase);
 
-  const [{ data: sheetsRaw }, { data: settingRaw }] = await Promise.all([
-    supabase
-      .from("sticker_sheets")
-      .select("id, start_number, end_number, pdf_storage_path, created_at, printed_at")
-      .order("start_number", { ascending: false })
-      .limit(20),
-    supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "last_sticker_number")
-      .eq("workspace_id", wsId ?? "")
-      .maybeSingle(),
-  ]);
+  const [{ data: sheetsRaw }, { data: countersRaw }, { data: prefixMapRaw }, { data: categoriesRaw }] =
+    await Promise.all([
+      supabase
+        .from("sticker_sheets")
+        .select("id, start_number, end_number, prefix, pdf_storage_path, created_at, printed_at")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      // Alle tellers (kale reeks + per-prefix) in één keer.
+      supabase
+        .from("app_settings")
+        .select("key, value")
+        .like("key", "last_sticker_number%")
+        .eq("workspace_id", wsId ?? ""),
+      supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "category_prefixes")
+        .eq("workspace_id", wsId ?? "")
+        .maybeSingle(),
+      supabase.from("categories").select("slug, name").order("name"),
+    ]);
   const sheets: StickerSheetRow[] = sheetsRaw ?? [];
-  const lastUsed = Number(settingRaw?.value ?? 0);
+
+  // Map prefix → laatst-gebruikt nummer ("" = kale reeks).
+  const startByPrefix: Record<string, number> = {};
+  for (const row of countersRaw ?? []) {
+    const key = row.key as string;
+    const pre = key === "last_sticker_number" ? "" : key.slice("last_sticker_number:".length);
+    startByPrefix[pre] = Number(row.value ?? 0);
+  }
+  const lastUsed = startByPrefix[""] ?? 0;
   const suggestedStart = Math.max(lastUsed + 1, 1);
+  const categoryPrefixes = (prefixMapRaw?.value as Record<string, string> | null) ?? {};
+  const categories = (categoriesRaw ?? []).map((c) => ({ slug: c.slug, name: c.name }));
 
   const t = await getTranslations("stickers");
   const dateTag = localeTag(await getLocale());
@@ -51,7 +75,12 @@ export default async function StickersPage() {
         </p>
       </section>
 
-      <StickerForm suggestedStart={suggestedStart} />
+      <StickerForm
+        suggestedStart={suggestedStart}
+        categories={categories}
+        categoryPrefixes={categoryPrefixes}
+        startByPrefix={startByPrefix}
+      />
 
       <section>
         <h2 className="section-title mb-3">{t("earlier")}</h2>
@@ -67,8 +96,8 @@ export default async function StickersPage() {
                 className="flex items-center justify-between p-3 text-sm"
               >
                 <span className="font-mono">
-                  {String(s.start_number).padStart(4, "0")}–
-                  {String(s.end_number).padStart(4, "0")}
+                  {stickerLabel(s.prefix, s.start_number)}–
+                  {stickerLabel(s.prefix, s.end_number)}
                 </span>
                 <span className="text-muted-foreground">
                   {s.created_at

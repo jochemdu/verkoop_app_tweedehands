@@ -26,13 +26,31 @@ export const PRESET_LABEL_KEYS: Record<StickerPreset, string> = {
   large_63x38: "presetLarge",
 };
 
-export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
+type StickerFormProps = {
+  suggestedStart: number;
+  categories: { slug: string; name: string }[];
+  categoryPrefixes: Record<string, string>;
+  startByPrefix: Record<string, number>;
+};
+
+export function StickerForm({
+  suggestedStart,
+  categories,
+  categoryPrefixes,
+  startByPrefix,
+}: StickerFormProps) {
   const t = useTranslations("stickers");
+  const tc = useTranslations("categoryNames");
   const [result, setResult] = useState<GenerateResult | null>(null);
+  // Categorie + prefix worden los van react-hook-form beheerd: het startnummer
+  // volgt de eigen teller per prefix.
+  const [category, setCategory] = useState("");
+  const [prefix, setPrefix] = useState("");
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<StickerSheetGenerateInput>({
     resolver: zodResolver(stickerSheetGenerateSchema),
@@ -44,11 +62,34 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
     },
   });
 
+  // Startnummer = laatst-gebruikt + 1 voor de gekozen prefix (of de kale reeks).
+  function suggestStart(pre: string) {
+    setValue("startNumber", Math.max((startByPrefix[pre] ?? 0) + 1, 1));
+  }
+
+  function onCategoryChange(slug: string) {
+    setCategory(slug);
+    const mapped = categoryPrefixes[slug] ?? "";
+    setPrefix(mapped);
+    suggestStart(mapped);
+  }
+
+  function onPrefixChange(raw: string) {
+    const clean = raw.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 6);
+    setPrefix(clean);
+    suggestStart(clean);
+  }
+
   async function onSubmit(data: StickerSheetGenerateInput) {
+    const payload = {
+      ...data,
+      prefix: prefix || undefined,
+      categorySlug: category || undefined,
+    };
     const res = await fetch("/api/stickers/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     const json = (await res.json()) as GenerateResult & { error?: string };
     if (!res.ok) {
@@ -56,9 +97,10 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
       return;
     }
     setResult(json);
+    const pad = (n: number) => `${prefix}${String(n).padStart(4, "0")}`;
     toast.success(
       t("sheetGenerated", {
-        range: `${String(json.sheet.start_number).padStart(4, "0")}–${String(json.sheet.end_number).padStart(4, "0")}`,
+        range: `${pad(json.sheet.start_number)}–${pad(json.sheet.end_number)}`,
       }),
     );
   }
@@ -68,6 +110,41 @@ export function StickerForm({ suggestedStart }: { suggestedStart: number }) {
       onSubmit={handleSubmit(onSubmit)}
       className="card space-y-4 p-6"
     >
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">{t("category")}</span>
+          <select
+            className="input"
+            value={category}
+            onChange={(e) => onCategoryChange(e.target.value)}
+          >
+            <option value="">{t("categoryNone")}</option>
+            {categories.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {tc.has(c.slug) ? tc(c.slug) : c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">{t("prefix")}</span>
+          <input
+            type="text"
+            inputMode="text"
+            placeholder={t("prefixPlaceholder")}
+            className="input font-mono uppercase"
+            value={prefix}
+            onChange={(e) => onPrefixChange(e.target.value)}
+            maxLength={6}
+          />
+          <span className="block text-xs text-muted-foreground">
+            {prefix
+              ? t("prefixPreview", { example: `${prefix}0001` })
+              : t("prefixHelp")}
+          </span>
+        </label>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <label className="space-y-1 text-sm">
           <span className="font-medium">{t("startNumber")}</span>
