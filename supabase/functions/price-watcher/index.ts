@@ -112,8 +112,14 @@ Deno.serve(async (_req) => {
         }
       }
       results.push({ watch_id: w.id, hits: data?.count ?? 0, lowest, alert });
-    } catch {
-      results.push({ watch_id: w.id, hits: 0 });
+    } catch (err) {
+      // Fout per watch niet stil slikken: loggen (zichtbaar in de function-logs)
+      // en apart markeren zodat een falende watch de rest niet meesleept.
+      console.error(
+        `price-watcher: watch ${w.id} faalde:`,
+        err instanceof Error ? err.message : err,
+      );
+      results.push({ watch_id: w.id, hits: 0, failed: true });
     }
   }
 

@@ -3,7 +3,16 @@
 
 export async function register() {
   const dsn = process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN;
-  if (!dsn) return;
+  if (!dsn) {
+    // In productie zonder DSN is er geen error-tracking — luid waarschuwen zodat
+    // dit niet stil onopgemerkt blijft (dev/preview zonder Sentry is prima).
+    if (process.env.VERCEL_ENV === "production") {
+      console.warn(
+        "[instrumentation] SENTRY_DSN ontbreekt in productie — error-tracking staat UIT.",
+      );
+    }
+    return;
+  }
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const Sentry = await import("@sentry/nextjs");
     Sentry.init({
