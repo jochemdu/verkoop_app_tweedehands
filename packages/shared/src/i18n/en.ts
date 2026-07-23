@@ -777,4 +777,37 @@ export const en: Messages = {
     unknown: "Unknown",
     other: "Other",
   },
+  mcpConnector: {
+    title: "Claude connector (MCP)",
+    intro:
+      "Connect this app to Claude so it can read and edit your inventory. Add the URL below as a custom connector in claude.ai.",
+    copy: "Copy",
+    copied: "Copied",
+    copyFailed: "Copy failed",
+    step1: "Open claude.ai → Settings → Connectors.",
+    step2: "Click 'Add custom connector' and paste the URL above.",
+    step3:
+      "Sign in to VerkoopAssistent when prompted and click 'Authorize Claude'.",
+    step4:
+      "Done. Claude only has access to your own data; you can revoke it by removing the connector in claude.ai.",
+  },
+  mcpConsent: {
+    authFailed: "Authorization failed",
+    invalidResponseType: "Invalid response_type.",
+    missingParams: "Missing parameters (client_id, redirect_uri, code_challenge).",
+    pkceOnly: "Only PKCE S256 is supported.",
+    unknownClient: "Unknown client. Remove the connector and add it again.",
+    redirectMismatch: "redirect_uri does not belong to this client.",
+    loginFirstTitle: "Sign in first",
+    loginFirstBody:
+      "You must be signed in to VerkoopAssistent in this tab to link the connector.",
+    loginBtn: "Sign in",
+    loginHint: 'Sign in, then click "connect" again in claude.ai.',
+    connectTitle: "Link connector",
+    connectBody:
+      "You are about to give {client} access to your VerkoopAssistent inventory — only your own products, photos, listings and market research. You can revoke this later.",
+    loggedInAs: "Signed in as {email}",
+    redirectNote: "After approval you return to {host}.",
+    authorizeBtn: "Authorize Claude",
+  },
 };

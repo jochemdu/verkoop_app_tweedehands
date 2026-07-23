@@ -983,6 +983,39 @@ export const nl = {
     unknown: "Onbekend",
     other: "Overig",
   },
+  mcpConnector: {
+    title: "Claude-connector (MCP)",
+    intro:
+      "Koppel deze app aan Claude zodat het je inventaris kan lezen en bewerken. Voeg onderstaande URL toe als custom connector in claude.ai.",
+    copy: "Kopiëren",
+    copied: "Gekopieerd",
+    copyFailed: "Kopiëren mislukt",
+    step1: "Open claude.ai → Instellingen → Connectors.",
+    step2: "Klik op 'Add custom connector' en plak de URL hierboven.",
+    step3:
+      "Log in op VerkoopAssistent als daarom gevraagd wordt en klik 'Autoriseer Claude'.",
+    step4:
+      "Klaar. Claude heeft alleen toegang tot jouw eigen gegevens; intrekken kan door de connector in claude.ai te verwijderen.",
+  },
+  mcpConsent: {
+    authFailed: "Autorisatie mislukt",
+    invalidResponseType: "Ongeldig response_type.",
+    missingParams: "Ontbrekende parameters (client_id, redirect_uri, code_challenge).",
+    pkceOnly: "Alleen PKCE S256 wordt ondersteund.",
+    unknownClient: "Onbekende client. Verwijder de connector en voeg hem opnieuw toe.",
+    redirectMismatch: "redirect_uri hoort niet bij deze client.",
+    loginFirstTitle: "Log eerst in",
+    loginFirstBody:
+      "Je moet in dit tabblad ingelogd zijn op VerkoopAssistent om de connector te koppelen.",
+    loginBtn: "Inloggen",
+    loginHint: 'Log in en klik daarna in claude.ai opnieuw op "connect".',
+    connectTitle: "Connector koppelen",
+    connectBody:
+      "Je staat op het punt {client} toegang te geven tot jouw VerkoopAssistent-inventaris — alleen jouw producten, foto's, advertenties en marktonderzoek. Je kunt dit later intrekken.",
+    loggedInAs: "Ingelogd als {email}",
+    redirectNote: "Na goedkeuren keer je terug naar {host}.",
+    authorizeBtn: "Autoriseer Claude",
+  },
 };
 
 // Bewust géén `as const`: de leaf-waarden zijn `string` zodat vertalingen

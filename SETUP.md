@@ -214,6 +214,9 @@ de datapad).
 **Connector toevoegen in claude.ai** (Settings → Connectors → *Add custom
 connector*):
 
+> Tip: de exacte connect-URL van jouw deploy staat óók in de app onder
+> **Instellingen → Claude-connector (MCP)**, met kopieerknop en stappen.
+
 1. URL: `https://<jouw-productie-domein>/api/mcp`
 2. claude.ai doorloopt automatisch OAuth (dynamic client registration → login →
    consent). Je moet in datzelfde browser-tabblad ingelogd zijn op
