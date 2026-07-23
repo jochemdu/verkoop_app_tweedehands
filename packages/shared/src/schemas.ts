@@ -7,10 +7,20 @@ import {
 } from "./enums";
 import { SHIPPING_CLASSES } from "./shipping";
 
-// 4-cijferig zero-padded sticker nummer: 0001 - 9999
+// Sticker-ID = optionele categorie-prefix (0-6 hoofdletters) + 4-cijferig
+// zero-padded nummer (0001-9999). Bijv. "0042" of "MEM0001". Geen prefix blijft
+// volledig backward-compatible met de oude 4-cijferige stickers.
 export const stickerIdSchema = z
   .string()
-  .regex(/^\d{4}$/, "Sticker-ID moet precies 4 cijfers zijn (bijv. 0042).");
+  .regex(
+    /^[A-Z]{0,6}\d{4}$/,
+    "Sticker-ID = optionele prefix (hoofdletters) + 4 cijfers, bijv. 0042 of MEM0001.",
+  );
+
+// Categorie-prefix: 1-6 hoofdletters (bijv. MEM voor geheugen).
+export const stickerPrefixSchema = z
+  .string()
+  .regex(/^[A-Z]{1,6}$/, "Prefix = 1-6 hoofdletters (bijv. MEM).");
 
 export const emailSchema = z.string().email("Ongeldig e-mailadres.");
 
@@ -93,6 +103,10 @@ export const stickerSheetGenerateSchema = z.object({
   count: z.number().int().min(1).max(160).default(160),
   preset: stickerPresetSchema.default("compact_21x15"),
   withQr: z.boolean().default(false),
+  // Optionele categorie-prefix: sticker-ID's worden PREFIX + 4 cijfers
+  // (MEM0001) met een eigen doorlopende nummerreeks per prefix.
+  prefix: stickerPrefixSchema.optional(),
+  categorySlug: z.string().regex(/^[a-z0-9_]+$/).optional(),
 });
 export type StickerSheetGenerateInput = z.input<typeof stickerSheetGenerateSchema>;
 export type StickerSheetGenerateData = z.output<typeof stickerSheetGenerateSchema>;

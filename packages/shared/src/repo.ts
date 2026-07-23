@@ -9,9 +9,10 @@ import type { Database } from "./database.types";
 
 export type Db = SupabaseClient<Database>;
 
-// Een product-referentie is een 4-cijferig sticker-ID óf een UUID.
+// Een product-referentie is een sticker-ID (optionele hoofdletter-prefix +
+// 4 cijfers, bijv. 0042 of MEM0001) óf een UUID.
 export function productIdentifierColumn(ref: string): "sticker_id" | "id" {
-  return /^\d{4}$/.test(ref) ? "sticker_id" : "id";
+  return /^[A-Z]{0,6}\d{4}$/.test(ref) ? "sticker_id" : "id";
 }
 
 // Resolvet sticker-ID of UUID naar de product-UUID. Gooit met een duidelijke

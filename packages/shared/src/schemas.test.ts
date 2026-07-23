@@ -11,9 +11,18 @@ describe("stickerIdSchema", () => {
     expect(stickerIdSchema.safeParse("0042").success).toBe(true);
     expect(stickerIdSchema.safeParse("9999").success).toBe(true);
   });
+  it("accepteert een hoofdletter-prefix + 4 cijfers", () => {
+    expect(stickerIdSchema.safeParse("MEM0001").success).toBe(true);
+    expect(stickerIdSchema.safeParse("A0042").success).toBe(true);
+  });
   it("weigert verkeerde lengte", () => {
     expect(stickerIdSchema.safeParse("42").success).toBe(false);
     expect(stickerIdSchema.safeParse("00042").success).toBe(false);
+    expect(stickerIdSchema.safeParse("MEM042").success).toBe(false);
+  });
+  it("weigert kleine letters of te lange prefix", () => {
+    expect(stickerIdSchema.safeParse("mem0001").success).toBe(false);
+    expect(stickerIdSchema.safeParse("TOOLONG0001").success).toBe(false);
   });
   it("weigert non-digits", () => {
     expect(stickerIdSchema.safeParse("0abc").success).toBe(false);

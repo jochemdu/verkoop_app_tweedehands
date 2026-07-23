@@ -1380,6 +1380,7 @@ export type Database = {
           id: string
           notes: string | null
           pdf_storage_path: string | null
+          prefix: string
           printed_at: string | null
           sheet_count: number | null
           start_number: number
@@ -1392,6 +1393,7 @@ export type Database = {
           id?: string
           notes?: string | null
           pdf_storage_path?: string | null
+          prefix?: string
           printed_at?: string | null
           sheet_count?: number | null
           start_number: number
@@ -1404,6 +1406,7 @@ export type Database = {
           id?: string
           notes?: string | null
           pdf_storage_path?: string | null
+          prefix?: string
           printed_at?: string | null
           sheet_count?: number | null
           start_number?: number
