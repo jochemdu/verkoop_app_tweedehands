@@ -132,10 +132,12 @@ export default function CaptureScreen() {
 
   async function runOcr(uri: string): Promise<string[]> {
     const result = await TextRecognition.recognize(uri);
-    // Zoek alle 4-cijferige sequenties met word boundary.
+    // Zoek sticker-codes: optionele hoofdletter-prefix (0-6) + 4 cijfers, dus
+    // zowel "0042" als "MEM0001". Tekst eerst naar hoofdletters zodat een
+    // kleingelezen prefix ook matcht en genormaliseerd wordt.
     const candidates = new Set<string>();
     for (const block of result.blocks) {
-      const matches = block.text.match(/\b\d{4}\b/g);
+      const matches = block.text.toUpperCase().match(/\b[A-Z]{0,6}\d{4}\b/g);
       if (matches) matches.forEach((m) => candidates.add(m));
     }
     return Array.from(candidates);
@@ -467,13 +469,17 @@ export default function CaptureScreen() {
             <TextInput
               value={stickerId}
               onChangeText={(v) => {
-                setStickerId(v);
+                // Sta een hoofdletter-prefix + cijfers toe (MEM0001). Filter op
+                // hoofdletters/cijfers en begrens op 6 prefix + 4 cijfers.
+                setStickerId(v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10));
                 setStickerConfidence(null);
               }}
               placeholder={t("stickerIdPlaceholder")}
               placeholderTextColor={c.mutedForeground}
-              keyboardType="number-pad"
-              maxLength={4}
+              keyboardType="default"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={10}
               style={[styles.inputMono, inputStyle]}
             />
             {lastUsed !== null && (
