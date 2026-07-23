@@ -352,6 +352,11 @@ export const de: Messages = {
     prefixPlaceholder: "z. B. MEM",
     prefixHelp: "Optional: Großbuchstaben vor der Nummer (pro Kategorie).",
     prefixPreview: "Erster Sticker wird {example}",
+    categoryPrefixesTitle: "Kategorie-Präfixe",
+    categoryPrefixesHelp:
+      "Gib jeder Kategorie ein eigenes Präfix (z. B. MEM für Speicher). Der Generator nutzt es automatisch, sodass jede Kategorie eine eindeutige Code-Reihe erhält.",
+    savePrefixes: "Präfixe speichern",
+    prefixesSaved: "{count} Präfix(e) gespeichert",
     startNumber: "Startnummer",
     count: "Anzahl Sticker",
     format: "Format",
