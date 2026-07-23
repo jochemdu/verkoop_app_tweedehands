@@ -80,6 +80,62 @@ export async function createProductStub(input: {
   return { productId: result.product.id };
 }
 
+// Foto's toevoegen aan een BESTAAND product (camera of galerij vanaf de
+// inventory-lijst). Uploadt naar Storage, bepaalt de volgende order_index na de
+// bestaande foto's, en maakt de photos-rijen aan. workspace_id wordt door de
+// BEFORE INSERT-trigger ingevuld; RLS bewaakt workspace-lidmaatschap. Rolt
+// geüploade bestanden terug als de insert faalt.
+export async function addPhotosToProduct(input: {
+  userId: string;
+  productId: string;
+  photos: PhotoInput[];
+}): Promise<{ added: number }> {
+  if (input.photos.length === 0) return { added: 0 };
+
+  const { data: existing } = await supabase
+    .from("photos")
+    .select("order_index")
+    .eq("product_id", input.productId)
+    .order("order_index", { ascending: false })
+    .limit(1);
+  const startIndex = (existing?.[0]?.order_index ?? -1) + 1;
+
+  const uploaded: Array<{ path: string; sizeBytes: number }> = [];
+  try {
+    for (let i = 0; i < input.photos.length; i++) {
+      uploaded.push(await uploadOne(input.userId, input.photos[i]!, startIndex + i));
+    }
+  } catch (err) {
+    if (uploaded.length > 0) {
+      await supabase.storage
+        .from("product-photos")
+        .remove(uploaded.map((u) => u.path));
+    }
+    throw err;
+  }
+
+  const { error } = await supabase.from("photos").insert(
+    input.photos.map((p, idx) => ({
+      product_id: input.productId,
+      storage_path: uploaded[idx]!.path,
+      order_index: startIndex + idx,
+      photo_type: (p.photoType ?? "general") as "general",
+      capture_mode: p.captureMode ?? null,
+      width: p.width ?? null,
+      height: p.height ?? null,
+      size_bytes: uploaded[idx]!.sizeBytes,
+      user_id: input.userId,
+    })),
+  );
+  if (error) {
+    await supabase.storage
+      .from("product-photos")
+      .remove(uploaded.map((u) => u.path));
+    throw new Error(error.message);
+  }
+  return { added: input.photos.length };
+}
+
 export async function createProductWithPhotos(
   input: CreateProductInput,
 ): Promise<{ productId: string }> {
