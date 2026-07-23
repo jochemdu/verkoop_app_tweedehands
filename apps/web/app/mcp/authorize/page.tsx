@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getClient } from "@/lib/mcp/store";
 
@@ -10,6 +11,7 @@ export default async function McpAuthorizePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const t = await getTranslations("mcpConsent");
   const sp = await searchParams;
   const get = (k: string) => (Array.isArray(sp[k]) ? sp[k]![0] : sp[k]) as string | undefined;
 
@@ -24,23 +26,33 @@ export default async function McpAuthorizePage({
   function invalid(reason: string) {
     return (
       <Shell>
-        <h1 className="text-xl font-bold">Autorisatie mislukt</h1>
+        <h1 className="text-xl font-bold">{t("authFailed")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{reason}</p>
       </Shell>
     );
   }
 
-  if (responseType !== "code") return invalid("Ongeldig response_type.");
+  if (responseType !== "code") return invalid(t("invalidResponseType"));
   if (!clientId || !redirectUri || !codeChallenge) {
-    return invalid("Ontbrekende parameters (client_id, redirect_uri, code_challenge).");
+    return invalid(t("missingParams"));
   }
   if (codeChallengeMethod && codeChallengeMethod !== "S256") {
-    return invalid("Alleen PKCE S256 wordt ondersteund.");
+    return invalid(t("pkceOnly"));
   }
   const client = await getClient(clientId);
-  if (!client) return invalid("Onbekende client. Verwijder de connector en voeg hem opnieuw toe.");
+  if (!client) return invalid(t("unknownClient"));
   if (!client.redirect_uris.includes(redirectUri)) {
-    return invalid("redirect_uri hoort niet bij deze client.");
+    return invalid(t("redirectMismatch"));
+  }
+
+  // Toon duidelijk wélke connector koppelt en waar hij na goedkeuren heen
+  // stuurt — zodat de gebruiker een onbekende/kwaadaardige client herkent.
+  const clientName = client.client_name?.trim() || "Claude";
+  let redirectHost = redirectUri;
+  try {
+    redirectHost = new URL(redirectUri).host;
+  } catch {
+    /* laat de volledige uri staan als hij niet parsebaar is */
   }
 
   const supabase = await createClient();
@@ -51,32 +63,26 @@ export default async function McpAuthorizePage({
   if (!user) {
     return (
       <Shell>
-        <h1 className="text-xl font-bold">Log eerst in</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Je moet in dit tabblad ingelogd zijn op VerkoopAssistent om de
-          connector te koppelen.
-        </p>
+        <h1 className="text-xl font-bold">{t("loginFirstTitle")}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t("loginFirstBody")}</p>
         <Link href="/login" className="btn btn-accent mt-4 w-full">
-          Inloggen
+          {t("loginBtn")}
         </Link>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Log in en klik daarna in claude.ai opnieuw op &quot;connect&quot;.
-        </p>
+        <p className="mt-2 text-xs text-muted-foreground">{t("loginHint")}</p>
       </Shell>
     );
   }
 
   return (
     <Shell>
-      <h1 className="text-xl font-bold">Connector koppelen</h1>
+      <h1 className="text-xl font-bold">{t("connectTitle")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Je staat op het punt <strong>Claude</strong> toegang te geven tot jouw
-        VerkoopAssistent-inventaris (alleen <em>jouw</em> producten, foto&apos;s,
-        advertenties en marktonderzoek). Je kunt dit later intrekken.
+        {t("connectBody", { client: clientName })}
       </p>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Ingelogd als {user.email}
-      </p>
+      <div className="mt-3 space-y-1 rounded-lg border border-border bg-muted p-3 text-xs">
+        <p className="text-muted-foreground">{t("loggedInAs", { email: user.email ?? "" })}</p>
+        <p className="text-muted-foreground">{t("redirectNote", { host: redirectHost })}</p>
+      </div>
 
       <form action="/api/mcp/authorize" method="POST" className="mt-4 space-y-2">
         <input type="hidden" name="client_id" value={clientId} />
@@ -85,7 +91,7 @@ export default async function McpAuthorizePage({
         <input type="hidden" name="state" value={state ?? ""} />
         <input type="hidden" name="scope" value={scope} />
         <button type="submit" className="btn btn-accent w-full">
-          Autoriseer Claude
+          {t("authorizeBtn")}
         </button>
       </form>
     </Shell>

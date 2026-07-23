@@ -779,4 +779,37 @@ export const de: Messages = {
     unknown: "Unbekannt",
     other: "Sonstiges",
   },
+  mcpConnector: {
+    title: "Claude-Connector (MCP)",
+    intro:
+      "Verbinde diese App mit Claude, damit es dein Inventar lesen und bearbeiten kann. Füge die URL unten als benutzerdefinierten Connector in claude.ai hinzu.",
+    copy: "Kopieren",
+    copied: "Kopiert",
+    copyFailed: "Kopieren fehlgeschlagen",
+    step1: "Öffne claude.ai → Einstellungen → Connectors.",
+    step2: "Klicke auf 'Add custom connector' und füge die obige URL ein.",
+    step3:
+      "Melde dich bei VerkoopAssistent an, wenn du dazu aufgefordert wirst, und klicke auf 'Claude autorisieren'.",
+    step4:
+      "Fertig. Claude hat nur Zugriff auf deine eigenen Daten; du kannst ihn widerrufen, indem du den Connector in claude.ai entfernst.",
+  },
+  mcpConsent: {
+    authFailed: "Autorisierung fehlgeschlagen",
+    invalidResponseType: "Ungültiger response_type.",
+    missingParams: "Fehlende Parameter (client_id, redirect_uri, code_challenge).",
+    pkceOnly: "Nur PKCE S256 wird unterstützt.",
+    unknownClient: "Unbekannter Client. Entferne den Connector und füge ihn erneut hinzu.",
+    redirectMismatch: "redirect_uri gehört nicht zu diesem Client.",
+    loginFirstTitle: "Zuerst anmelden",
+    loginFirstBody:
+      "Du musst in diesem Tab bei VerkoopAssistent angemeldet sein, um den Connector zu verbinden.",
+    loginBtn: "Anmelden",
+    loginHint: 'Melde dich an und klicke dann in claude.ai erneut auf "connect".',
+    connectTitle: "Connector verbinden",
+    connectBody:
+      "Du bist dabei, {client} Zugriff auf dein VerkoopAssistent-Inventar zu geben — nur deine eigenen Produkte, Fotos, Anzeigen und Marktforschung. Du kannst dies später widerrufen.",
+    loggedInAs: "Angemeldet als {email}",
+    redirectNote: "Nach der Genehmigung kehrst du zu {host} zurück.",
+    authorizeBtn: "Claude autorisieren",
+  },
 };

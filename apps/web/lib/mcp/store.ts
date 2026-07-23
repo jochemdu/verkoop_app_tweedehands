@@ -40,10 +40,10 @@ export async function registerClient(
 
 export async function getClient(
   clientId: string,
-): Promise<{ redirect_uris: string[] } | null> {
+): Promise<{ redirect_uris: string[]; client_name: string | null } | null> {
   const { data } = await db()
     .from("oauth_clients")
-    .select("redirect_uris")
+    .select("redirect_uris, client_name")
     .eq("client_id", clientId)
     .maybeSingle();
   return data ?? null;
