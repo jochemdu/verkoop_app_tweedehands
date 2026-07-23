@@ -12,6 +12,7 @@ import { EditProductForm } from "./edit-form";
 import { DeleteButton } from "./delete-button";
 import { AnalyzeButton } from "./analyze-button";
 import { AddPhotosButton } from "./add-photos-button";
+import { CameraCaptureButton } from "./camera-capture";
 import { PhotoTools, type ToolPhoto } from "./photo-tools";
 import { PriceChart } from "./price-chart";
 import { MarketComparables } from "./market-comparables";
@@ -128,6 +129,7 @@ export default async function ProductDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <CameraCaptureButton productId={product.id} userId={user!.id} />
           <AddPhotosButton productId={product.id} userId={user!.id} />
           <AnalyzeButton productId={product.id} />
           <DeleteButton productId={product.id} />
