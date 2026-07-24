@@ -1623,6 +1623,10 @@ export type Database = {
           created_at: string
         }[]
       }
+      get_dashboard_aggregates: {
+        Args: never
+        Returns: Json
+      }
       get_dashboard_stats: {
         Args: never
         Returns: {

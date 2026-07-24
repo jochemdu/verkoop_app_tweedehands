@@ -91,39 +91,55 @@ export async function POST(req: NextRequest) {
     stickers = reserved as string[];
   }
 
-  const created: Array<{ product_id: string; sticker_id: string | null }> = [];
-  const errors: Array<{ photo_path: string; error: string }> = [];
-
-  for (let i = 0; i < photo_paths.length; i++) {
-    const path = photo_paths[i]!;
-    const sticker = stickers[i] ?? null;
-    const result = await insertProductWithPhotos(supabase, {
-      product: {
-        sticker_id: sticker,
-        sticker_input_method: sticker ? "manual_increment" : null,
-        working_title: workingTitle ?? null,
-        user_id: user.id,
-      },
-      photos: [
-        {
-          storage_path: path,
-          order_index: 0,
-          photo_type: "general" as const,
-          user_id: user.id,
-        },
-      ],
-      cleanupPaths: [path],
-    });
-    if (!result.ok) {
-      errors.push({ photo_path: path, error: result.error });
-      continue;
-    }
-    created.push({ product_id: result.product.id, sticker_id: sticker });
+  // Batch i.p.v. N× round-trips: één products-insert + één photos-insert.
+  // De workspace_id wordt per rij door de BEFORE INSERT-trigger gevuld.
+  const productRows = photo_paths.map((_, i) => ({
+    sticker_id: stickers![i] ?? null,
+    sticker_input_method: stickers![i] ? ("manual_increment" as const) : null,
+    working_title: workingTitle ?? null,
+    status: "indexed" as const,
+    user_id: user.id,
+  }));
+  const { data: insertedProducts, error: prodErr } = await supabase
+    .from("products")
+    .insert(productRows)
+    .select("id, sticker_id");
+  if (prodErr || !insertedProducts) {
+    // Geen product-rijen → geüploade foto's opruimen.
+    await supabase.storage.from("product-photos").remove(photo_paths);
+    return NextResponse.json(
+      { error: `Producten aanmaken mislukt: ${prodErr?.message ?? "onbekend"}` },
+      { status: 500 },
+    );
   }
 
-  return NextResponse.json({
-    created: created.length,
-    errors,
-    products: created,
-  });
+  // Koppel elke foto aan zijn product via sticker_id (robuust t.o.v. de
+  // volgorde waarin Postgres de rijen teruggeeft).
+  const idBySticker = new Map(insertedProducts.map((p) => [p.sticker_id, p.id]));
+  const photoRows = photo_paths.map((path, i) => ({
+    product_id: idBySticker.get(stickers![i] ?? null)!,
+    storage_path: path,
+    order_index: 0,
+    photo_type: "general" as const,
+    user_id: user.id,
+  }));
+  const { error: photoErr } = await supabase.from("photos").insert(photoRows);
+  if (photoErr) {
+    // Rollback: verwijder de zojuist gemaakte producten + de geüploade foto's.
+    await supabase.from("products").delete().in(
+      "id",
+      insertedProducts.map((p) => p.id),
+    );
+    await supabase.storage.from("product-photos").remove(photo_paths);
+    return NextResponse.json(
+      { error: `Foto's koppelen mislukt: ${photoErr.message}` },
+      { status: 500 },
+    );
+  }
+
+  const created = insertedProducts.map((p) => ({
+    product_id: p.id,
+    sticker_id: p.sticker_id,
+  }));
+  return NextResponse.json({ created: created.length, products: created });
 }
