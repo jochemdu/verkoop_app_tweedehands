@@ -28,7 +28,7 @@ export default async function Dashboard() {
   const [
     { data: stats },
     { data: recent },
-    { data: allProducts },
+    { data: aggRaw },
   ] = await Promise.all([
     // Fase 31: per-user RPC i.p.v. directe matview-select (matviews kennen
     // geen RLS; directe select lekte cross-tenant en brak bij >1 user).
@@ -39,10 +39,9 @@ export default async function Dashboard() {
       .is("deleted_at", null)
       .order("indexed_at", { ascending: false })
       .limit(5),
-    supabase
-      .from("products")
-      .select("category_slug, status, indexed_at, sold_price, recommended_price")
-      .is("deleted_at", null),
+    // Fase 60: categorie/status/week/waarde-aggregaties in de DB (workspace-
+    // gescopt via RLS) i.p.v. de volledige productset in geheugen.
+    supabase.rpc("get_dashboard_aggregates"),
   ]);
   const s = stats as {
     total_products?: number;
@@ -52,6 +51,13 @@ export default async function Dashboard() {
     sold_count?: number;
     total_est_value?: number;
   } | null;
+  const agg = (aggRaw ?? {}) as {
+    category_counts?: Record<string, number>;
+    status_counts?: Record<string, number>;
+    weekly?: Record<string, number>;
+    realized?: number;
+    potential?: number;
+  };
   const totalProducts = s?.total_products ?? 0;
   const indexedCount = s?.indexed_count ?? 0;
   const readyCount = s?.ready_count ?? 0;
@@ -59,21 +65,12 @@ export default async function Dashboard() {
   const soldCount = s?.sold_count ?? 0;
 
   // Categorieën pie
-  const categoryMap = new Map<string, number>();
-  (allProducts ?? []).forEach((p) => {
-    const k = p.category_slug ?? "unknown";
-    categoryMap.set(k, (categoryMap.get(k) ?? 0) + 1);
-  });
-  const categoryData: CategoryCount[] = [...categoryMap.entries()]
-    .map(([label, value]) => ({ label, value }))
+  const categoryData: CategoryCount[] = Object.entries(agg.category_counts ?? {})
+    .map(([label, value]) => ({ label, value: Number(value) }))
     .sort((a, b) => b.value - a.value);
 
   // Status bar
-  const statusMap = new Map<string, number>();
-  (allProducts ?? []).forEach((p) => {
-    const k = p.status ?? "indexed";
-    statusMap.set(k, (statusMap.get(k) ?? 0) + 1);
-  });
+  const statusCounts = agg.status_counts ?? {};
   const statusOrder = [
     "indexed",
     "analyzing",
@@ -85,46 +82,29 @@ export default async function Dashboard() {
     "archived",
   ];
   const statusData: StatusCount[] = statusOrder
-    .map((s) => ({ label: s, value: statusMap.get(s) ?? 0 }))
+    .map((label) => ({ label, value: Number(statusCounts[label] ?? 0) }))
     .filter((s) => s.value > 0);
 
-  // Weekly indexed (laatste 12 weken)
-  const weeksMap = new Map<string, number>();
+  // Weekly indexed (laatste 12 weken): skelet van 12 weken, gevuld uit de RPC.
+  const weekly = agg.weekly ?? {};
   const now = new Date();
+  const weeklyData: WeeklyPoint[] = [];
   for (let w = 11; w >= 0; w--) {
     const d = new Date(now);
     d.setUTCDate(d.getUTCDate() - w * 7);
     const key = isoWeekKey(d);
-    weeksMap.set(key, 0);
+    weeklyData.push({ week: key, count: Number(weekly[key] ?? 0) });
   }
-  (allProducts ?? []).forEach((p) => {
-    if (!p.indexed_at) return;
-    const key = isoWeekKey(new Date(p.indexed_at));
-    if (weeksMap.has(key)) {
-      weeksMap.set(key, (weeksMap.get(key) ?? 0) + 1);
-    }
-  });
-  const weeklyData: WeeklyPoint[] = [...weeksMap.entries()].map(([week, count]) => ({
-    week,
-    count,
-  }));
-
-  // Geschatte waarde: uit materialized view (pre-aggregated) met fallback
-  // naar on-the-fly als view nog niet gerefreshed.
-  const totalEstValue = s?.total_est_value
-    ? Number(s.total_est_value)
-    : (allProducts ?? []).reduce((sum, p) => {
-        const v = p.sold_price ?? p.recommended_price ?? 0;
-        return sum + Number(v || 0);
-      }, 0);
 
   // Splits de waarde in gerealiseerd (verkocht) vs voorraad-potentieel.
-  let realizedValue = 0;
-  let potentialValue = 0;
-  (allProducts ?? []).forEach((p) => {
-    if (p.status === "sold") realizedValue += Number(p.sold_price ?? 0);
-    else potentialValue += Number(p.recommended_price ?? 0);
-  });
+  const realizedValue = Number(agg.realized ?? 0);
+  const potentialValue = Number(agg.potential ?? 0);
+
+  // Geschatte waarde: uit materialized view (pre-aggregated) met fallback
+  // naar de live aggregatie als de view nog niet gerefreshed is.
+  const totalEstValue = s?.total_est_value
+    ? Number(s.total_est_value)
+    : realizedValue + potentialValue;
 
   // Trend: geïndexeerd deze week vs vorige week.
   const wLen = weeklyData.length;
