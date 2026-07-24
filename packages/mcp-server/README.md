@@ -16,6 +16,34 @@ MCP (Model Context Protocol) server die Claude Desktop/Code toegang geeft tot je
 
 Elke tool accepteert zowel UUID's als 4-cijferige sticker-ID's (bijv. `"0042"`) als product-identifier waar relevant.
 
+## Architectuur: twee MCP-surfaces (bewuste keuze)
+
+Er zijn twee MCP-servers, en sommige tools delen een naam (`list_inventory`,
+`search_products`, `get_product_context`, `get_product_photos`,
+`update_product`, `save_market_research`). Dat is **geen duplicatie om weg te
+werken** — het zijn twee verschillende surfaces met een verschillend
+auth-model en een verschillende scope:
+
+| | Deze lokale stdio-server (`packages/mcp-server`) | Gehoste server (`apps/web/lib/mcp`) |
+|---|---|---|
+| **Voor** | Claude Desktop/Code, lokaal voor jezelf | claude.ai (custom connector), multi-tenant |
+| **Auth** | **service-role** (godmode) + expliciete `getOwnerId()` / `getOwnerWorkspaceId()` | per-gebruiker JWT → **RLS** doet de isolatie (geen user-filter in code) |
+| **Scope** | volledige toolkit (18 tools), rijker (bv. prijsadvies, extra logging) | gecureerde, veilige subset (6 tools) |
+
+Omdat service-role RLS omzeilt, **moet** de lokale server elke query expliciet
+op de owner scopen; de gehoste server leunt juist op RLS. Daarom verschillen de
+handlers (en soms de schema's) bewust. De tools klakkeloos samenvoegen zou óf de
+rijkere lokale features slopen, óf owner/service-role-complexiteit (en
+cross-tenant-risico) de gehoste kant in duwen.
+
+De écht gedeelde logica is wél al gededupliceerd en leeft in
+`packages/shared`: `resolveProductId` / `resolveProductIds`, `signedPhotoUrls`,
+`sanitizeForLLM` / `sanitizeIlikeQuery`, de zod-schemas en de DB-types. Beide
+servers zijn dunne surfaces bovenop die gedeelde kern. Wil je de auth-modellen
+ooit unificeren (zodat ook de handlers gedeeld worden), dan is de weg: de lokale
+server een owner-gescopte **RLS**-client geven (owner-JWT minten, zoals de web
+doet) i.p.v. service-role — een aparte, bewuste stap.
+
 ## Prerequisites
 
 - Node.js 20+
